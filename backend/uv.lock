@@ -48,6 +48,24 @@ wheels = [
 ]
 
 [[package]]
+name = "chewy-attachment"
+version = "0.4.3"
+source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
+dependencies = [
+    { name = "python-magic" },
+]
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/85/d8/a3f50e3baf9f06005b15260c8e60830eca8f9396562c099c4c52d044a153/chewy_attachment-0.4.3.tar.gz", hash = "sha256:69c20555f98522fc611ac73ec7eeb65bf13a31b6f97ea92313054086e9e3f08c", size = 26279, upload-time = "2026-01-20T09:02:50.677Z" }
+wheels = [
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/38/f8/81d028d2e46a6ec3681294677646c621469d3fd5d6cad5218d4e34413dfa/chewy_attachment-0.4.3-py3-none-any.whl", hash = "sha256:bc75d79c7e0ee1b4f41cb04052eeac3795f9161bf5f42f83f4489db2da6b5df1", size = 35267, upload-time = "2026-01-20T09:02:48.989Z" },
+]
+
+[package.optional-dependencies]
+django = [
+    { name = "django" },
+    { name = "djangorestframework" },
+]
+
+[[package]]
 name = "click"
 version = "8.3.1"
 source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
@@ -525,6 +543,15 @@ wheels = [
 ]
 
 [[package]]
+name = "python-magic"
+version = "0.4.27"
+source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/da/db/0b3e28ac047452d079d375ec6798bf76a036a08182dbb39ed38116a49130/python-magic-0.4.27.tar.gz", hash = "sha256:c1ba14b08e4a5f5c31a302b7721239695b2f0f058d125bd5ce1ee36b9d9d3c3b", size = 14677, upload-time = "2022-06-07T20:16:59.508Z" }
+wheels = [
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/6c/73/9f872cb81fc5c3bb48f7227872c28975f998f3e7c2b1c16e95e6432bbb90/python_magic-0.4.27-py2.py3-none-any.whl", hash = "sha256:c212960ad306f700aa0d01e5d7a325d20548ff97eb9920dcd29513174f0294d3", size = 13840, upload-time = "2022-06-07T20:16:57.763Z" },
+]
+
+[[package]]
 name = "pytokens"
 version = "0.4.0"
 source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
@@ -598,6 +625,7 @@ name = "todo-app-backend"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "chewy-attachment", extra = ["django"] },
     { name = "dj-database-url" },
     { name = "django" },
     { name = "django-cors-headers" },
@@ -625,6 +653,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "black", marker = "extra == 'dev'", specifier = ">=23.0" },
+    { name = "chewy-attachment", extras = ["django"], specifier = ">=0.4.3" },
     { name = "coverage", marker = "extra == 'dev'", specifier = ">=7.3" },
     { name = "dj-database-url", specifier = ">=2.1" },
     { name = "django", specifier = ">=5.0,<6.0" },

@@ -173,7 +173,7 @@ class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = [
-            'uid', 'name', 'desc', 'sort_order', 'settings', 'attachments',
+            'uid', 'name', 'desc', 'sort_order', 'settings',
             'created_at', 'updated_at', 'projects_count'
         ]
         read_only_fields = ['uid', 'created_at', 'updated_at']
@@ -216,7 +216,7 @@ class ProjectListSerializer(serializers.ModelSerializer):
         model = Project
         fields = [
             'uid', 'name', 'desc', 'group', 'view_type', 'style',
-            'sort_order', 'attachments', 'created_at', 'updated_at',
+            'sort_order', 'created_at', 'updated_at',
             'tasks_count', 'completed_tasks_count'
         ]
 
@@ -241,7 +241,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = [
             'uid', 'name', 'desc', 'group', 'group_uid', 'view_type',
-            'style', 'settings', 'sort_order', 'attachments', 'created_at', 'updated_at',
+            'style', 'settings', 'sort_order', 'created_at', 'updated_at',
             'tasks_count', 'completed_tasks_count'
         ]
         read_only_fields = ['uid', 'created_at', 'updated_at']

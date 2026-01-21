@@ -11,6 +11,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('health/', health_check, name='health_check'),
     path('api/v1/', include('apps.todolist.urls')),
+    path('api/attachments/', include('chewy_attachment.django_app.urls')),
 ]
 
 # Serve media files in development

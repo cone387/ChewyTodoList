@@ -255,6 +255,8 @@ class ChangePasswordView(generics.UpdateAPIView):
 class TagViewSet(viewsets.ModelViewSet):
     """标签视图集"""
     
+    lookup_field = 'uid'
+    
     serializer_class = TagSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = TagFilter
@@ -335,6 +337,8 @@ class TagViewSet(viewsets.ModelViewSet):
 
 class GroupViewSet(viewsets.ModelViewSet):
     """分组视图集"""
+    
+    lookup_field = 'uid'
     
     serializer_class = GroupSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -425,6 +429,8 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 class ProjectViewSet(viewsets.ModelViewSet):
     """项目视图集"""
+    
+    lookup_field = 'uid'
     
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = ProjectFilter
@@ -544,6 +550,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 class TaskViewSet(viewsets.ModelViewSet):
     """任务视图集"""
     
+    lookup_field = 'uid'
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = TaskFilter
     search_fields = ['title', 'content']

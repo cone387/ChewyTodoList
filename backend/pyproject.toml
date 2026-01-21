@@ -13,6 +13,7 @@ dependencies = [
     "dj-database-url>=2.1",
     "djangorestframework-simplejwt>=5.3",
     "django-extensions>=3.2",
+    "chewy-attachment[django]>=0.4.3",
 ]
 
 [project.optional-dependencies]

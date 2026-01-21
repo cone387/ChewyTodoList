@@ -20,7 +20,7 @@ def custom_exception_handler(exc, context):
             extra={
                 'request': context.get('request'),
                 'view': context.get('view'),
-                'exc_info': exc,
+                'exception': exc,
             }
         )
         

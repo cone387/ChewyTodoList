@@ -126,12 +126,6 @@ class Group(BaseModel):
     sort_order = models.FloatField(default=get_timestamp_sortorder, verbose_name="排序")
     desc = models.TextField(blank=True, null=True, verbose_name="描述")
     settings = models.JSONField(default=dict, blank=True, verbose_name="设置")
-    attachments = models.JSONField(
-        default=list,
-        blank=True,
-        help_text="附件列表，存储附件元信息的字典列表",
-        verbose_name="附件"
-    )
 
     @staticmethod
     def get_user_default(user):
@@ -198,12 +192,6 @@ class Project(BaseModel):
         verbose_name="视图类型"
     )
     settings = models.JSONField(default=dict, blank=True, verbose_name="设置")
-    attachments = models.JSONField(
-        default=list,
-        blank=True,
-        help_text="附件列表，存储附件元信息的字典列表",
-        verbose_name="附件"
-    )
 
     @staticmethod
     def get_default_project(user):
@@ -361,7 +349,7 @@ class Task(BaseModel):
     attachments = models.JSONField(
         default=list,
         blank=True,
-        help_text="附件列表，存储附件元信息的字典列表",
+        help_text="附件列表，存储附件ID的列表",
         verbose_name="附件"
     )
 

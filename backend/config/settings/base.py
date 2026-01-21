@@ -33,6 +33,7 @@ THIRD_PARTY_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'django_filters',
+    'chewy_attachment',
 ]
 
 LOCAL_APPS = [
@@ -198,7 +199,38 @@ SECURE_CONTENT_TYPE_NOSNIFF = config('SECURE_CONTENT_TYPE_NOSNIFF', default=True
 SECURE_BROWSER_XSS_FILTER = config('SECURE_BROWSER_XSS_FILTER', default=True, cast=bool)
 X_FRAME_OPTIONS = config('X_FRAME_OPTIONS', default='DENY')
 
-# Logging
+# Chewy Attachment settings
+CHEWY_ATTACHMENT = {
+    # 存储引擎
+    "STORAGE_ENGINE": "file",
+    
+    # 存储根目录
+    "STORAGE_ROOT": BASE_DIR.parent / 'data' / 'attachments',
+    
+    # 文件大小限制 (50MB)
+    "MAX_FILE_SIZE": 50 * 1024 * 1024,
+    
+    # 允许的文件扩展名
+    "ALLOWED_EXTENSIONS": [
+        # 图片
+        ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg",
+        # 文档
+        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".rtf",
+        # 压缩文件
+        ".zip", ".rar", ".7z", ".tar", ".gz",
+        # 其他
+        ".mp3", ".mp4", ".avi", ".mov", ".csv", ".json", ".xml",
+    ],
+    
+    # 时间格式
+    "DATETIME_FORMAT": "%Y-%m-%d %H:%M:%S",
+    
+    # 权限类
+    "PERMISSION_CLASSES": [
+        "chewy_attachment.django_app.permissions.IsAuthenticatedForUpload",
+        "chewy_attachment.django_app.permissions.IsOwnerOrPublicReadOnly",
+    ],
+}
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
