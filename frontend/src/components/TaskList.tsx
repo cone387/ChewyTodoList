@@ -203,7 +203,6 @@ const TaskList: React.FC = () => {
   
   // 按日期分组任务
   const groupTasksByDate = (tasks: Task[]) => {
-    const today = new Date();
     const todayTasks: Task[] = [];
     const otherTasks: Task[] = [];
 

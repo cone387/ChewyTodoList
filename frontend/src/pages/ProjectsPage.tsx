@@ -16,7 +16,7 @@ const ProjectsPage: React.FC = () => {
 
   // 获取项目的图标和颜色
   const getProjectIcon = (project: any) => {
-    const icons = ['work', 'person', 'shopping_cart', 'flight', 'fitness_center', 'book', 'home', 'school'];
+    const icons = ['work', 'person', 'shopping_cart', 'flight', 'sports', 'book', 'home', 'school'];
     const colors = ['purple', 'blue', 'orange', 'green', 'pink', 'indigo', 'teal', 'red'];
     
     // 根据项目名称生成一致的图标和颜色
@@ -266,40 +266,6 @@ const ProjectsPage: React.FC = () => {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-gray-300 text-[20px] group-hover:text-gray-500">
-                  chevron_right
-                </span>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        {/* Shared Section */}
-        <div className="mt-6">
-          <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">
-            与我共享
-          </h3>
-          <div className="space-y-1">
-            <button className="w-full flex items-center p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
-              <div className="size-10 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 mr-3">
-                <span className="material-symbols-outlined text-[20px]">group</span>
-              </div>
-              <div className="flex-1 text-left">
-                <h4 className="text-sm font-medium text-gray-900 dark:text-white">团队协作</h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400">来自团队的更新</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-2 mr-1">
-                  <div className="size-6 rounded-full bg-blue-400 text-[8px] flex items-center justify-center text-white border-2 border-white dark:border-surface-dark">
-                    A
-                  </div>
-                  <div className="size-6 rounded-full bg-purple-400 text-[8px] flex items-center justify-center text-white border-2 border-white dark:border-surface-dark">
-                    B
-                  </div>
-                  <div className="size-6 rounded-full bg-gray-200 text-[8px] flex items-center justify-center text-gray-600 border-2 border-white dark:border-surface-dark">
-                    +2
-                  </div>
-                </div>
                 <span className="material-symbols-outlined text-gray-300 text-[20px] group-hover:text-gray-500">
                   chevron_right
                 </span>

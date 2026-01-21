@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import TaskList from '../components/TaskList';
@@ -7,7 +7,6 @@ import FloatingAddButton from '../components/FloatingAddButton';
 
 const HomePage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState('');
   const projectFilter = searchParams.get('project');
 
   useEffect(() => {
@@ -18,7 +17,8 @@ const HomePage: React.FC = () => {
   }, [projectFilter]);
 
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
+    // TODO: 实现搜索功能
+    console.log('Search query:', query);
   };
 
   const handleFilter = () => {

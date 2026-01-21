@@ -57,20 +57,24 @@ export interface Project {
 }
 
 // 任务状态枚举
-export enum TaskStatus {
-  UNASSIGNED = 0,
-  TODO = 1,
-  COMPLETED = 2,
-  ABANDONED = 3,
-}
+export const TaskStatus = {
+  UNASSIGNED: 0,
+  TODO: 1,
+  COMPLETED: 2,
+  ABANDONED: 3,
+} as const;
+
+export type TaskStatus = typeof TaskStatus[keyof typeof TaskStatus];
 
 // 任务优先级枚举
-export enum TaskPriority {
-  LOW = 0,
-  MEDIUM = 1,
-  HIGH = 2,
-  URGENT = 3,
-}
+export const TaskPriority = {
+  LOW: 0,
+  MEDIUM: 1,
+  HIGH: 2,
+  URGENT: 3,
+} as const;
+
+export type TaskPriority = typeof TaskPriority[keyof typeof TaskPriority];
 
 // 任务类型
 export interface Task {

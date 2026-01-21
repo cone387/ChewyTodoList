@@ -92,7 +92,7 @@ class Command(BaseCommand):
                 'name': '健身计划',
                 'desc': '保持健康的运动计划',
                 'group': personal_group,
-                'style': {'color': '#e67e22', 'icon': 'dumbbell'}
+                'style': {'color': '#e67e22', 'icon': 'directions_run'}
             }
         ]
 

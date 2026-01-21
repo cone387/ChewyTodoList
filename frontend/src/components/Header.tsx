@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useProfile } from '../hooks/useAuth';
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -8,7 +7,6 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onSearch, onFilter }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const { data: profile } = useProfile();
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;

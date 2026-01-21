@@ -14,7 +14,7 @@ const CreateTaskPage: React.FC = () => {
     title: '',
     content: '',
     project_uid: '',
-    priority: TaskPriority.MEDIUM,
+    priority: TaskPriority.MEDIUM as TaskPriority,
     tag_uids: [] as string[],
     due_date: '',
     start_date: '',
