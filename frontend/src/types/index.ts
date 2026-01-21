@@ -139,3 +139,38 @@ export interface ActivityLog {
     name: string;
   };
 }
+
+// 视图类型
+export interface TaskView {
+  uid: string;
+  name: string;
+  project?: Project;
+  view_type: 'list' | 'board' | 'calendar' | 'table';
+  view_type_display: string;
+  is_default: boolean;
+  is_public: boolean;
+  sort_order: number;
+  filters: ViewFilter[];
+  sorts: ViewSort[];
+  group_by?: string;
+  display_settings: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+  tasks_count?: number;
+}
+
+// 视图筛选条件
+export interface ViewFilter {
+  field: string;
+  operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'starts_with' | 'ends_with' | 
+           'is_empty' | 'is_not_empty' | 'greater_than' | 'greater_than_or_equal' | 
+           'less_than' | 'less_than_or_equal' | 'in' | 'not_in';
+  value: any;
+  logic?: 'and' | 'or';
+}
+
+// 视图排序规则
+export interface ViewSort {
+  field: string;
+  direction: 'asc' | 'desc';
+}

@@ -7,7 +7,10 @@ import type {
   Tag, 
   Group, 
   Project,
-  ActivityLog 
+  ActivityLog,
+  TaskView,
+  ViewFilter,
+  ViewSort
 } from '../types/index';
 
 // 创建axios实例
@@ -258,6 +261,58 @@ export const activityApi = {
     project?: string;
     page?: number;
   }) => api.get<ApiResponse<PaginatedResponse<ActivityLog>>>('/activity-logs/', { params }),
+};
+
+// 视图API
+export const viewApi = {
+  // 获取视图列表
+  getViews: (params?: {
+    project?: string;
+    view_type?: string;
+  }) => api.get<ApiResponse<PaginatedResponse<TaskView>>>('/views/', { params }),
+
+  // 获取视图详情
+  getView: (uid: string) => api.get<ApiResponse<TaskView>>(`/views/${uid}/`),
+
+  // 创建视图
+  createView: (data: {
+    name: string;
+    project_uid?: string;
+    view_type?: 'list' | 'board' | 'calendar' | 'table';
+    filters?: ViewFilter[];
+    sorts?: ViewSort[];
+    group_by?: string;
+    display_settings?: Record<string, any>;
+  }) => api.post<ApiResponse<TaskView>>('/views/', data),
+
+  // 更新视图
+  updateView: (uid: string, data: Partial<{
+    name: string;
+    view_type: 'list' | 'board' | 'calendar' | 'table';
+    filters: ViewFilter[];
+    sorts: ViewSort[];
+    group_by: string;
+    display_settings: Record<string, any>;
+  }>) => api.patch<ApiResponse<TaskView>>(`/views/${uid}/`, data),
+
+  // 删除视图
+  deleteView: (uid: string) => api.delete(`/views/${uid}/`),
+
+  // 获取视图下的任务
+  getViewTasks: (uid: string, params?: {
+    page?: number;
+  }) => api.get<ApiResponse<PaginatedResponse<Task>>>(`/views/${uid}/tasks/`, { params }),
+
+  // 设置默认视图
+  setDefaultView: (uid: string) => api.post(`/views/${uid}/set_default/`),
+
+  // 复制视图
+  duplicateView: (uid: string) => api.post<ApiResponse<TaskView>>(`/views/${uid}/duplicate/`),
+
+  // 获取默认视图
+  getDefaultViews: (params?: {
+    project?: string;
+  }) => api.get<ApiResponse<TaskView[]>>('/views/default_views/', { params }),
 };
 
 export default api;

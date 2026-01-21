@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { useDefaultViews } from '../hooks/useViews';
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
   onFilter?: () => void;
+  onViewChange?: (viewUid: string) => void;
+  currentView?: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSearch, onFilter }) => {
+const Header: React.FC<HeaderProps> = ({ onSearch, onFilter, onViewChange, currentView }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchVisible, setIsSearchVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  const { data: defaultViews } = useDefaultViews();
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
@@ -93,20 +98,24 @@ const Header: React.FC<HeaderProps> = ({ onSearch, onFilter }) => {
         style={{ paddingTop: `calc(env(safe-area-inset-top) + 60px + ${isSearchVisible ? '50px' : '0px'})` }}
       >
         <div className="flex overflow-x-auto no-scrollbar gap-4 px-4 py-2 text-sm font-medium">
-          <button className="whitespace-nowrap text-primary border-b-2 border-primary pb-1">
-            最近
-          </button>
-          <button className="whitespace-nowrap text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 pb-1">
-            收藏
-          </button>
-          <button className="whitespace-nowrap text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 pb-1">
-            项目
-          </button>
-          <button className="whitespace-nowrap text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 pb-1">
-            看板
-          </button>
-          <button className="whitespace-nowrap text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 pb-1">
-            文档
+          {defaultViews?.map((view) => (
+            <button
+              key={view.uid}
+              onClick={() => onViewChange?.(view.uid)}
+              className={`whitespace-nowrap pb-1 ${
+                currentView === view.uid
+                  ? 'text-primary border-b-2 border-primary'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+              }`}
+            >
+              {view.name}
+            </button>
+          ))}
+          
+          {/* 添加自定义视图按钮 */}
+          <button className="whitespace-nowrap text-gray-400 hover:text-gray-600 pb-1 flex items-center gap-1">
+            <span className="material-symbols-outlined text-[16px]">add</span>
+            <span>自定义</span>
           </button>
         </div>
       </div>

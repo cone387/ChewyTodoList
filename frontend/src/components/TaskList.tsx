@@ -170,7 +170,11 @@ const TaskSection: React.FC<TaskSectionProps> = ({
   );
 };
 
-const TaskList: React.FC = () => {
+interface TaskListProps {
+  viewTasks?: Task[];
+}
+
+const TaskList: React.FC<TaskListProps> = ({ viewTasks }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const projectFilter = searchParams.get('project');
@@ -186,7 +190,7 @@ const TaskList: React.FC = () => {
     navigate(`/task/${task.uid}`);
   };
 
-  if (isLoading) {
+  if (isLoading && !viewTasks) {
     return (
       <div className="flex items-center justify-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -194,10 +198,11 @@ const TaskList: React.FC = () => {
     );
   }
 
-  let tasks = tasksResponse?.results || [];
+  // 使用视图任务或默认任务
+  let tasks = viewTasks || tasksResponse?.results || [];
   
   // 如果有项目筛选，只显示该项目的任务
-  if (projectFilter) {
+  if (projectFilter && !viewTasks) {
     tasks = tasks.filter(task => task.project.uid === projectFilter);
   }
   

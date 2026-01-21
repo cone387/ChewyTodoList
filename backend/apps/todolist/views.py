@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.db import transaction
 from django.http import JsonResponse
 
-from .models import Tag, Group, Project, Task, ActivityLog
+from .models import Tag, Group, Project, Task, ActivityLog, TaskView
 from .serializers import (
     UserRegistrationSerializer,
     UserSerializer,
@@ -25,6 +25,8 @@ from .serializers import (
     TaskListSerializer,
     BulkUpdateTaskSerializer,
     ActivityLogSerializer,
+    TaskViewSerializer,
+    TaskViewListSerializer,
 )
 from .filters import TagFilter, GroupFilter, ProjectFilter, TaskFilter, ActivityLogFilter
 
@@ -891,4 +893,189 @@ class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
             'success': True,
             'data': serializer.data,
             'message': '获取活动日志成功'
+        })
+
+
+# =========================
+# 任务视图管理
+# =========================
+
+class TaskViewViewSet(viewsets.ModelViewSet):
+    """任务视图管理视图集"""
+    
+    lookup_field = 'uid'
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    search_fields = ['name']
+    ordering_fields = ['name', 'sort_order', 'created_at', 'updated_at']
+    ordering = ['sort_order', 'name']
+
+    def get_queryset(self):
+        """获取当前用户的视图"""
+        return TaskView.objects.filter(user=self.request.user).select_related('project')
+
+    def get_serializer_class(self):
+        """根据动作选择序列化器"""
+        if self.action == 'list':
+            return TaskViewListSerializer
+        return TaskViewSerializer
+
+    def create(self, request, *args, **kwargs):
+        """创建视图"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        
+        return Response({
+            'success': True,
+            'data': serializer.data,
+            'message': '视图创建成功'
+        }, status=status.HTTP_201_CREATED)
+
+    def retrieve(self, request, *args, **kwargs):
+        """获取视图详情"""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        
+        return Response({
+            'success': True,
+            'data': serializer.data,
+            'message': '获取视图详情成功'
+        })
+
+    def update(self, request, *args, **kwargs):
+        """更新视图"""
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response({
+            'success': True,
+            'data': serializer.data,
+            'message': '视图更新成功'
+        })
+
+    def destroy(self, request, *args, **kwargs):
+        """删除视图"""
+        instance = self.get_object()
+        
+        # 检查是否为默认视图
+        if instance.is_default:
+            return Response({
+                'success': False,
+                'error': {
+                    'code': 'BUSINESS_002',
+                    'message': '默认视图不能删除',
+                    'details': {}
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        self.perform_destroy(instance)
+        
+        return Response({
+            'success': True,
+            'data': {},
+            'message': '视图删除成功'
+        }, status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['get'])
+    def tasks(self, request, uid=None):
+        """获取视图下的任务"""
+        view = self.get_object()
+        
+        # 获取基础查询集
+        queryset = Task.objects.filter(user=request.user).select_related(
+            'project', 'project__group', 'parent'
+        ).prefetch_related('tags', 'subtasks')
+        
+        # 如果视图绑定了项目，则筛选项目
+        if view.project:
+            queryset = queryset.filter(project=view.project)
+        
+        # 应用筛选条件
+        queryset = view.apply_filters(queryset)
+        
+        # 应用排序规则
+        queryset = view.apply_sorts(queryset)
+        
+        # 分页
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = TaskListSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        serializer = TaskListSerializer(queryset, many=True)
+        return Response({
+            'success': True,
+            'data': serializer.data,
+            'message': '获取视图任务成功'
+        })
+
+    @action(detail=True, methods=['post'])
+    def set_default(self, request, uid=None):
+        """设置为默认视图"""
+        view = self.get_object()
+        
+        with transaction.atomic():
+            # 取消其他默认视图
+            TaskView.objects.filter(
+                user=request.user,
+                project=view.project,
+                is_default=True
+            ).update(is_default=False)
+            
+            # 设置当前视图为默认
+            view.is_default = True
+            view.save(update_fields=['is_default'])
+        
+        return Response({
+            'success': True,
+            'data': {},
+            'message': '设置默认视图成功'
+        })
+
+    @action(detail=True, methods=['post'])
+    def duplicate(self, request, uid=None):
+        """复制视图"""
+        view = self.get_object()
+        
+        # 创建副本
+        new_view = TaskView.objects.create(
+            user=request.user,
+            name=f"{view.name} 副本",
+            project=view.project,
+            view_type=view.view_type,
+            is_default=False,
+            is_public=False,
+            filters=view.filters.copy(),
+            sorts=view.sorts.copy(),
+            group_by=view.group_by,
+            display_settings=view.display_settings.copy()
+        )
+        
+        serializer = self.get_serializer(new_view)
+        return Response({
+            'success': True,
+            'data': serializer.data,
+            'message': '视图复制成功'
+        }, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['get'])
+    def default_views(self, request):
+        """获取默认视图"""
+        project_uid = request.query_params.get('project')
+        
+        queryset = self.get_queryset().filter(is_default=True)
+        
+        if project_uid:
+            queryset = queryset.filter(project__uid=project_uid)
+        else:
+            queryset = queryset.filter(project__isnull=True)
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            'success': True,
+            'data': serializer.data,
+            'message': '获取默认视图成功'
         })

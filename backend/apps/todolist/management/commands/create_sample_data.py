@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
-from apps.todolist.models import Group, Project, Tag, Task
+from apps.todolist.models import Group, Project, Tag, Task, TaskView
 import random
 
 User = get_user_model()
@@ -201,6 +201,111 @@ class Command(BaseCommand):
             
             if created:
                 task.tags.set(task_data['tags'])
+
+        # 创建默认视图
+        views_data = [
+            {
+                'name': '最近',
+                'project': None,  # 全局视图
+                'view_type': TaskView.ViewType.LIST,
+                'is_default': True,
+                'filters': [],
+                'sorts': [
+                    {'field': 'updated_at', 'direction': 'desc'}
+                ],
+                'group_by': None,
+                'display_settings': {
+                    'show_project': True,
+                    'show_tags': True,
+                    'show_due_date': True
+                }
+            },
+            {
+                'name': '收藏',
+                'project': None,
+                'view_type': TaskView.ViewType.LIST,
+                'is_default': False,
+                'filters': [
+                    {'field': 'priority', 'operator': 'greater_than_or_equal', 'value': Task.TaskPriority.HIGH}
+                ],
+                'sorts': [
+                    {'field': 'priority', 'direction': 'desc'},
+                    {'field': 'due_date', 'direction': 'asc'}
+                ],
+                'group_by': 'priority',
+                'display_settings': {
+                    'show_project': True,
+                    'show_tags': True,
+                    'show_due_date': True
+                }
+            },
+            {
+                'name': '项目',
+                'project': None,
+                'view_type': TaskView.ViewType.LIST,
+                'is_default': False,
+                'filters': [],
+                'sorts': [
+                    {'field': 'sort_order', 'direction': 'asc'}
+                ],
+                'group_by': 'project',
+                'display_settings': {
+                    'show_project': False,
+                    'show_tags': True,
+                    'show_due_date': True
+                }
+            },
+            {
+                'name': '看板',
+                'project': None,
+                'view_type': TaskView.ViewType.BOARD,
+                'is_default': False,
+                'filters': [],
+                'sorts': [
+                    {'field': 'sort_order', 'direction': 'asc'}
+                ],
+                'group_by': 'status',
+                'display_settings': {
+                    'show_project': True,
+                    'show_tags': True,
+                    'show_due_date': True
+                }
+            },
+            {
+                'name': '今日任务',
+                'project': None,
+                'view_type': TaskView.ViewType.LIST,
+                'is_default': False,
+                'filters': [
+                    {'field': 'due_date', 'operator': 'equals', 'value': 'today'}
+                ],
+                'sorts': [
+                    {'field': 'priority', 'direction': 'desc'},
+                    {'field': 'due_date', 'direction': 'asc'}
+                ],
+                'group_by': None,
+                'display_settings': {
+                    'show_project': True,
+                    'show_tags': True,
+                    'show_due_date': False
+                }
+            }
+        ]
+
+        for view_data in views_data:
+            view, _ = TaskView.objects.get_or_create(
+                user=user,
+                name=view_data['name'],
+                project=view_data['project'],
+                defaults={
+                    'view_type': view_data['view_type'],
+                    'is_default': view_data['is_default'],
+                    'filters': view_data['filters'],
+                    'sorts': view_data['sorts'],
+                    'group_by': view_data['group_by'],
+                    'display_settings': view_data['display_settings']
+                }
+            )
 
         self.stdout.write(
             self.style.SUCCESS('示例数据创建完成!')

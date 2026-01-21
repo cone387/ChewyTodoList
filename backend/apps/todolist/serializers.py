@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils import timezone
-from .models import Tag, Group, Project, Task, ActivityLog
+from .models import Tag, Group, Project, Task, ActivityLog, TaskView
 
 User = get_user_model()
 
@@ -536,3 +536,176 @@ class ActivityLogSerializer(serializers.ModelSerializer):
             'id', 'task', 'task_uid', 'project', 'project_uid',
             'action', 'action_display', 'detail', 'created_at'
         ]
+
+
+# =========================
+# 视图序列化器
+# =========================
+
+class TaskViewSerializer(serializers.ModelSerializer):
+    """任务视图序列化器"""
+    
+    project = ProjectListSerializer(read_only=True)
+    project_uid = serializers.CharField(write_only=True, required=False, allow_null=True)
+    view_type_display = serializers.CharField(source='get_view_type_display', read_only=True)
+
+    class Meta:
+        model = TaskView
+        fields = [
+            'uid', 'name', 'project', 'project_uid', 'view_type', 'view_type_display',
+            'is_default', 'is_public', 'sort_order', 'filters', 'sorts', 'group_by',
+            'display_settings', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['uid', 'created_at', 'updated_at']
+
+    def validate_project_uid(self, value):
+        """验证项目UID"""
+        if not value:
+            return None
+        
+        user = self.context['request'].user
+        try:
+            project = Project.objects.get(uid=value, user=user)
+            return project
+        except Project.DoesNotExist:
+            raise serializers.ValidationError("指定的项目不存在")
+
+    def validate_name(self, value):
+        """验证视图名称唯一性"""
+        user = self.context['request'].user
+        project_uid = self.initial_data.get('project_uid')
+        
+        # 获取项目对象
+        project = None
+        if project_uid:
+            try:
+                project = Project.objects.get(uid=project_uid, user=user)
+            except Project.DoesNotExist:
+                pass
+        
+        # 检查同一项目下的视图名称唯一性
+        queryset = TaskView.objects.filter(user=user, project=project, name=value)
+        
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        
+        if queryset.exists():
+            project_name = project.name if project else "全局"
+            raise serializers.ValidationError(f"在{project_name}下已存在同名视图")
+        
+        return value.strip()
+
+    def validate_filters(self, value):
+        """验证筛选条件"""
+        if not isinstance(value, list):
+            raise serializers.ValidationError("筛选条件必须是数组格式")
+        
+        allowed_fields = [
+            'status', 'priority', 'title', 'content', 'project__name',
+            'tags__name', 'start_date', 'due_date', 'created_at', 'updated_at'
+        ]
+        
+        allowed_operators = [
+            'equals', 'not_equals', 'contains', 'not_contains',
+            'starts_with', 'ends_with', 'is_empty', 'is_not_empty',
+            'greater_than', 'greater_than_or_equal', 'less_than', 'less_than_or_equal',
+            'in', 'not_in'
+        ]
+        
+        for i, filter_rule in enumerate(value):
+            if not isinstance(filter_rule, dict):
+                raise serializers.ValidationError(f"筛选条件[{i}]必须是对象格式")
+            
+            field = filter_rule.get('field')
+            operator = filter_rule.get('operator')
+            
+            if field not in allowed_fields:
+                raise serializers.ValidationError(f"不支持的筛选字段: {field}")
+            
+            if operator not in allowed_operators:
+                raise serializers.ValidationError(f"不支持的筛选操作符: {operator}")
+        
+        return value
+
+    def validate_sorts(self, value):
+        """验证排序规则"""
+        if not isinstance(value, list):
+            raise serializers.ValidationError("排序规则必须是数组格式")
+        
+        allowed_fields = [
+            'status', 'priority', 'title', 'start_date', 'due_date',
+            'created_at', 'updated_at', 'sort_order'
+        ]
+        
+        for i, sort_rule in enumerate(value):
+            if not isinstance(sort_rule, dict):
+                raise serializers.ValidationError(f"排序规则[{i}]必须是对象格式")
+            
+            field = sort_rule.get('field')
+            direction = sort_rule.get('direction', 'asc')
+            
+            if field not in allowed_fields:
+                raise serializers.ValidationError(f"不支持的排序字段: {field}")
+            
+            if direction not in ['asc', 'desc']:
+                raise serializers.ValidationError(f"排序方向必须是 asc 或 desc")
+        
+        return value
+
+    def validate_group_by(self, value):
+        """验证分组字段"""
+        if not value:
+            return value
+        
+        allowed_fields = ['status', 'priority', 'project', 'tags', 'due_date']
+        
+        if value not in allowed_fields:
+            raise serializers.ValidationError(f"不支持的分组字段: {value}")
+        
+        return value
+
+    def create(self, validated_data):
+        """创建视图"""
+        project = validated_data.pop('project_uid', None)
+        validated_data['project'] = project
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        """更新视图"""
+        if 'project_uid' in validated_data:
+            project = validated_data.pop('project_uid')
+            validated_data['project'] = project
+        return super().update(instance, validated_data)
+
+
+class TaskViewListSerializer(serializers.ModelSerializer):
+    """任务视图列表序列化器"""
+    
+    project = ProjectListSerializer(read_only=True)
+    view_type_display = serializers.CharField(source='get_view_type_display', read_only=True)
+    tasks_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TaskView
+        fields = [
+            'uid', 'name', 'project', 'view_type', 'view_type_display',
+            'is_default', 'is_public', 'sort_order', 'tasks_count',
+            'created_at', 'updated_at'
+        ]
+
+    def get_tasks_count(self, obj):
+        """获取视图下的任务数量"""
+        from .models import Task
+        
+        # 获取基础查询集
+        queryset = Task.objects.filter(user=obj.user)
+        
+        # 如果视图绑定了项目，则筛选项目
+        if obj.project:
+            queryset = queryset.filter(project=obj.project)
+        
+        # 应用筛选条件
+        queryset = obj.apply_filters(queryset)
+        
+        return queryset.count()

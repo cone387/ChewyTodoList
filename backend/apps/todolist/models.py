@@ -454,3 +454,193 @@ class ActivityLog(BaseModel):
 
     def __str__(self):
         return f"{self.get_action_display()} - {self.task.title}"
+
+
+# =========================
+# 视图模型
+# =========================
+
+class TaskView(BaseModel):
+    """任务视图模型 - 类似Notion的视图功能"""
+    
+    class ViewType(models.TextChoices):
+        LIST = "list", "列表视图"
+        BOARD = "board", "看板视图"
+        CALENDAR = "calendar", "日历视图"
+        TABLE = "table", "表格视图"
+
+    uid = models.CharField(
+        max_length=22,
+        unique=True,
+        default=generate_uid,
+        editable=False,
+        verbose_name="UID"
+    )
+    name = models.CharField(max_length=100, db_index=True, verbose_name="视图名称")
+    project = models.ForeignKey(
+        Project,
+        to_field="uid",
+        on_delete=models.CASCADE,
+        related_name="views",
+        null=True,
+        blank=True,
+        verbose_name="所属项目"
+    )
+    view_type = models.CharField(
+        max_length=16,
+        choices=ViewType.choices,
+        default=ViewType.LIST,
+        verbose_name="视图类型"
+    )
+    is_default = models.BooleanField(default=False, verbose_name="是否默认视图")
+    is_public = models.BooleanField(default=False, verbose_name="是否公开")
+    sort_order = models.FloatField(default=get_timestamp_sortorder, verbose_name="排序")
+    
+    # 筛选条件
+    filters = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name="筛选条件",
+        help_text="筛选规则列表，格式：[{field, operator, value, logic}]"
+    )
+    
+    # 排序规则
+    sorts = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name="排序规则",
+        help_text="排序规则列表，格式：[{field, direction}]"
+    )
+    
+    # 分组规则
+    group_by = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        verbose_name="分组字段",
+        help_text="按哪个字段分组显示"
+    )
+    
+    # 显示设置
+    display_settings = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name="显示设置",
+        help_text="列显示、颜色、图标等设置"
+    )
+
+    class Meta:
+        db_table = "ct_task_views"
+        ordering = ["sort_order", "name"]
+        verbose_name = verbose_name_plural = "任务视图"
+        indexes = [
+            models.Index(fields=['user', 'project', 'sort_order'], name='view_user_project_sort_idx'),
+            models.Index(fields=['user', 'is_default'], name='view_user_default_idx'),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'project', 'name'],
+                name='unique_view_name_per_project'
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.get_view_type_display()})"
+
+    @classmethod
+    def get_default_views(cls, user, project=None):
+        """获取默认视图"""
+        return cls.objects.filter(
+            user=user,
+            project=project,
+            is_default=True
+        ).first()
+
+    def apply_filters(self, queryset):
+        """应用筛选条件到查询集"""
+        if not self.filters:
+            return queryset
+        
+        from django.db.models import Q
+        import operator
+        from functools import reduce
+        
+        conditions = []
+        
+        for filter_rule in self.filters:
+            field = filter_rule.get('field')
+            op = filter_rule.get('operator')
+            value = filter_rule.get('value')
+            
+            if not all([field, op, value is not None]):
+                continue
+                
+            # 构建查询条件
+            lookup = self._build_lookup(field, op, value)
+            if lookup:
+                conditions.append(Q(**lookup))
+        
+        if conditions:
+            # 根据逻辑操作符组合条件（暂时只支持AND）
+            combined_condition = reduce(operator.and_, conditions)
+            queryset = queryset.filter(combined_condition)
+        
+        return queryset
+
+    def apply_sorts(self, queryset):
+        """应用排序规则到查询集"""
+        if not self.sorts:
+            return queryset
+        
+        order_fields = []
+        for sort_rule in self.sorts:
+            field = sort_rule.get('field')
+            direction = sort_rule.get('direction', 'asc')
+            
+            if field:
+                prefix = '-' if direction == 'desc' else ''
+                order_fields.append(f"{prefix}{field}")
+        
+        if order_fields:
+            queryset = queryset.order_by(*order_fields)
+        
+        return queryset
+
+    def _build_lookup(self, field, operator, value):
+        """构建Django查询lookup"""
+        lookup_map = {
+            'equals': '',
+            'not_equals': '',
+            'contains': '__icontains',
+            'not_contains': '__icontains',
+            'starts_with': '__istartswith',
+            'ends_with': '__iendswith',
+            'is_empty': '__isnull',
+            'is_not_empty': '__isnull',
+            'greater_than': '__gt',
+            'greater_than_or_equal': '__gte',
+            'less_than': '__lt',
+            'less_than_or_equal': '__lte',
+            'in': '__in',
+            'not_in': '__in',
+        }
+        
+        if operator not in lookup_map:
+            return None
+        
+        lookup_suffix = lookup_map[operator]
+        lookup_key = f"{field}{lookup_suffix}"
+        
+        # 特殊处理
+        if operator == 'not_equals':
+            return {f"{field}__ne": value}
+        elif operator == 'not_contains':
+            return {f"{field}__icontains": value}  # 需要在外层用exclude
+        elif operator == 'is_empty':
+            return {lookup_key: True}
+        elif operator == 'is_not_empty':
+            return {lookup_key: False}
+        elif operator == 'not_in':
+            return {lookup_key: value}  # 需要在外层用exclude
+        else:
+            return {lookup_key: value}
