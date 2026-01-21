@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authApi } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 // 登录
 export const useLogin = () => {
@@ -61,7 +62,15 @@ export const useProfile = () => {
     queryKey: ['profile'],
     queryFn: () => authApi.getProfile(),
     select: (data) => data.data,
-    retry: false,
+    retry: (failureCount, error: any) => {
+      // 如果是401错误，不要重试
+      if (error?.response?.status === 401) {
+        return false;
+      }
+      // 其他错误最多重试2次
+      return failureCount < 2;
+    },
+    enabled: !!localStorage.getItem('access_token'),
   });
 };
 
@@ -69,4 +78,18 @@ export const useProfile = () => {
 export const useIsAuthenticated = () => {
   const token = localStorage.getItem('access_token');
   return !!token;
+};
+
+// 认证守卫Hook
+export const useAuthGuard = () => {
+  const navigate = useNavigate();
+  const isAuthenticated = useIsAuthenticated();
+
+  useEffect(() => {
+    if (!isAuthenticated && window.location.pathname !== '/login') {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
+
+  return isAuthenticated;
 };

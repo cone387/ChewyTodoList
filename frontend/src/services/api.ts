@@ -27,11 +27,47 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// 用于防止重复刷新token的标志
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: any) => void;
+  reject: (reason?: any) => void;
+}> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(token);
+    }
+  });
+  
+  failedQueue = [];
+};
+
 // 响应拦截器 - 处理token过期
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // 如果正在刷新token，将请求加入队列
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return api(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
       const refreshToken = localStorage.getItem('refresh_token');
       if (refreshToken) {
         try {
@@ -41,20 +77,40 @@ api.interceptors.response.use(
           const newToken = response.data.access;
           localStorage.setItem('access_token', newToken);
           
+          processQueue(null, newToken);
+          
           // 重试原请求
-          error.config.headers.Authorization = `Bearer ${newToken}`;
-          return api.request(error.config);
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return api(originalRequest);
         } catch (refreshError) {
+          processQueue(refreshError, null);
+          
           // 刷新失败，清除token并跳转到登录页
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
-          window.location.href = '/login';
+          
+          // 只在不是登录页面时才跳转
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+          
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
         }
       } else {
-        // 没有refresh token，跳转到登录页
-        window.location.href = '/login';
+        // 没有refresh token，清除所有token并跳转到登录页
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+        
+        return Promise.reject(error);
       }
     }
+    
     return Promise.reject(error);
   }
 );

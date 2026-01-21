@@ -27,9 +27,11 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden pb-16">
+    <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden">
       <Header onSearch={handleSearch} onFilter={handleFilter} />
-      <TaskList />
+      <main className="flex-1 overflow-y-auto pb-16 bg-white dark:bg-background-dark">
+        <TaskList />
+      </main>
       <FloatingAddButton />
       <BottomNav />
     </div>

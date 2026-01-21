@@ -11,5 +11,14 @@ export const useActivityLogs = (params?: {
     queryKey: ['activity-logs', params],
     queryFn: () => activityApi.getActivityLogs(params),
     select: (data) => data.data.data,
+    retry: (failureCount, error: any) => {
+      // 如果是401错误，不要重试
+      if (error?.response?.status === 401) {
+        return false;
+      }
+      // 其他错误最多重试2次
+      return failureCount < 2;
+    },
+    enabled: !!localStorage.getItem('access_token'),
   });
 };

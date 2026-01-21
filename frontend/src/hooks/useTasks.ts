@@ -13,6 +13,15 @@ export const useTasks = (params?: {
     queryKey: ['tasks', params],
     queryFn: () => taskApi.getTasks(params),
     select: (data) => data.data.data,
+    retry: (failureCount, error: any) => {
+      // 如果是401错误，不要重试
+      if (error?.response?.status === 401) {
+        return false;
+      }
+      // 其他错误最多重试2次
+      return failureCount < 2;
+    },
+    enabled: !!localStorage.getItem('access_token'),
   });
 };
 
@@ -22,7 +31,15 @@ export const useTask = (uid: string) => {
     queryKey: ['task', uid],
     queryFn: () => taskApi.getTask(uid),
     select: (data) => data.data.data,
-    enabled: !!uid,
+    enabled: !!uid && !!localStorage.getItem('access_token'),
+    retry: (failureCount, error: any) => {
+      // 如果是401错误，不要重试
+      if (error?.response?.status === 401) {
+        return false;
+      }
+      // 其他错误最多重试2次
+      return failureCount < 2;
+    },
   });
 };
 

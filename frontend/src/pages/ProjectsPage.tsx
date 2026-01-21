@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useProjects } from '../hooks/useProjects';
 import { useTasks } from '../hooks/useTasks';
 import { isToday, parseISO } from 'date-fns';
+import ProjectsHeader from '../components/ProjectsHeader';
 
 const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -126,47 +127,12 @@ const ProjectsPage: React.FC = () => {
   };
 
   return (
-    <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden pb-16">
-      {/* Header */}
-      <header className="sticky top-0 z-20 bg-white dark:bg-surface-dark pt-safe">
-        <div className="flex items-center p-3 justify-between">
-          <div className="flex items-center gap-3">
-            <button className="text-[#5f6368] dark:text-white flex items-center justify-center">
-              <span className="material-symbols-outlined text-[20px]">menu</span>
-            </button>
-          </div>
-          
-          <div className="flex items-center gap-1">
-            <span className="text-base font-semibold">清单</span>
-          </div>
-          
-          <div className="flex items-center justify-end">
-            <div className="size-8 rounded-full bg-[#1c2630] text-white flex items-center justify-center text-xs font-medium relative">
-              U
-              <div className="absolute bottom-0 right-0 size-2.5 bg-green-500 rounded-full border-2 border-white dark:border-[#1c2630]"></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Search Bar */}
-        <div className="px-3 pb-3 flex items-center gap-2">
-          <div className="flex flex-1 items-center rounded-lg bg-[#f0f2f5] dark:bg-[#252f3a] h-10 px-3">
-            <span className="material-symbols-outlined text-gray-400 text-[20px]">search</span>
-            <input 
-              className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-[#111418] dark:text-white placeholder-gray-400 ml-2 p-0 focus:outline-none"
-              placeholder="搜索清单..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <button 
-            onClick={handleCreateProject}
-            className="size-10 rounded-lg bg-gray-50 dark:bg-[#252f3a] text-gray-600 dark:text-gray-300 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <span className="material-symbols-outlined text-[20px]">add</span>
-          </button>
-        </div>
-      </header>
+    <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden">
+      <ProjectsHeader 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onCreateProject={handleCreateProject}
+      />
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto pb-24 bg-white dark:bg-background-dark px-3 relative">

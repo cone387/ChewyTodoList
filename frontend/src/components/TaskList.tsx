@@ -150,7 +150,7 @@ const TaskSection: React.FC<TaskSectionProps> = ({
 
   return (
     <div className="mb-2">
-      <div className="sticky top-0 z-10 bg-white/95 dark:bg-background-dark/95 backdrop-blur-sm px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+      <div className="sticky top-36 z-[5] bg-white/95 dark:bg-background-dark/95 backdrop-blur-sm px-4 py-3 border-b border-gray-100 dark:border-gray-800">
         <h3 className="text-[#111418] dark:text-white text-sm font-bold flex items-center gap-2">
           {showDot && <span className="size-2 bg-primary rounded-full"></span>}
           {title}

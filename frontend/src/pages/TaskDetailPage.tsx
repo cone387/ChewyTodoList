@@ -138,7 +138,7 @@ const TaskDetailPage: React.FC = () => {
   return (
     <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden pb-16">
       {/* Header */}
-      <header className="sticky top-0 z-20 bg-white dark:bg-surface-dark pt-safe border-b border-gray-100 dark:border-gray-800">
+      <header className="fixed top-0 left-0 right-0 z-30 bg-white dark:bg-surface-dark pt-safe border-b border-gray-100 dark:border-gray-800 max-w-md mx-auto">
         <div className="flex items-center p-3 justify-between">
           <button 
             onClick={handleBack}
@@ -158,7 +158,7 @@ const TaskDetailPage: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto pb-24 bg-white dark:bg-background-dark">
+      <main className="flex-1 overflow-y-auto pb-24 bg-white dark:bg-background-dark" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 60px)' }}>
         {/* Task Title */}
         <div className="px-5 pt-6 pb-2">
           <div className="flex items-start gap-3">

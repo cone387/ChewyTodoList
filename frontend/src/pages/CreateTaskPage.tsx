@@ -198,7 +198,7 @@ const CreateTaskPage: React.FC = () => {
   return (
     <div className="relative flex h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-background-dark overflow-hidden pb-16">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-white/80 dark:bg-background-dark/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700 pt-safe">
+      <header className="fixed top-0 left-0 right-0 z-30 bg-white/80 dark:bg-background-dark/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700 pt-safe max-w-md mx-auto">
         <div className="flex items-center justify-between px-4 h-14">
           <button 
             onClick={handleCancel}
@@ -218,7 +218,7 @@ const CreateTaskPage: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto no-scrollbar pb-10">
+      <main className="flex-1 overflow-y-auto no-scrollbar pb-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 56px)' }}>
         <div className="px-5 py-6 space-y-8">
           {/* Title and Description */}
           <div className="space-y-4">
