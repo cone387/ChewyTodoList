@@ -61,8 +61,7 @@ class Command(BaseCommand):
             name='工作项目',
             defaults={
                 'desc': '工作相关的项目',
-                'settings': {'color': '#3498db', 'icon': 'briefcase'},
-                'attachments': []
+                'settings': {'color': '#3498db', 'icon': 'briefcase'}
             }
         )
 
@@ -71,8 +70,7 @@ class Command(BaseCommand):
             name='个人项目',
             defaults={
                 'desc': '个人学习和生活项目',
-                'settings': {'color': '#e74c3c', 'icon': 'user'},
-                'attachments': []
+                'settings': {'color': '#e74c3c', 'icon': 'user'}
             }
         )
 
@@ -82,22 +80,19 @@ class Command(BaseCommand):
                 'name': '待办应用开发',
                 'desc': '开发一个功能完整的待办事项管理应用',
                 'group': work_group,
-                'style': {'color': '#2ecc71', 'icon': 'code'},
-                'attachments': []
+                'style': {'color': '#2ecc71', 'icon': 'code'}
             },
             {
                 'name': '学习计划',
                 'desc': '个人技能提升和学习计划',
                 'group': personal_group,
-                'style': {'color': '#f39c12', 'icon': 'book'},
-                'attachments': []
+                'style': {'color': '#f39c12', 'icon': 'book'}
             },
             {
                 'name': '健身计划',
                 'desc': '保持健康的运动计划',
                 'group': personal_group,
-                'style': {'color': '#e67e22', 'icon': 'dumbbell'},
-                'attachments': []
+                'style': {'color': '#e67e22', 'icon': 'dumbbell'}
             }
         ]
 
@@ -109,8 +104,7 @@ class Command(BaseCommand):
                 group=project_data['group'],
                 defaults={
                     'desc': project_data['desc'],
-                    'style': project_data['style'],
-                    'attachments': project_data['attachments']
+                    'style': project_data['style']
                 }
             )
             projects.append(project)
