@@ -98,7 +98,7 @@ class Tag(BaseModel):
         unique_together = ["name", "user"]
         verbose_name = verbose_name_plural = "标签"
         ordering = ["sort_order", "-updated_at"]
-        db_table = "todolist_tags"
+        db_table = "ct_tags"
         indexes = [
             models.Index(fields=['user', '-updated_at'], name='tag_user_updated_idx'),
             models.Index(fields=['user', 'name'], name='tag_user_name_idx'),
@@ -138,7 +138,7 @@ class Group(BaseModel):
         return group
 
     class Meta:
-        db_table = "todolist_groups"
+        db_table = "ct_groups"
         ordering = ["sort_order", "-updated_at"]
         unique_together = ("name", "user")
         verbose_name = verbose_name_plural = "清单分组"
@@ -206,7 +206,7 @@ class Project(BaseModel):
         return project
 
     class Meta:
-        db_table = "todolist_projects"
+        db_table = "ct_projects"
         ordering = ["sort_order", "-updated_at"]
         unique_together = ("name", "group", "user")
         verbose_name = verbose_name_plural = "待办项目"
@@ -356,7 +356,7 @@ class Task(BaseModel):
     objects = TaskQuerySet.as_manager()
 
     class Meta:
-        db_table = "todolist_tasks"
+        db_table = "ct_tasks"
         ordering = ["sort_order", "-updated_at"]
         verbose_name = verbose_name_plural = "待办事项"
         indexes = [
@@ -443,7 +443,7 @@ class ActivityLog(BaseModel):
     detail = models.TextField(blank=True, verbose_name="详细信息")
 
     class Meta:
-        db_table = "todolist_activity_logs"
+        db_table = "ct_activity_logs"
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural = "活动日志"
         indexes = [
