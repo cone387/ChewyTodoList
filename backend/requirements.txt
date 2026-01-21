@@ -1,0 +1,24 @@
+# 这个文件是为了兼容性，实际依赖管理使用 pyproject.toml
+# 如果需要生成requirements.txt，可以使用: uv pip freeze > requirements.txt
+
+# 核心依赖
+Django>=5.0,<6.0
+djangorestframework>=3.14
+django-cors-headers>=4.0
+django-filter>=23.0
+python-decouple>=3.8
+pillow>=10.0
+dj-database-url>=2.1
+djangorestframework-simplejwt>=5.3
+django-extensions>=3.2
+
+# 开发依赖
+black>=23.0
+isort>=5.12
+flake8>=6.0
+pytest>=7.4
+pytest-django>=4.5
+factory-boy>=3.3
+coverage>=7.3
+pre-commit>=3.4
+django-debug-toolbar>=4.2

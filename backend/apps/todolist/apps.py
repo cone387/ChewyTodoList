@@ -1,0 +1,7 @@
+from django.apps import AppConfig
+
+
+class TodolistConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'apps.todolist'
+    verbose_name = '待办事项管理'
