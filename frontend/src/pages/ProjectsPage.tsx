@@ -126,7 +126,7 @@ const ProjectsPage: React.FC = () => {
   };
 
   return (
-    <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden">
+    <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden pb-16">
       {/* Header */}
       <header className="sticky top-0 z-20 bg-white dark:bg-surface-dark pt-safe">
         <div className="flex items-center p-3 justify-between">
@@ -330,13 +330,13 @@ const ProjectsPage: React.FC = () => {
       {/* Floating Add Button */}
       <button 
         onClick={handleCreateProject}
-        className="fixed bottom-20 right-6 size-14 rounded-full bg-primary text-white shadow-lg flex items-center justify-center active:scale-95 transition-transform z-30"
+        className="fixed bottom-24 right-6 size-14 rounded-full bg-primary text-white shadow-lg flex items-center justify-center active:scale-95 transition-transform z-30"
       >
         <span className="material-symbols-outlined text-[32px]">add</span>
       </button>
 
       {/* Bottom Navigation */}
-      <nav className="bg-white dark:bg-surface-dark border-t border-[#e5e7eb] dark:border-[#2a3441] flex items-center justify-around h-16 pb-safe absolute bottom-0 w-full z-20">
+      <nav className="bg-white dark:bg-surface-dark border-t border-[#e5e7eb] dark:border-[#2a3441] flex items-center justify-around h-16 pb-safe fixed bottom-0 w-full z-20 max-w-md mx-auto left-1/2 transform -translate-x-1/2">
         <button 
           onClick={() => navigate('/')}
           className="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-600 transition-colors gap-1"

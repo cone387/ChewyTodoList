@@ -5,6 +5,7 @@ import { useActivityLogs } from '../hooks/useActivityLogs';
 import { TaskStatus, TaskPriority } from '../types/index';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import BottomNav from '../components/BottomNav';
 
 const TaskDetailPage: React.FC = () => {
   const { uid } = useParams<{ uid: string }>();
@@ -116,7 +117,7 @@ const TaskDetailPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden">
+      <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden pb-16">
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
@@ -126,7 +127,7 @@ const TaskDetailPage: React.FC = () => {
 
   if (!task) {
     return (
-      <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden">
+      <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden pb-16">
         <div className="flex items-center justify-center py-8">
           <p className="text-gray-500">任务不存在</p>
         </div>
@@ -135,7 +136,7 @@ const TaskDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden">
+    <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden pb-16">
       {/* Header */}
       <header className="sticky top-0 z-20 bg-white dark:bg-surface-dark pt-safe border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center p-3 justify-between">
@@ -472,6 +473,8 @@ const TaskDetailPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      <BottomNav />
     </div>
   );
 };

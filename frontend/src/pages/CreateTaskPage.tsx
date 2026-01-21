@@ -4,6 +4,7 @@ import { useCreateTask } from '../hooks/useTasks';
 import { useProjects } from '../hooks/useProjects';
 import { useTags } from '../hooks/useTags';
 import { TaskPriority } from '../types/index';
+import BottomNav from '../components/BottomNav';
 
 const CreateTaskPage: React.FC = () => {
   const navigate = useNavigate();
@@ -195,7 +196,7 @@ const CreateTaskPage: React.FC = () => {
   }, [projects, formData.project_uid]);
 
   return (
-    <div className="relative flex h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-background-dark overflow-hidden">
+    <div className="relative flex h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-background-dark overflow-hidden pb-16">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-white/80 dark:bg-background-dark/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700 pt-safe">
         <div className="flex items-center justify-between px-4 h-14">
@@ -447,6 +448,8 @@ const CreateTaskPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      <BottomNav />
     </div>
   );
 };

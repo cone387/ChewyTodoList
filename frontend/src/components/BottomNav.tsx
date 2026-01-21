@@ -35,7 +35,7 @@ const BottomNav: React.FC = () => {
   };
 
   return (
-    <nav className="bg-white dark:bg-surface-dark border-t border-[#e5e7eb] dark:border-[#2a3441] flex items-center justify-around h-16 pb-safe absolute bottom-0 w-full z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+    <nav className="bg-white dark:bg-surface-dark border-t border-[#e5e7eb] dark:border-[#2a3441] flex items-center justify-around h-16 pb-safe fixed bottom-0 w-full z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] max-w-md mx-auto left-1/2 transform -translate-x-1/2">
       {navItems.map((item) => {
         const active = isActive(item.path);
         
