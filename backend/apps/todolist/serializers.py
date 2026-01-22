@@ -553,7 +553,7 @@ class TaskViewSerializer(serializers.ModelSerializer):
         model = TaskView
         fields = [
             'uid', 'name', 'project', 'project_uid', 'view_type', 'view_type_display',
-            'is_default', 'is_public', 'sort_order', 'filters', 'sorts', 'group_by',
+            'is_default', 'is_public', 'is_visible_in_nav', 'sort_order', 'filters', 'sorts', 'group_by',
             'display_settings', 'created_at', 'updated_at'
         ]
         read_only_fields = ['uid', 'created_at', 'updated_at']
@@ -602,14 +602,27 @@ class TaskViewSerializer(serializers.ModelSerializer):
         
         allowed_fields = [
             'status', 'priority', 'title', 'content', 'project__name',
-            'tags__name', 'start_date', 'due_date', 'created_at', 'updated_at'
+            'tags__name', 'start_date', 'due_date', 'created_at', 'updated_at',
+            'is_completed', 'is_overdue'
         ]
         
         allowed_operators = [
             'equals', 'not_equals', 'contains', 'not_contains',
             'starts_with', 'ends_with', 'is_empty', 'is_not_empty',
             'greater_than', 'greater_than_or_equal', 'less_than', 'less_than_or_equal',
-            'in', 'not_in'
+            'in', 'not_in', 'between', 'not_between',
+            'is_today', 'is_yesterday', 'is_tomorrow', 'is_this_week', 
+            'is_last_week', 'is_next_week', 'is_this_month', 
+            'is_last_month', 'is_next_month', 'is_overdue', 'has_no_date',
+            'is_true', 'is_false'
+        ]
+        
+        # 不需要值的操作符
+        no_value_operators = [
+            'is_empty', 'is_not_empty', 'is_today', 'is_yesterday', 'is_tomorrow',
+            'is_this_week', 'is_last_week', 'is_next_week', 'is_this_month',
+            'is_last_month', 'is_next_month', 'is_overdue', 'has_no_date',
+            'is_true', 'is_false'
         ]
         
         for i, filter_rule in enumerate(value):
@@ -624,6 +637,16 @@ class TaskViewSerializer(serializers.ModelSerializer):
             
             if operator not in allowed_operators:
                 raise serializers.ValidationError(f"不支持的筛选操作符: {operator}")
+            
+            # 验证逻辑操作符
+            logic = filter_rule.get('logic', 'and')
+            if logic not in ['and', 'or']:
+                raise serializers.ValidationError(f"筛选条件[{i}]的逻辑操作符必须是 and 或 or")
+            
+            # 对于不需要值的操作符，强制设置value为None
+            if operator in no_value_operators:
+                filter_rule['value'] = None
+                filter_rule.pop('value2', None)
         
         return value
 
@@ -690,7 +713,7 @@ class TaskViewListSerializer(serializers.ModelSerializer):
         model = TaskView
         fields = [
             'uid', 'name', 'project', 'view_type', 'view_type_display',
-            'is_default', 'is_public', 'sort_order', 'tasks_count',
+            'is_default', 'is_public', 'is_visible_in_nav', 'sort_order', 'tasks_count',
             'created_at', 'updated_at'
         ]
 

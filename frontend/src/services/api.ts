@@ -54,9 +54,14 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    
+    console.log('API Error:', error.response?.status, error.response?.data);
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      console.log('401 error detected, attempting token refresh...');
+      
       if (isRefreshing) {
+        console.log('Already refreshing, queuing request...');
         // 如果正在刷新token，将请求加入队列
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -72,13 +77,32 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       const refreshToken = localStorage.getItem('refresh_token');
+      console.log('Refresh token exists:', !!refreshToken);
+      
       if (refreshToken) {
         try {
+          console.log('Attempting to refresh token...');
           const response = await axios.post('http://localhost:8000/api/auth/refresh/', {
             refresh: refreshToken,
           });
-          const newToken = response.data.access;
+          
+          console.log('Refresh response:', response.data);
+          
+          // 后端返回格式: { success: true, data: { access: "token" } }
+          const newToken = response.data.data?.access || response.data.access;
+          
+          if (!newToken) {
+            throw new Error('No access token in refresh response');
+          }
+          
           localStorage.setItem('access_token', newToken);
+          
+          // 如果有新的refresh token，也要更新
+          if (response.data.data?.refresh) {
+            localStorage.setItem('refresh_token', response.data.data.refresh);
+          }
+          
+          console.log('Token refreshed successfully');
           
           processQueue(null, newToken);
           
@@ -86,16 +110,18 @@ api.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           return api(originalRequest);
         } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
           processQueue(refreshError, null);
           
           // 刷新失败，清除token并跳转到登录页
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
           
-          // 只在不是登录页面时才跳转
-          if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
-          }
+          // 强制跳转到登录页
+          console.log('Redirecting to login due to refresh failure');
+          setTimeout(() => {
+            window.location.replace('/login');
+          }, 100);
           
           return Promise.reject(refreshError);
         } finally {
@@ -103,12 +129,13 @@ api.interceptors.response.use(
         }
       } else {
         // 没有refresh token，清除所有token并跳转到登录页
+        console.log('No refresh token found, clearing auth and redirecting');
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
+        setTimeout(() => {
+          window.location.replace('/login');
+        }, 100);
         
         return Promise.reject(error);
       }

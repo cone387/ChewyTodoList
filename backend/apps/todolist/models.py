@@ -494,6 +494,7 @@ class TaskView(BaseModel):
     )
     is_default = models.BooleanField(default=False, verbose_name="是否默认视图")
     is_public = models.BooleanField(default=False, verbose_name="是否公开")
+    is_visible_in_nav = models.BooleanField(default=True, verbose_name="是否在导航栏显示")
     sort_order = models.FloatField(default=get_timestamp_sortorder, verbose_name="排序")
     
     # 筛选条件
@@ -566,24 +567,50 @@ class TaskView(BaseModel):
         from functools import reduce
         
         conditions = []
+        exclude_conditions = []
         
         for filter_rule in self.filters:
             field = filter_rule.get('field')
             op = filter_rule.get('operator')
             value = filter_rule.get('value')
+            value2 = filter_rule.get('value2')
             
-            if not all([field, op, value is not None]):
+            if not all([field, op]):
+                continue
+            
+            # 对于不需要值的操作符，强制设置value为None
+            no_value_operators = [
+                'is_empty', 'is_not_empty', 'is_today', 'is_yesterday', 'is_tomorrow',
+                'is_this_week', 'is_last_week', 'is_next_week', 'is_this_month',
+                'is_last_month', 'is_next_month', 'is_overdue', 'has_no_date',
+                'is_true', 'is_false'
+            ]
+            
+            if op in no_value_operators:
+                value = None
+                value2 = None
+            elif op not in no_value_operators and value is None:
+                # 需要值但值为None的情况，跳过此筛选条件
                 continue
                 
             # 构建查询条件
-            lookup = self._build_lookup(field, op, value)
+            lookup = self._build_lookup(field, op, value, value2)
             if lookup:
-                conditions.append(Q(**lookup))
+                # 需要使用exclude的操作符
+                if op in ['not_equals', 'not_contains', 'not_in', 'not_between']:
+                    exclude_conditions.append(Q(**lookup))
+                else:
+                    conditions.append(Q(**lookup))
         
+        # 应用include条件（AND逻辑）
         if conditions:
-            # 根据逻辑操作符组合条件（暂时只支持AND）
             combined_condition = reduce(operator.and_, conditions)
             queryset = queryset.filter(combined_condition)
+        
+        # 应用exclude条件
+        if exclude_conditions:
+            for exclude_condition in exclude_conditions:
+                queryset = queryset.exclude(exclude_condition)
         
         return queryset
 
@@ -606,8 +633,12 @@ class TaskView(BaseModel):
         
         return queryset
 
-    def _build_lookup(self, field, operator, value):
+    def _build_lookup(self, field, operator, value, value2=None):
         """构建Django查询lookup"""
+        from django.utils import timezone
+        from datetime import datetime, timedelta
+        
+        # 基础lookup映射
         lookup_map = {
             'equals': '',
             'not_equals': '',
@@ -623,7 +654,19 @@ class TaskView(BaseModel):
             'less_than_or_equal': '__lte',
             'in': '__in',
             'not_in': '__in',
+            'between': '__range',
+            'not_between': '__range',
         }
+        
+        # 处理日期特殊操作符
+        if operator in ['is_today', 'is_yesterday', 'is_tomorrow', 'is_this_week', 
+                       'is_last_week', 'is_next_week', 'is_this_month', 
+                       'is_last_month', 'is_next_month', 'is_overdue', 'has_no_date']:
+            return self._build_date_lookup(field, operator)
+        
+        # 处理布尔操作符
+        if operator in ['is_true', 'is_false']:
+            return {field: operator == 'is_true'}
         
         if operator not in lookup_map:
             return None
@@ -642,5 +685,97 @@ class TaskView(BaseModel):
             return {lookup_key: False}
         elif operator == 'not_in':
             return {lookup_key: value}  # 需要在外层用exclude
+        elif operator == 'between':
+            if value2 is not None:
+                return {lookup_key: [value, value2]}
+            return None
+        elif operator == 'not_between':
+            if value2 is not None:
+                return {lookup_key: [value, value2]}  # 需要在外层用exclude
+            return None
         else:
             return {lookup_key: value}
+
+    def _build_date_lookup(self, field, operator):
+        """构建日期相关的查询lookup"""
+        from django.utils import timezone
+        from datetime import datetime, timedelta
+        
+        now = timezone.now()
+        today = now.date()
+        
+        if operator == 'is_today':
+            return {
+                f"{field}__date": today
+            }
+        elif operator == 'is_yesterday':
+            yesterday = today - timedelta(days=1)
+            return {
+                f"{field}__date": yesterday
+            }
+        elif operator == 'is_tomorrow':
+            tomorrow = today + timedelta(days=1)
+            return {
+                f"{field}__date": tomorrow
+            }
+        elif operator == 'is_this_week':
+            week_start = today - timedelta(days=today.weekday())
+            week_end = week_start + timedelta(days=6)
+            return {
+                f"{field}__date__range": [week_start, week_end]
+            }
+        elif operator == 'is_last_week':
+            week_start = today - timedelta(days=today.weekday() + 7)
+            week_end = week_start + timedelta(days=6)
+            return {
+                f"{field}__date__range": [week_start, week_end]
+            }
+        elif operator == 'is_next_week':
+            week_start = today + timedelta(days=7 - today.weekday())
+            week_end = week_start + timedelta(days=6)
+            return {
+                f"{field}__date__range": [week_start, week_end]
+            }
+        elif operator == 'is_this_month':
+            month_start = today.replace(day=1)
+            if today.month == 12:
+                month_end = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
+            else:
+                month_end = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
+            return {
+                f"{field}__date__range": [month_start, month_end]
+            }
+        elif operator == 'is_last_month':
+            if today.month == 1:
+                month_start = today.replace(year=today.year - 1, month=12, day=1)
+                month_end = today.replace(day=1) - timedelta(days=1)
+            else:
+                month_start = today.replace(month=today.month - 1, day=1)
+                month_end = today.replace(day=1) - timedelta(days=1)
+            return {
+                f"{field}__date__range": [month_start, month_end]
+            }
+        elif operator == 'is_next_month':
+            if today.month == 12:
+                month_start = today.replace(year=today.year + 1, month=1, day=1)
+                month_end = today.replace(year=today.year + 1, month=2, day=1) - timedelta(days=1)
+            else:
+                month_start = today.replace(month=today.month + 1, day=1)
+                if today.month == 11:
+                    month_end = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
+                else:
+                    month_end = today.replace(month=today.month + 2, day=1) - timedelta(days=1)
+            return {
+                f"{field}__date__range": [month_start, month_end]
+            }
+        elif operator == 'is_overdue':
+            return {
+                f"{field}__lt": now,
+                'status__in': [Task.TaskStatus.UNASSIGNED, Task.TaskStatus.TODO]
+            }
+        elif operator == 'has_no_date':
+            return {
+                f"{field}__isnull": True
+            }
+        
+        return None

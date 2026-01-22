@@ -7,6 +7,9 @@ import LoginPage from './pages/LoginPage';
 import TaskDetailPage from './pages/TaskDetailPage';
 import CreateTaskPage from './pages/CreateTaskPage';
 import ProjectsPage from './pages/ProjectsPage';
+import ViewsPage from './pages/ViewsPage';
+import ViewPreviewPage from './pages/ViewPreviewPage';
+import CreateViewPage from './pages/CreateViewPage';
 import './index.css';
 
 // 创建QueryClient实例
@@ -79,6 +82,42 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 <ProjectsPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/views/create" 
+            element={
+              <ProtectedRoute>
+                <CreateViewPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/views/edit/:uid" 
+            element={
+              <ProtectedRoute>
+                <CreateViewPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/views/:uid" 
+            element={
+              <ProtectedRoute>
+                <ViewPreviewPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/views" 
+            element={
+              <ProtectedRoute>
+                <ViewsPage />
               </ProtectedRoute>
             } 
           />

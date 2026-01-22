@@ -146,3 +146,36 @@ export const useDuplicateView = () => {
     },
   });
 };
+
+// 切换视图在导航栏的显示状态
+export const useToggleViewVisibility = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ uid, isVisible }: { uid: string; isVisible: boolean }) =>
+      viewApi.updateView(uid, { is_visible_in_nav: isVisible }),
+    onSuccess: (_, { uid }) => {
+      queryClient.invalidateQueries({ queryKey: ['views'] });
+      queryClient.invalidateQueries({ queryKey: ['view', uid] });
+      queryClient.invalidateQueries({ queryKey: ['default-views'] });
+    },
+  });
+};
+
+// 获取导航栏显示的视图（用于Header组件）
+export const useNavViews = (params?: {
+  project?: string;
+}) => {
+  return useQuery({
+    queryKey: ['nav-views', params],
+    queryFn: () => viewApi.getViews({ ...params, is_visible_in_nav: true }),
+    select: (data) => data.data.data,
+    retry: (failureCount, error: any) => {
+      if (error?.response?.status === 401) {
+        return false;
+      }
+      return failureCount < 2;
+    },
+    enabled: !!localStorage.getItem('access_token'),
+  });
+};

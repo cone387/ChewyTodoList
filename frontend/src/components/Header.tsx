@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDefaultViews } from '../hooks/useViews';
+import type { TaskView } from '../types/index';
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -9,6 +11,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ onSearch, onFilter, onViewChange, currentView }) => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchVisible, setIsSearchVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -19,6 +22,14 @@ const Header: React.FC<HeaderProps> = ({ onSearch, onFilter, onViewChange, curre
     const query = e.target.value;
     setSearchQuery(query);
     onSearch?.(query);
+  };
+
+  const handleCreateView = () => {
+    navigate('/views/create');
+  };
+
+  const handleEditView = (view: TaskView) => {
+    navigate(`/views/edit/${view.uid}`);
   };
 
   useEffect(() => {
@@ -54,7 +65,13 @@ const Header: React.FC<HeaderProps> = ({ onSearch, onFilter, onViewChange, curre
             <span className="text-base font-semibold">任务管理</span>
           </div>
           
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-end gap-2">
+            <button 
+              onClick={() => navigate('/views')}
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex items-center justify-center size-8 rounded-full transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px]">tune</span>
+            </button>
             <div className="size-8 rounded-full bg-gray-200 dark:bg-[#252f3a] flex items-center justify-center relative">
               <span className="material-symbols-outlined text-gray-500 dark:text-gray-400 text-[18px]">
                 person
@@ -102,6 +119,7 @@ const Header: React.FC<HeaderProps> = ({ onSearch, onFilter, onViewChange, curre
             <button
               key={view.uid}
               onClick={() => onViewChange?.(view.uid)}
+              onDoubleClick={() => handleEditView(view)}
               className={`whitespace-nowrap pb-1 ${
                 currentView === view.uid
                   ? 'text-primary border-b-2 border-primary'
@@ -113,7 +131,10 @@ const Header: React.FC<HeaderProps> = ({ onSearch, onFilter, onViewChange, curre
           ))}
           
           {/* 添加自定义视图按钮 */}
-          <button className="whitespace-nowrap text-gray-400 hover:text-gray-600 pb-1 flex items-center gap-1">
+          <button 
+            onClick={handleCreateView}
+            className="whitespace-nowrap text-gray-400 hover:text-gray-600 pb-1 flex items-center gap-1"
+          >
             <span className="material-symbols-outlined text-[16px]">add</span>
             <span>自定义</span>
           </button>

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authApi } from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 // 登录
 export const useLogin = () => {
@@ -76,8 +76,29 @@ export const useProfile = () => {
 
 // 检查是否已登录
 export const useIsAuthenticated = () => {
-  const token = localStorage.getItem('access_token');
-  return !!token;
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return !!localStorage.getItem('access_token');
+  });
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem('access_token');
+      setIsAuthenticated(!!token);
+    };
+
+    // 监听storage变化
+    window.addEventListener('storage', checkAuth);
+    
+    // 定期检查（防止token在其他标签页被清除）
+    const interval = setInterval(checkAuth, 1000);
+
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      clearInterval(interval);
+    };
+  }, []);
+
+  return isAuthenticated;
 };
 
 // 认证守卫Hook
