@@ -676,7 +676,7 @@ class TaskView(BaseModel):
         
         # 特殊处理
         if operator == 'not_equals':
-            return {f"{field}__ne": value}
+            return {f"{field}": value}  # 使用exclude处理，所以这里用正常的等于
         elif operator == 'not_contains':
             return {f"{field}__icontains": value}  # 需要在外层用exclude
         elif operator == 'is_empty':
