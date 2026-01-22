@@ -8,9 +8,22 @@ interface HeaderProps {
   onFilter?: () => void;
   onViewChange?: (viewUid: string) => void;
   currentView?: string;
+  showCompleted?: boolean;
+  onToggleCompleted?: () => void;
+  onSelectTemplate?: () => void;
+  onSelectTaskCard?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSearch, onFilter, onViewChange, currentView }) => {
+const Header: React.FC<HeaderProps> = ({ 
+  onSearch, 
+  onFilter, 
+  onViewChange, 
+  currentView,
+  showCompleted = false,
+  onToggleCompleted,
+  onSelectTemplate,
+  onSelectTaskCard
+}) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchVisible, setIsSearchVisible] = useState(true);
@@ -66,6 +79,45 @@ const Header: React.FC<HeaderProps> = ({ onSearch, onFilter, onViewChange, curre
           </div>
           
           <div className="flex items-center justify-end gap-2">
+            {/* 任务卡片选择按钮 */}
+            {onSelectTaskCard && (
+              <button 
+                onClick={onSelectTaskCard}
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex items-center justify-center size-8 rounded-full transition-colors"
+                title="选择任务卡片样式"
+              >
+                <span className="material-symbols-outlined text-[18px]">style</span>
+              </button>
+            )}
+            
+            {/* 视图模板选择按钮 */}
+            {onSelectTemplate && (
+              <button 
+                onClick={onSelectTemplate}
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex items-center justify-center size-8 rounded-full transition-colors"
+                title="选择视图类型"
+              >
+                <span className="material-symbols-outlined text-[18px]">view_module</span>
+              </button>
+            )}
+            
+            {/* 已完成任务显示切换按钮 */}
+            {onToggleCompleted && (
+              <button 
+                onClick={onToggleCompleted}
+                className={`flex items-center justify-center size-8 rounded-full transition-colors ${
+                  showCompleted 
+                    ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20' 
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                }`}
+                title={showCompleted ? '隐藏已完成任务' : '显示已完成任务'}
+              >
+                <span className={`material-symbols-outlined text-[18px] ${showCompleted ? 'fill-1' : ''}`}>
+                  {showCompleted ? 'check_circle' : 'radio_button_unchecked'}
+                </span>
+              </button>
+            )}
+            
             <button 
               onClick={() => navigate('/views')}
               className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex items-center justify-center size-8 rounded-full transition-colors"

@@ -13,6 +13,7 @@ interface ViewRendererProps {
   onTaskClick?: (task: Task) => void;
   onTaskUpdate?: (task: Task, updates: Partial<Task>) => void;
   loading?: boolean;
+  showCompleted?: boolean;
 }
 
 const ViewRenderer: React.FC<ViewRendererProps> = ({
@@ -21,6 +22,7 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({
   onTaskClick,
   onTaskUpdate,
   loading = false,
+  showCompleted = false,
 }) => {
   if (loading) {
     return (
@@ -38,6 +40,7 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({
           view={view}
           onTaskClick={onTaskClick}
           onTaskUpdate={onTaskUpdate}
+          showCompleted={showCompleted}
         />
       );
     
@@ -94,6 +97,7 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({
           view={view}
           onTaskClick={onTaskClick}
           onTaskUpdate={onTaskUpdate}
+          showCompleted={showCompleted}
         />
       );
   }

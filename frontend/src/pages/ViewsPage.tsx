@@ -1079,7 +1079,11 @@ const ViewsPage: React.FC = () => {
                         
                         {/* 创建时间 */}
                         <div className="text-xs text-gray-400 mt-1">
-                          创建于 {new Date(taskView.created_at).toLocaleString('zh-CN')}
+                          创建于 {new Date(taskView.created_at).toLocaleDateString('zh-CN', { 
+                            year: 'numeric', 
+                            month: '2-digit', 
+                            day: '2-digit' 
+                          })}
                         </div>
                       </div>
                     </div>

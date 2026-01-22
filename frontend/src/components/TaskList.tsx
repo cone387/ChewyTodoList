@@ -146,6 +146,7 @@ const TaskSection: React.FC<TaskSectionProps> = ({
   onTaskClick,
   showDot = false 
 }) => {
+  // 如果没有任务，不显示该分组
   if (tasks.length === 0) return null;
 
   return (

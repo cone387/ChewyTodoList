@@ -7,6 +7,7 @@ interface EnhancedTaskListProps {
   view?: TaskView;
   onTaskClick?: (task: Task) => void;
   onTaskUpdate?: (task: Task, updates: Partial<Task>) => void;
+  showCompleted?: boolean;
 }
 
 const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
@@ -14,7 +15,9 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
   view,
   onTaskClick,
   onTaskUpdate,
+  showCompleted = false,
 }) => {
+  const [isCompletedExpanded, setIsCompletedExpanded] = React.useState(false);
   const displaySettings = view?.display_settings || {
     show_project: true,
     show_tags: true,
@@ -97,6 +100,10 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
     onTaskUpdate?.(task, { status: newStatus });
   };
 
+  // 分离已完成和未完成的任务
+  const incompleteTasks = tasks.filter(task => !task.is_completed);
+  const completedTasks = tasks.filter(task => task.is_completed);
+
   if (tasks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-gray-400">
@@ -106,15 +113,15 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
     );
   }
 
-  // 根据视图分组设置对任务进行分组
+  // 根据视图分组设置对任务进行分组（只对未完成任务分组）
   const groupedTasks = React.useMemo(() => {
     if (!view?.group_by) {
-      return { '': tasks };
+      return { '': incompleteTasks };
     }
 
     const groups: Record<string, Task[]> = {};
     
-    tasks.forEach(task => {
+    incompleteTasks.forEach(task => {
       let groupKey = '';
       
       switch (view.group_by) {
@@ -155,14 +162,15 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
     });
     
     return groups;
-  }, [tasks, view?.group_by]);
+  }, [incompleteTasks, view?.group_by]);
 
   return (
     <div className="space-y-4">
+      {/* 未完成任务分组 */}
       {Object.entries(groupedTasks).map(([groupName, groupTasks]) => (
         <div key={groupName} className="space-y-2">
-          {/* 分组标题 */}
-          {groupName && view?.group_by && (
+          {/* 分组标题 - 只在有分组设置且分组名称不为空时显示 */}
+          {view?.group_by && groupName && (
             <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {groupName}
@@ -183,7 +191,6 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
                   p-3 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 
                   rounded-lg hover:shadow-sm transition-all cursor-pointer
                   ${displaySettings.compact_mode ? 'py-2' : 'py-3'}
-                  ${task.is_completed ? 'opacity-60' : ''}
                 `}
               >
                 <div className="flex items-start gap-3">
@@ -212,7 +219,6 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <h3 className={`
                         font-medium text-gray-900 dark:text-white
-                        ${task.is_completed ? 'line-through text-gray-500' : ''}
                         ${displaySettings.compact_mode ? 'text-sm' : 'text-base'}
                       `}>
                         {task.title}
@@ -295,6 +301,114 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
           </div>
         </div>
       ))}
+
+      {/* 已完成任务分组 - 可折叠 */}
+      {showCompleted && completedTasks.length > 0 && (
+        <div className="mt-6">
+          <button
+            onClick={() => setIsCompletedExpanded(!isCompletedExpanded)}
+            className="w-full flex items-center justify-between px-3 py-2 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-green-600 dark:text-green-400 text-[20px] fill-1">
+                check_circle
+              </span>
+              <h3 className="text-sm font-medium text-green-700 dark:text-green-300">
+                已完成
+              </h3>
+              <span className="text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded-full">
+                {completedTasks.length}
+              </span>
+            </div>
+            <span className={`material-symbols-outlined text-green-600 dark:text-green-400 text-[20px] transition-transform ${
+              isCompletedExpanded ? 'rotate-180' : ''
+            }`}>
+              expand_more
+            </span>
+          </button>
+
+          {/* 已完成任务列表 */}
+          {isCompletedExpanded && (
+            <div className="space-y-2 mt-2">
+              {completedTasks.map((task) => (
+                <div
+                  key={task.uid}
+                  onClick={() => onTaskClick?.(task)}
+                  className={`
+                    p-3 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 
+                    rounded-lg hover:shadow-sm transition-all cursor-pointer opacity-60
+                    ${displaySettings.compact_mode ? 'py-2' : 'py-3'}
+                  `}
+                >
+                  <div className="flex items-start gap-3">
+                    {/* 状态复选框 */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStatusToggle(task);
+                      }}
+                      className="size-5 rounded border-2 bg-green-500 border-green-500 text-white flex items-center justify-center transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">check</span>
+                    </button>
+
+                    {/* 任务内容 */}
+                    <div className="flex-1 min-w-0">
+                      {/* 标题行 */}
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h3 className={`
+                          font-medium text-gray-500 line-through
+                          ${displaySettings.compact_mode ? 'text-sm' : 'text-base'}
+                        `}>
+                          {task.title}
+                        </h3>
+                      </div>
+
+                      {/* 元数据行 */}
+                      <div className="flex items-center gap-3 text-xs text-gray-400">
+                        {/* 项目 */}
+                        {displaySettings.show_project && (
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[12px]">folder</span>
+                            {task.project.name}
+                          </span>
+                        )}
+                        
+                        {/* 完成时间 */}
+                        {task.updated_at && (
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[12px]">schedule</span>
+                            {new Date(task.updated_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* 标签 */}
+                      {displaySettings.show_tags && task.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {task.tags.map((tag) => (
+                            <span
+                              key={tag.uid}
+                              className="px-2 py-0.5 text-xs rounded-full opacity-60"
+                              style={{
+                                backgroundColor: `${tag.color}20`,
+                                color: tag.color,
+                                border: `1px solid ${tag.color}40`,
+                              }}
+                            >
+                              {tag.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
