@@ -1,6 +1,6 @@
 import django_filters
 from django.utils import timezone
-from .models import Tag, Group, Project, Task, ActivityLog
+from .models import Tag, Group, Project, Task, ActivityLog, TaskView
 
 
 class TagFilter(django_filters.FilterSet):
@@ -133,3 +133,23 @@ class ActivityLogFilter(django_filters.FilterSet):
     class Meta:
         model = ActivityLog
         fields = ['task', 'project', 'action', 'date_from', 'date_to']
+
+
+class TaskViewFilter(django_filters.FilterSet):
+    """任务视图过滤器"""
+    
+    name = django_filters.CharFilter(lookup_expr='icontains')
+    project = django_filters.CharFilter(field_name='project__uid')
+    view_type = django_filters.ChoiceFilter(choices=TaskView.ViewType.choices)
+    is_default = django_filters.BooleanFilter()
+    is_public = django_filters.BooleanFilter()
+    is_visible_in_nav = django_filters.BooleanFilter()
+    created_after = django_filters.DateTimeFilter(field_name='created_at', lookup_expr='gte')
+    created_before = django_filters.DateTimeFilter(field_name='created_at', lookup_expr='lte')
+
+    class Meta:
+        model = TaskView
+        fields = [
+            'name', 'project', 'view_type', 'is_default', 'is_public', 
+            'is_visible_in_nav', 'created_after', 'created_before'
+        ]

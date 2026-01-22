@@ -296,6 +296,7 @@ export const viewApi = {
   getViews: (params?: {
     project?: string;
     view_type?: string;
+    is_visible_in_nav?: boolean;
   }) => api.get<ApiResponse<PaginatedResponse<TaskView>>>('/views/', { params }),
 
   // 获取视图详情
@@ -310,6 +311,7 @@ export const viewApi = {
     sorts?: ViewSort[];
     group_by?: string;
     display_settings?: Record<string, any>;
+    is_visible_in_nav?: boolean;
   }) => api.post<ApiResponse<TaskView>>('/views/', data),
 
   // 更新视图
@@ -320,6 +322,7 @@ export const viewApi = {
     sorts: ViewSort[];
     group_by: string;
     display_settings: Record<string, any>;
+    is_visible_in_nav: boolean;
   }>) => api.patch<ApiResponse<TaskView>>(`/views/${uid}/`, data),
 
   // 删除视图

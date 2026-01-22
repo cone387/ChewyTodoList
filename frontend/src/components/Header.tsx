@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDefaultViews } from '../hooks/useViews';
+import { useNavViews } from '../hooks/useViews';
 import type { TaskView } from '../types/index';
 
 interface HeaderProps {
@@ -16,7 +16,7 @@ const Header: React.FC<HeaderProps> = ({ onSearch, onFilter, onViewChange, curre
   const [isSearchVisible, setIsSearchVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
-  const { data: defaultViews } = useDefaultViews();
+  const { data: navViews } = useNavViews();
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
@@ -115,7 +115,7 @@ const Header: React.FC<HeaderProps> = ({ onSearch, onFilter, onViewChange, curre
         style={{ paddingTop: `calc(env(safe-area-inset-top) + 60px + ${isSearchVisible ? '50px' : '0px'})` }}
       >
         <div className="flex overflow-x-auto no-scrollbar gap-4 px-4 py-2 text-sm font-medium">
-          {defaultViews?.map((view) => (
+          {navViews?.results?.map((view) => (
             <button
               key={view.uid}
               onClick={() => onViewChange?.(view.uid)}

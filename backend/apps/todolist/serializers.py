@@ -560,7 +560,7 @@ class TaskViewSerializer(serializers.ModelSerializer):
 
     def validate_project_uid(self, value):
         """验证项目UID"""
-        if not value:
+        if not value or value == 'null' or value == '':
             return None
         
         user = self.context['request'].user
@@ -577,7 +577,7 @@ class TaskViewSerializer(serializers.ModelSerializer):
         
         # 获取项目对象
         project = None
-        if project_uid:
+        if project_uid and project_uid != 'null':  # 处理前端发送的字符串'null'
             try:
                 project = Project.objects.get(uid=project_uid, user=user)
             except Project.DoesNotExist:
@@ -721,14 +721,18 @@ class TaskViewListSerializer(serializers.ModelSerializer):
         """获取视图下的任务数量"""
         from .models import Task
         
-        # 获取基础查询集
-        queryset = Task.objects.filter(user=obj.user)
-        
-        # 如果视图绑定了项目，则筛选项目
-        if obj.project:
-            queryset = queryset.filter(project=obj.project)
-        
-        # 应用筛选条件
-        queryset = obj.apply_filters(queryset)
-        
-        return queryset.count()
+        try:
+            # 获取基础查询集
+            queryset = Task.objects.filter(user=obj.user)
+            
+            # 如果视图绑定了项目，则筛选项目
+            if obj.project:
+                queryset = queryset.filter(project=obj.project)
+            
+            # 应用筛选条件
+            queryset = obj.apply_filters(queryset)
+            
+            return queryset.count()
+        except Exception as e:
+            # 如果筛选条件有问题，返回0
+            return 0

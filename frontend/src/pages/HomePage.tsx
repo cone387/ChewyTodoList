@@ -4,23 +4,23 @@ import Header from '../components/Header';
 import TaskList from '../components/TaskList';
 import BottomNav from '../components/BottomNav';
 import FloatingAddButton from '../components/FloatingAddButton';
-import { useViewTasks, useDefaultViews } from '../hooks/useViews';
+import { useViewTasks, useNavViews } from '../hooks/useViews';
 
 const HomePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [currentView, setCurrentView] = useState<string>('');
   const projectFilter = searchParams.get('project');
 
-  const { data: defaultViews } = useDefaultViews();
+  const { data: navViews } = useNavViews();
   const { data: viewTasks } = useViewTasks(currentView);
 
   useEffect(() => {
     // 设置默认视图
-    if (defaultViews && defaultViews.length > 0 && !currentView) {
-      const defaultView = defaultViews.find(v => v.is_default) || defaultViews[0];
+    if (navViews?.results && navViews.results.length > 0 && !currentView) {
+      const defaultView = navViews.results.find(v => v.is_default) || navViews.results[0];
       setCurrentView(defaultView.uid);
     }
-  }, [defaultViews, currentView]);
+  }, [navViews, currentView]);
 
   useEffect(() => {
     // 如果有项目筛选参数，可以在这里处理

@@ -207,26 +207,26 @@ const ViewsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedViews, setSelectedViews] = React.useState<string[]>([]);
   const [isSelectionMode, setIsSelectionMode] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState<'market' | 'nav' | 'templates'>('market');
+  const [activeTab, setActiveTab] = React.useState<'my' | 'system' | 'nav'>('my');
 
   const views = viewsResponse?.results || [];
   
   // 分离不同类型的视图
-  const marketViews = views; // 用户创建的视图
+  const myViews = views; // 用户创建的视图
+  const systemViews = PRESET_TEMPLATES; // 系统预置视图
   const navViews = views.filter(view => view.is_visible_in_nav);
-  const templateViews = PRESET_TEMPLATES; // 预设模板
   
   // 根据当前标签页筛选视图
   const getCurrentViews = () => {
     switch (activeTab) {
-      case 'market':
-        return marketViews;
+      case 'my':
+        return myViews;
+      case 'system':
+        return systemViews;
       case 'nav':
         return navViews;
-      case 'templates':
-        return templateViews;
       default:
-        return marketViews;
+        return myViews;
     }
   };
   
@@ -235,8 +235,8 @@ const ViewsPage: React.FC = () => {
   // Filter views based on search query
   const filteredViews = currentViews.filter(view => 
     view.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (activeTab !== 'templates' && (view as TaskView).project?.name?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (activeTab === 'templates' && (view as ViewTemplate).description.toLowerCase().includes(searchQuery.toLowerCase()))
+    (activeTab !== 'system' && (view as TaskView).project?.name?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (activeTab === 'system' && (view as ViewTemplate).description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const handleBack = () => {
@@ -247,29 +247,61 @@ const ViewsPage: React.FC = () => {
     navigate('/views/create');
   };
 
+  const handleRemoveFromNav = async (view: TaskView) => {
+    try {
+      await toggleViewVisibility.mutateAsync({
+        uid: view.uid,
+        isVisible: false
+      });
+    } catch (error) {
+      console.error('从导航栏移除视图失败:', error);
+    }
+  };
+
+  const handleAddToNav = async (view: TaskView) => {
+    try {
+      await toggleViewVisibility.mutateAsync({
+        uid: view.uid,
+        isVisible: true
+      });
+    } catch (error) {
+      console.error('添加视图到导航栏失败:', error);
+    }
+  };
+
   const handleCreateFromTemplate = async (template: ViewTemplate) => {
     try {
-      const timestamp = new Date().toLocaleString('zh-CN', { 
-        month: '2-digit', 
-        day: '2-digit', 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      });
+      // 生成唯一的视图名称（使用时间戳和随机数确保唯一性）
+      const generateUniqueName = (baseName: string) => {
+        const now = new Date();
+        const timestamp = `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        const random = Math.floor(Math.random() * 1000);
+        
+        // 先尝试原名称
+        const existingNames = views.map(v => v.name);
+        if (!existingNames.includes(baseName)) {
+          return baseName;
+        }
+        
+        // 如果原名称已存在，使用时间戳和随机数
+        return `${baseName} ${timestamp}.${random}`;
+      };
       
       const viewData = {
-        name: `${template.name} ${timestamp}`,
+        name: generateUniqueName(template.name),
         view_type: template.view_type,
         filters: template.filters,
         sorts: template.sorts,
         group_by: template.group_by || undefined,
         display_settings: template.display_settings,
         is_visible_in_nav: true, // 从模板创建的视图默认显示在导航栏
+        project_uid: null, // 明确设置为null，表示全局视图
       };
       
       await createView.mutateAsync(viewData);
       
-      // 创建成功后切换到市场标签页
-      setActiveTab('market');
+      // 创建成功后切换到我的视图标签页
+      setActiveTab('my');
     } catch (error) {
       console.error('从模板创建视图失败:', error);
     }
@@ -302,17 +334,6 @@ const ViewsPage: React.FC = () => {
       } catch (error) {
         console.error('删除视图失败:', error);
       }
-    }
-  };
-
-  const handleToggleVisibility = async (view: TaskView) => {
-    try {
-      await toggleViewVisibility.mutateAsync({
-        uid: view.uid,
-        isVisible: !view.is_visible_in_nav
-      });
-    } catch (error) {
-      console.error('切换视图显示状态失败:', error);
     }
   };
 
@@ -423,7 +444,7 @@ const ViewsPage: React.FC = () => {
             
             {isSelectionMode && selectedViews.length > 0 ? (
               <div className="flex items-center gap-1">
-                {activeTab === 'market' && (
+                {activeTab === 'my' && (
                   <>
                     <button 
                       onClick={() => handleBatchToggleVisibility(true)}
@@ -465,35 +486,35 @@ const ViewsPage: React.FC = () => {
         {/* Tab Navigation */}
         <div className="flex border-b border-gray-100 dark:border-gray-800">
           <button
-            onClick={() => setActiveTab('market')}
+            onClick={() => setActiveTab('my')}
             className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
-              activeTab === 'market'
+              activeTab === 'my'
                 ? 'text-primary border-b-2 border-primary bg-primary/5'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
             }`}
           >
             <div className="flex items-center justify-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">folder</span>
-              <span>我的视图</span>
+              <span className="material-symbols-outlined text-[18px]">person</span>
+              <span>我的</span>
               <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-xs rounded">
-                {marketViews.length}
+                {myViews.length}
               </span>
             </div>
           </button>
           
           <button
-            onClick={() => setActiveTab('templates')}
+            onClick={() => setActiveTab('system')}
             className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
-              activeTab === 'templates'
+              activeTab === 'system'
                 ? 'text-primary border-b-2 border-primary bg-primary/5'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
             }`}
           >
             <div className="flex items-center justify-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">library_add</span>
-              <span>预设模板</span>
+              <span className="material-symbols-outlined text-[18px]">settings</span>
+              <span>系统</span>
               <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-xs rounded">
-                {templateViews.length}
+                {systemViews.length}
               </span>
             </div>
           </button>
@@ -525,17 +546,17 @@ const ViewsPage: React.FC = () => {
             <div className="flex items-start gap-2">
               <span className="material-symbols-outlined text-blue-500 text-[16px] mt-0.5">info</span>
               <div className="text-sm text-blue-700 dark:text-blue-300">
-                {activeTab === 'market' ? (
+                {activeTab === 'my' ? (
                   <>
-                    <strong>我的视图</strong>：管理你创建的所有视图。你可以在这里编辑、删除视图，以及控制哪些视图显示在导航栏中。
+                    <strong>我的视图</strong>：管理你创建的所有视图。你可以在这里编辑、删除、复制视图，以及将视图添加到导航栏中。
                   </>
-                ) : activeTab === 'templates' ? (
+                ) : activeTab === 'system' ? (
                   <>
-                    <strong>预设模板</strong>：快速创建常用的视图配置。选择一个模板即可立即创建对应的视图，无需手动配置筛选和排序规则。
+                    <strong>系统视图</strong>：系统预置的常用视图配置。你可以将这些视图添加到导航栏中，或者基于它们创建自己的视图。
                   </>
                 ) : (
                   <>
-                    <strong>导航栏</strong>：这些视图会显示在任务页面的顶部导航栏中，方便快速切换。你可以从我的视图中选择需要的视图添加到这里。
+                    <strong>导航栏管理</strong>：管理显示在任务页面顶部导航栏中的视图。你可以在这里调整视图的显示顺序，或将视图从导航栏中移除。
                   </>
                 )}
               </div>
@@ -550,7 +571,7 @@ const ViewsPage: React.FC = () => {
               </div>
               <input
                 type="text"
-                placeholder={`搜索${activeTab === 'market' ? '我的视图' : activeTab === 'templates' ? '预设模板' : '导航栏视图'}...`}
+                placeholder={`搜索${activeTab === 'my' ? '我的视图' : activeTab === 'system' ? '系统视图' : '导航栏视图'}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -578,7 +599,7 @@ const ViewsPage: React.FC = () => {
           {filteredViews.length === 0 && searchQuery ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-400">
               <span className="material-symbols-outlined text-[48px] mb-4">search_off</span>
-              <p className="text-sm mb-4">没有找到匹配的{activeTab === 'templates' ? '模板' : '视图'}</p>
+              <p className="text-sm mb-4">没有找到匹配的{activeTab === 'system' ? '系统视图' : '视图'}</p>
               <button 
                 onClick={() => setSearchQuery('')}
                 className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
@@ -589,27 +610,27 @@ const ViewsPage: React.FC = () => {
           ) : currentViews.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-400">
               <span className="material-symbols-outlined text-[48px] mb-4">
-                {activeTab === 'market' ? 'folder' : activeTab === 'templates' ? 'library_add' : 'tab'}
+                {activeTab === 'my' ? 'person' : activeTab === 'system' ? 'settings' : 'tab'}
               </span>
               <p className="text-sm mb-4">
-                {activeTab === 'market' ? '还没有创建任何视图' : 
-                 activeTab === 'templates' ? '暂无预设模板' : 
+                {activeTab === 'my' ? '还没有创建任何视图' : 
+                 activeTab === 'system' ? '暂无系统视图' : 
                  '导航栏中还没有视图'}
               </p>
               <button 
-                onClick={activeTab === 'market' ? handleCreateView : 
-                         activeTab === 'templates' ? () => {} : 
-                         () => setActiveTab('market')}
+                onClick={activeTab === 'my' ? handleCreateView : 
+                         activeTab === 'system' ? () => {} : 
+                         () => setActiveTab('my')}
                 className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
-                disabled={activeTab === 'templates'}
+                disabled={activeTab === 'system'}
               >
-                {activeTab === 'market' ? '创建第一个视图' : 
-                 activeTab === 'templates' ? '敬请期待' : 
-                 '去我的视图选择'}
+                {activeTab === 'my' ? '创建第一个视图' : 
+                 activeTab === 'system' ? '敬请期待' : 
+                 '去我的视图添加'}
               </button>
             </div>
-          ) : activeTab === 'templates' ? (
-            // 渲染预设模板
+          ) : activeTab === 'system' ? (
+            // 渲染系统视图
             filteredViews.map((template) => {
               const viewTemplate = template as ViewTemplate;
               return (
@@ -627,9 +648,14 @@ const ViewsPage: React.FC = () => {
                         </div>
                         
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                            {viewTemplate.name}
-                          </h3>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {viewTemplate.name}
+                            </h3>
+                            <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium rounded">
+                              系统
+                            </span>
+                          </div>
                           <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                             {viewTemplate.description}
                           </p>
@@ -670,21 +696,174 @@ const ViewsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* 操作按钮 */}
+                  {/* 系统视图操作按钮 */}
                   <div className="flex items-center gap-2 p-4 pt-0 border-t border-gray-100 dark:border-gray-700">
                     <button
                       onClick={() => handleCreateFromTemplate(viewTemplate)}
                       disabled={createView.isPending}
-                      className="flex-1 py-2 px-4 text-sm font-medium text-white bg-primary rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50"
+                      className="flex-1 py-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                      title="创建一个副本到我的视图"
                     >
-                      {createView.isPending ? '创建中...' : '使用此模板'}
+                      {createView.isPending ? '创建中...' : '创建副本'}
                     </button>
                     
                     <button
-                      onClick={() => navigate(`/views/preview?template=${encodeURIComponent(JSON.stringify(viewTemplate))}`)}
+                      onClick={async () => {
+                        // 创建系统视图副本并直接添加到导航栏
+                        try {
+                          const generateUniqueName = (baseName: string) => {
+                            const now = new Date();
+                            const timestamp = `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                            const random = Math.floor(Math.random() * 1000);
+                            
+                            // 先尝试原名称
+                            const existingNames = views.map(v => v.name);
+                            if (!existingNames.includes(baseName)) {
+                              return baseName;
+                            }
+                            
+                            // 如果原名称已存在，使用时间戳和随机数
+                            return `${baseName} ${timestamp}.${random}`;
+                          };
+                          
+                          const viewData = {
+                            name: generateUniqueName(viewTemplate.name),
+                            view_type: viewTemplate.view_type,
+                            filters: viewTemplate.filters,
+                            sorts: viewTemplate.sorts,
+                            group_by: viewTemplate.group_by || undefined,
+                            display_settings: viewTemplate.display_settings,
+                            is_visible_in_nav: true, // 直接添加到导航栏
+                            project_uid: null, // 明确设置为null，表示全局视图
+                          };
+                          
+                          await createView.mutateAsync(viewData);
+                          
+                          // 创建成功后切换到导航栏标签页
+                          setActiveTab('nav');
+                        } catch (error) {
+                          console.error('添加到导航栏失败:', error);
+                        }
+                      }}
+                      disabled={createView.isPending}
+                      className="flex-1 py-2 px-3 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                      title="直接添加到导航栏"
+                    >
+                      {createView.isPending ? '添加中...' : '加入导航栏'}
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        // 系统视图预览：直接在当前页面显示配置信息
+                        alert(`系统视图配置：\n\n视图类型：${viewTemplate.view_type === 'list' ? '列表' : viewTemplate.view_type === 'board' ? '看板' : viewTemplate.view_type === 'calendar' ? '日历' : '表格'}\n筛选条件：${viewTemplate.filters.length} 个\n排序规则：${viewTemplate.sorts.length} 个\n${viewTemplate.group_by ? `分组方式：${viewTemplate.group_by}` : '无分组'}\n\n${viewTemplate.description}`);
+                      }}
                       className="py-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                      title="预览配置信息"
                     >
                       <span className="material-symbols-outlined text-[16px]">visibility</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          ) : activeTab === 'nav' ? (
+            // 渲染导航栏视图 - 专门用于管理导航栏中的视图
+            filteredViews.map((view) => {
+              const taskView = view as TaskView;
+              return (
+                <div
+                  key={taskView.uid}
+                  className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden"
+                >
+                  <div className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start gap-3 flex-1">
+                        <div className={`size-8 rounded-lg flex items-center justify-center ${getViewTypeColor(taskView.view_type)}`}>
+                          <span className="material-symbols-outlined text-[20px]">
+                            {getViewTypeIcon(taskView.view_type)}
+                          </span>
+                        </div>
+                        
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {taskView.name}
+                            </h3>
+                            {taskView.is_default && (
+                              <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded">
+                                默认
+                              </span>
+                            )}
+                            <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium rounded">
+                              导航栏
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                            <span>{taskView.view_type_display}</span>
+                            {taskView.project && (
+                              <span>• {taskView.project.name}</span>
+                            )}
+                            {!taskView.project && (
+                              <span>• 全局视图</span>
+                            )}
+                            {taskView.tasks_count !== undefined && (
+                              <span>• {taskView.tasks_count} 个任务</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 拖拽排序手柄 */}
+                      <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-move">
+                        <span className="material-symbols-outlined text-[20px]">drag_indicator</span>
+                      </button>
+                    </div>
+
+                    {/* 视图配置摘要 */}
+                    <div className="space-y-2">
+                      {taskView.filters && taskView.filters.length > 0 && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="material-symbols-outlined text-[16px] text-gray-400">filter_alt</span>
+                          <span className="text-gray-600 dark:text-gray-300">
+                            {taskView.filters.length} 个筛选条件
+                          </span>
+                        </div>
+                      )}
+                      
+                      {taskView.sorts && taskView.sorts.length > 0 && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="material-symbols-outlined text-[16px] text-gray-400">sort</span>
+                          <span className="text-gray-600 dark:text-gray-300">
+                            按 {taskView.sorts.map(s => s.field).join(', ')} 排序
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 导航栏专用操作按钮 */}
+                  <div className="flex items-center gap-2 p-4 pt-0 border-t border-gray-100 dark:border-gray-700">
+                    <button
+                      onClick={() => navigate(`/views/${taskView.uid}`)}
+                      className="flex-1 py-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      预览
+                    </button>
+                    
+                    <button
+                      onClick={() => handleEditView(taskView)}
+                      className="flex-1 py-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      编辑
+                    </button>
+                    
+                    <button
+                      onClick={() => handleRemoveFromNav(taskView)}
+                      disabled={toggleViewVisibility.isPending}
+                      className="py-2 px-3 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">remove</span>
                     </button>
                   </div>
                 </div>
@@ -890,22 +1069,29 @@ const ViewsPage: React.FC = () => {
                       复制
                     </button>
                     
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleVisibility(taskView);
-                      }}
-                      disabled={toggleViewVisibility.isPending}
-                      className={`py-2 px-3 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 ${
-                        taskView.is_visible_in_nav
-                          ? 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30'
-                          : 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30'
-                      }`}
-                    >
-                      <span className="material-symbols-outlined text-[16px]">
-                        {taskView.is_visible_in_nav ? 'visibility_off' : 'visibility'}
-                      </span>
-                    </button>
+                    {!taskView.is_visible_in_nav ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToNav(taskView);
+                        }}
+                        disabled={toggleViewVisibility.isPending}
+                        className="py-2 px-3 text-sm font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors disabled:opacity-50"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">add</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveFromNav(taskView);
+                        }}
+                        disabled={toggleViewVisibility.isPending}
+                        className="py-2 px-3 text-sm font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors disabled:opacity-50"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">remove</span>
+                      </button>
+                    )}
                     
                     {!taskView.is_default && (
                       <button

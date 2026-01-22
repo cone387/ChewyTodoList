@@ -28,7 +28,7 @@ from .serializers import (
     TaskViewSerializer,
     TaskViewListSerializer,
 )
-from .filters import TagFilter, GroupFilter, ProjectFilter, TaskFilter, ActivityLogFilter
+from .filters import TagFilter, GroupFilter, ProjectFilter, TaskFilter, ActivityLogFilter, TaskViewFilter
 
 User = get_user_model()
 
@@ -905,6 +905,7 @@ class TaskViewViewSet(viewsets.ModelViewSet):
     
     lookup_field = 'uid'
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = TaskViewFilter
     search_fields = ['name']
     ordering_fields = ['name', 'sort_order', 'created_at', 'updated_at']
     ordering = ['sort_order', 'name']
