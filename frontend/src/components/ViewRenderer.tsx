@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Task, TaskView } from '../types/index';
+import type { TaskCardTemplate } from '../types/taskCard';
 import EnhancedTaskList from './EnhancedTaskList';
 import KanbanBoard from './KanbanBoard';
 import CalendarView from './CalendarView';
@@ -14,6 +15,7 @@ interface ViewRendererProps {
   onTaskUpdate?: (task: Task, updates: Partial<Task>) => void;
   loading?: boolean;
   showCompleted?: boolean;
+  cardStyle?: TaskCardTemplate;
 }
 
 const ViewRenderer: React.FC<ViewRendererProps> = ({
@@ -23,6 +25,7 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({
   onTaskUpdate,
   loading = false,
   showCompleted = false,
+  cardStyle,
 }) => {
   if (loading) {
     return (
@@ -41,6 +44,7 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({
           onTaskClick={onTaskClick}
           onTaskUpdate={onTaskUpdate}
           showCompleted={showCompleted}
+          cardStyle={cardStyle}
         />
       );
     
@@ -98,6 +102,7 @@ const ViewRenderer: React.FC<ViewRendererProps> = ({
           onTaskClick={onTaskClick}
           onTaskUpdate={onTaskUpdate}
           showCompleted={showCompleted}
+          cardStyle={cardStyle}
         />
       );
   }

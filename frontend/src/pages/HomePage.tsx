@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import ViewRenderer from '../components/ViewRenderer';
 import BottomNav from '../components/BottomNav';
 import FloatingAddButton from '../components/FloatingAddButton';
-import { useViewTasks, useNavViews, useView } from '../hooks/useViews';
+import { useViewTasks, useNavViews, useView, useUpdateView } from '../hooks/useViews';
 import { TASK_CARD_TEMPLATES, type TaskCardTemplate } from '../types/taskCard';
 
 const HomePage: React.FC = () => {
@@ -20,6 +20,7 @@ const HomePage: React.FC = () => {
   const { data: navViews } = useNavViews();
   const { data: viewTasks } = useViewTasks(currentView);
   const { data: viewData } = useView(currentView);
+  const updateView = useUpdateView();
 
   useEffect(() => {
     // 设置默认视图
@@ -71,6 +72,9 @@ const HomePage: React.FC = () => {
     setShowTaskCardSelector(!showTaskCardSelector);
   };
 
+  // 获取当前选择的卡片样式对象
+  const currentCardStyle = TASK_CARD_TEMPLATES.find(template => template.id === selectedTaskCard);
+
   const viewTypes = [
     { value: 'list', label: '列表视图', icon: 'list' },
     { value: 'board', label: '看板视图', icon: 'view_kanban' },
@@ -114,16 +118,25 @@ const HomePage: React.FC = () => {
               {viewTypes.map((type) => (
                 <button
                   key={type.value}
-                  onClick={() => {
-                    // TODO: 实现切换视图类型的功能
-                    console.log('Switch to view type:', type.value);
-                    setShowTemplateSelector(false);
+                  onClick={async () => {
+                    if (viewData && currentView) {
+                      try {
+                        await updateView.mutateAsync({
+                          uid: currentView,
+                          data: { view_type: type.value }
+                        });
+                        setShowTemplateSelector(false);
+                      } catch (error) {
+                        console.error('切换视图类型失败:', error);
+                      }
+                    }
                   }}
+                  disabled={updateView.isPending}
                   className={`p-4 rounded-xl border-2 transition-all ${
                     viewData.view_type === type.value
                       ? 'border-primary bg-primary/5 dark:bg-primary/10'
                       : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                  }`}
+                  } ${updateView.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <div className="flex flex-col items-center gap-2">
                     <span className={`material-symbols-outlined text-[32px] ${
@@ -260,6 +273,7 @@ const HomePage: React.FC = () => {
             onTaskClick={handleTaskClick}
             onTaskUpdate={handleTaskUpdate}
             showCompleted={showCompleted}
+            cardStyle={currentCardStyle}
           />
         ) : (
           <div className="flex items-center justify-center py-16">

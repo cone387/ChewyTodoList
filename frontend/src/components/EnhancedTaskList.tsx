@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Task, TaskView } from '../types/index';
 import { TaskStatus, TaskPriority } from '../types/index';
+import type { TaskCardTemplate } from '../types/taskCard';
 
 interface EnhancedTaskListProps {
   tasks: Task[];
@@ -8,6 +9,7 @@ interface EnhancedTaskListProps {
   onTaskClick?: (task: Task) => void;
   onTaskUpdate?: (task: Task, updates: Partial<Task>) => void;
   showCompleted?: boolean;
+  cardStyle?: TaskCardTemplate;
 }
 
 const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
@@ -16,16 +18,26 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
   onTaskClick,
   onTaskUpdate,
   showCompleted = false,
+  cardStyle,
 }) => {
   const [isCompletedExpanded, setIsCompletedExpanded] = React.useState(false);
-  const displaySettings = view?.display_settings || {
+  
+  // 使用卡片样式配置，如果没有提供则使用视图的显示设置
+  const displaySettings = cardStyle ? {
+    show_project: cardStyle.style.showProject,
+    show_tags: cardStyle.style.showTags,
+    show_due_date: cardStyle.style.showDueDate,
+    show_priority: cardStyle.style.showPriority,
+    show_status: cardStyle.style.showStatus,
+    compact_mode: cardStyle.style.layout === 'compact',
+  } : (view?.display_settings || {
     show_project: true,
     show_tags: true,
     show_due_date: true,
     show_priority: true,
     show_status: true,
     compact_mode: false,
-  };
+  });
 
   const getStatusColor = (status: number) => {
     switch (status) {
@@ -98,6 +110,123 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
   const handleStatusToggle = (task: Task) => {
     const newStatus = task.status === TaskStatus.COMPLETED ? TaskStatus.TODO : TaskStatus.COMPLETED;
     onTaskUpdate?.(task, { status: newStatus });
+  };
+
+  // 根据卡片样式获取CSS类
+  const getCardClasses = () => {
+    if (!cardStyle) return '';
+    
+    const classes = [];
+    
+    // 边框圆角
+    const radiusMap = {
+      none: 'rounded-none',
+      small: 'rounded',
+      medium: 'rounded-lg',
+      large: 'rounded-xl',
+    };
+    classes.push(radiusMap[cardStyle.style.borderRadius]);
+    
+    // 阴影
+    const shadowMap = {
+      none: 'shadow-none',
+      small: 'shadow-sm',
+      medium: 'shadow-md',
+      large: 'shadow-lg',
+    };
+    classes.push(shadowMap[cardStyle.style.shadow]);
+    
+    // 内边距
+    const paddingMap = {
+      tight: 'p-2',
+      normal: 'p-3',
+      loose: 'p-4',
+    };
+    classes.push(paddingMap[cardStyle.style.padding]);
+    
+    // 悬停效果
+    const hoverMap = {
+      lift: 'hover:shadow-lg hover:-translate-y-0.5 transition-all',
+      glow: 'hover:shadow-xl hover:shadow-primary/20 transition-shadow',
+      border: 'hover:border-primary transition-colors',
+      none: '',
+    };
+    classes.push(hoverMap[cardStyle.style.hoverEffect]);
+    
+    return classes.join(' ');
+  };
+
+  // 根据卡片样式获取标题CSS类
+  const getTitleClasses = (isCompleted: boolean) => {
+    if (!cardStyle) {
+      return `font-medium text-gray-900 dark:text-white ${isCompleted ? 'line-through text-gray-500' : ''}`;
+    }
+    
+    const classes = [];
+    
+    // 字体大小
+    const sizeMap = {
+      small: 'text-sm',
+      medium: 'text-base',
+      large: 'text-lg',
+    };
+    classes.push(sizeMap[cardStyle.style.titleSize]);
+    
+    // 字体粗细
+    const weightMap = {
+      normal: 'font-normal',
+      medium: 'font-medium',
+      semibold: 'font-semibold',
+      bold: 'font-bold',
+    };
+    classes.push(weightMap[cardStyle.style.titleWeight]);
+    
+    // 颜色和删除线
+    if (isCompleted && cardStyle.style.showStrikethrough) {
+      classes.push('line-through text-gray-500');
+    } else if (isCompleted) {
+      classes.push('text-gray-500');
+    } else {
+      classes.push('text-gray-900 dark:text-white');
+    }
+    
+    return classes.join(' ');
+  };
+
+  // 根据卡片样式获取复选框样式
+  const getCheckboxClasses = () => {
+    if (!cardStyle) return 'rounded';
+    
+    const styleMap = {
+      circle: 'rounded-full',
+      square: 'rounded-none',
+      rounded: 'rounded',
+    };
+    return styleMap[cardStyle.style.checkboxStyle];
+  };
+
+  // 根据优先级指示器样式获取类
+  const getPriorityIndicatorClasses = (priority: number) => {
+    if (!cardStyle || cardStyle.style.priorityIndicator === 'none') return '';
+    
+    const colorMap: Record<number, string> = {
+      [TaskPriority.LOW]: 'gray',
+      [TaskPriority.MEDIUM]: 'yellow',
+      [TaskPriority.HIGH]: 'orange',
+      [TaskPriority.URGENT]: 'red',
+    };
+    const color = colorMap[priority] || 'gray';
+    
+    switch (cardStyle.style.priorityIndicator) {
+      case 'background':
+        return `bg-${color}-50 dark:bg-${color}-900/20`;
+      case 'border':
+        return `border-l-4 border-${color}-500`;
+      case 'dot':
+        return '';
+      default:
+        return '';
+    }
   };
 
   // 分离已完成和未完成的任务
@@ -188,9 +317,11 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
                 key={task.uid}
                 onClick={() => onTaskClick?.(task)}
                 className={`
-                  p-3 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 
-                  rounded-lg hover:shadow-sm transition-all cursor-pointer
-                  ${displaySettings.compact_mode ? 'py-2' : 'py-3'}
+                  bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 
+                  cursor-pointer
+                  ${getCardClasses()}
+                  ${getPriorityIndicatorClasses(task.priority)}
+                  ${displaySettings.compact_mode ? 'py-2' : ''}
                 `}
               >
                 <div className="flex items-start gap-3">
@@ -201,7 +332,8 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
                       handleStatusToggle(task);
                     }}
                     className={`
-                      size-5 rounded border-2 flex items-center justify-center transition-colors
+                      size-5 border-2 flex items-center justify-center transition-colors flex-shrink-0
+                      ${getCheckboxClasses()}
                       ${task.is_completed 
                         ? 'bg-green-500 border-green-500 text-white' 
                         : 'border-gray-300 dark:border-gray-600 hover:border-green-500'
@@ -217,35 +349,57 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
                   <div className="flex-1 min-w-0">
                     {/* 标题行 */}
                     <div className="flex items-start justify-between gap-2 mb-1">
-                      <h3 className={`
-                        font-medium text-gray-900 dark:text-white
-                        ${displaySettings.compact_mode ? 'text-sm' : 'text-base'}
-                      `}>
+                      <h3 className={getTitleClasses(false)}>
                         {task.title}
                       </h3>
                       
                       {/* 优先级指示器 */}
-                      {displaySettings.show_priority && task.priority > TaskPriority.LOW && (
+                      {displaySettings.show_priority && task.priority > TaskPriority.LOW && 
+                       cardStyle?.style.priorityIndicator === 'flag' && (
                         <span className={`${getPriorityColor(task.priority)} flex-shrink-0`}>
-                          <span className="material-symbols-outlined text-[16px]">
+                          <span className={`material-symbols-outlined text-[16px] ${
+                            cardStyle?.style.iconStyle === 'filled' ? 'fill-1' : ''
+                          }`}>
                             {getPriorityIcon(task.priority)}
                           </span>
                         </span>
                       )}
+                      
+                      {/* 优先级点指示器 */}
+                      {displaySettings.show_priority && task.priority > TaskPriority.LOW && 
+                       cardStyle?.style.priorityIndicator === 'dot' && (
+                        <span className={`size-2 rounded-full flex-shrink-0 ${
+                          task.priority === TaskPriority.URGENT ? 'bg-red-500' :
+                          task.priority === TaskPriority.HIGH ? 'bg-orange-500' :
+                          'bg-yellow-500'
+                        }`} />
+                      )}
                     </div>
 
+                    {/* 描述 */}
+                    {cardStyle?.style.showDescription && task.content && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
+                        {task.content}
+                      </p>
+                    )}
+
                     {/* 元数据行 */}
-                    <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                    <div className={`flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 ${
+                      cardStyle?.style.metadataLayout === 'stacked' ? 'flex-col items-start' : 
+                      cardStyle?.style.metadataLayout === 'grid' ? 'grid grid-cols-2' : ''
+                    }`}>
                       {/* 项目 */}
                       {displaySettings.show_project && (
                         <span className="flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[12px]">folder</span>
+                          <span className={`material-symbols-outlined text-[12px] ${
+                            cardStyle?.style.iconStyle === 'filled' ? 'fill-1' : ''
+                          }`}>folder</span>
                           {task.project.name}
                         </span>
                       )}
                       
                       {/* 状态 */}
-                      {displaySettings.show_status && (
+                      {displaySettings.show_status && cardStyle?.style.statusIndicator === 'badge' && (
                         <span className={`
                           px-2 py-0.5 rounded-full text-xs font-medium
                           ${getStatusColor(task.status)}
@@ -260,7 +414,9 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
                           flex items-center gap-1
                           ${isOverdue(task) ? 'text-red-500' : ''}
                         `}>
-                          <span className="material-symbols-outlined text-[12px]">
+                          <span className={`material-symbols-outlined text-[12px] ${
+                            cardStyle?.style.iconStyle === 'filled' ? 'fill-1' : ''
+                          }`}>
                             {isOverdue(task) ? 'schedule' : 'event'}
                           </span>
                           {formatDate(task.due_date)}
@@ -268,7 +424,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
                       )}
                       
                       {/* 子任务计数 */}
-                      {task.subtasks_count > 0 && (
+                      {cardStyle?.style.showSubtasks && task.subtasks_count > 0 && (
                         <span className="flex items-center gap-1">
                           <span className="material-symbols-outlined text-[12px]">subdirectory_arrow_right</span>
                           {task.completed_subtasks_count}/{task.subtasks_count}
@@ -279,19 +435,25 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
                     {/* 标签 */}
                     {displaySettings.show_tags && task.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-2">
-                        {task.tags.map((tag) => (
-                          <span
-                            key={tag.uid}
-                            className="px-2 py-0.5 text-xs rounded-full"
-                            style={{
-                              backgroundColor: `${tag.color}20`,
-                              color: tag.color,
-                              border: `1px solid ${tag.color}40`,
-                            }}
-                          >
-                            {tag.name}
-                          </span>
-                        ))}
+                        {task.tags.map((tag) => {
+                          const tagStyleClass = cardStyle?.style.tagStyle === 'badge' ? 'px-2 py-1 rounded font-medium' :
+                                               cardStyle?.style.tagStyle === 'minimal' ? 'px-1.5 py-0.5 rounded-sm text-xs' :
+                                               'px-2 py-0.5 rounded-full text-xs';
+                          
+                          return (
+                            <span
+                              key={tag.uid}
+                              className={tagStyleClass}
+                              style={{
+                                backgroundColor: `${tag.color}20`,
+                                color: tag.color,
+                                border: `1px solid ${tag.color}40`,
+                              }}
+                            >
+                              {tag.name}
+                            </span>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
