@@ -1,17 +1,24 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCreateView } from '../hooks/useViews';
+import { useCreateView, useViews, useUpdateView } from '../hooks/useViews';
 import { VIEW_TEMPLATES, TEMPLATE_CATEGORIES, getRecommendedTemplates } from '../data/viewTemplates';
 import type { ViewTemplate } from '../types/templates';
+import type { TaskView } from '../types/index';
 
 const ViewTemplateMarketPage: React.FC = () => {
   const navigate = useNavigate();
   const createView = useCreateView();
+  const updateView = useUpdateView();
+  const { data: viewsResponse } = useViews();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedViewType, setSelectedViewType] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'popular' | 'rating' | 'newest'>('popular');
+  const [showViewSelector, setShowViewSelector] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<ViewTemplate | null>(null);
+
+  const views = viewsResponse?.results || [];
 
   // 筛选和排序模板
   const filteredTemplates = useMemo(() => {
@@ -87,6 +94,35 @@ const ViewTemplateMarketPage: React.FC = () => {
     // 跳转到预览页面，传递模板数据
     const templateData = encodeURIComponent(JSON.stringify(template));
     navigate(`/views/template-preview?template=${templateData}`);
+  };
+
+  const handleApplyToView = (template: ViewTemplate) => {
+    setSelectedTemplate(template);
+    setShowViewSelector(true);
+  };
+
+  const handleApplyTemplateToView = async (view: TaskView) => {
+    if (!selectedTemplate) return;
+
+    try {
+      await updateView.mutateAsync({
+        uid: view.uid,
+        data: {
+          view_type: selectedTemplate.view_type,
+          filters: selectedTemplate.filters,
+          sorts: selectedTemplate.sorts,
+          group_by: selectedTemplate.group_by || undefined,
+          display_settings: selectedTemplate.display_settings,
+        },
+      });
+      setShowViewSelector(false);
+      setSelectedTemplate(null);
+      // 可以显示成功提示
+      alert(`已成功将"${selectedTemplate.name}"模板应用到视图"${view.name}"`);
+    } catch (error) {
+      console.error('应用模板失败:', error);
+      alert('应用模板失败，请重试');
+    }
   };
 
   const getViewTypeIcon = (viewType: string) => {
@@ -324,11 +360,17 @@ const ViewTemplateMarketPage: React.FC = () => {
                         预览
                       </button>
                       <button
+                        onClick={() => handleApplyToView(template)}
+                        className="flex-1 py-2 px-3 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        应用到视图
+                      </button>
+                      <button
                         onClick={() => handleCreateFromTemplate(template)}
                         disabled={createView.isPending}
                         className="flex-1 py-2 px-3 text-sm font-medium text-white bg-primary rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50"
                       >
-                        {createView.isPending ? '创建中...' : '使用模板'}
+                        {createView.isPending ? '创建中...' : '创建新视图'}
                       </button>
                     </div>
                   </div>
@@ -460,11 +502,17 @@ const ViewTemplateMarketPage: React.FC = () => {
                         预览
                       </button>
                       <button
+                        onClick={() => handleApplyToView(template)}
+                        className="flex-1 py-2 px-3 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        应用到视图
+                      </button>
+                      <button
                         onClick={() => handleCreateFromTemplate(template)}
                         disabled={createView.isPending}
                         className="flex-1 py-2 px-3 text-sm font-medium text-white bg-primary rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50"
                       >
-                        {createView.isPending ? '创建中...' : '使用模板'}
+                        {createView.isPending ? '创建中...' : '创建新视图'}
                       </button>
                     </div>
                   </div>
@@ -474,6 +522,121 @@ const ViewTemplateMarketPage: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* 视图选择器弹窗 */}
+      {showViewSelector && selectedTemplate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="bg-white dark:bg-surface-dark rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+            {/* 弹窗头部 */}
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  选择要应用的视图
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowViewSelector(false);
+                    setSelectedTemplate(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                >
+                  <span className="material-symbols-outlined text-[24px]">close</span>
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                将"{selectedTemplate.name}"模板应用到以下视图
+              </p>
+            </div>
+
+            {/* 视图列表 */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {views.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                  <span className="material-symbols-outlined text-[48px] mb-4">inbox</span>
+                  <p className="text-sm mb-4">还没有创建任何视图</p>
+                  <button
+                    onClick={() => {
+                      setShowViewSelector(false);
+                      navigate('/views/create');
+                    }}
+                    className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
+                  >
+                    创建第一个视图
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3">
+                  {views.map((view) => (
+                    <div
+                      key={view.uid}
+                      onClick={() => handleApplyTemplateToView(view)}
+                      className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary hover:bg-primary/5 cursor-pointer transition-all"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`size-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          view.view_type === 'list' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' :
+                          view.view_type === 'board' ? 'bg-green-100 dark:bg-green-900/30 text-green-600' :
+                          view.view_type === 'calendar' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600' :
+                          view.view_type === 'table' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600' :
+                          view.view_type === 'timeline' ? 'bg-red-100 dark:bg-red-900/30 text-red-600' :
+                          'bg-pink-100 dark:bg-pink-900/30 text-pink-600'
+                        }`}>
+                          <span className="material-symbols-outlined text-[24px]">
+                            {view.view_type === 'list' ? 'list' :
+                             view.view_type === 'board' ? 'view_kanban' :
+                             view.view_type === 'calendar' ? 'calendar_month' :
+                             view.view_type === 'table' ? 'table' :
+                             view.view_type === 'timeline' ? 'timeline' : 'photo_library'}
+                          </span>
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold text-gray-900 dark:text-white">
+                              {view.name}
+                            </h4>
+                            {view.is_default && (
+                              <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded">
+                                默认
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                            <span>{view.view_type_display}</span>
+                            {view.project && (
+                              <span>• {view.project.name}</span>
+                            )}
+                            {view.tasks_count !== undefined && (
+                              <span>• {view.tasks_count} 个任务</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center text-primary">
+                          <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 弹窗底部 */}
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => {
+                  setShowViewSelector(false);
+                  setSelectedTemplate(null);
+                }}
+                className="w-full py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

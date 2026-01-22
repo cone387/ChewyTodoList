@@ -3,7 +3,9 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useCreateView, useUpdateView, useDeleteView, useView } from '../hooks/useViews';
 import { useProjects } from '../hooks/useProjects';
 import FilterBuilder from '../components/FilterBuilder';
+import { VIEW_TEMPLATES } from '../data/viewTemplates';
 import type { ViewFilter, ViewSort } from '../types/index';
+import type { ViewTemplate } from '../types/templates';
 
 // Import operator definitions for filter sanitization
 const OPERATOR_DEFINITIONS = [
@@ -32,6 +34,7 @@ const CreateViewPage: React.FC = () => {
   const isEditing = !!uid;
   
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -214,6 +217,21 @@ const CreateViewPage: React.FC = () => {
     setFormData({ ...formData, sorts: newSorts });
   };
 
+  const handleApplyTemplate = (template: ViewTemplate) => {
+    setFormData({
+      ...formData,
+      view_type: template.view_type,
+      filters: template.filters,
+      sorts: template.sorts,
+      group_by: template.group_by || '',
+      display_settings: {
+        ...formData.display_settings,
+        ...template.display_settings,
+      },
+    });
+    setShowTemplateSelector(false);
+  };
+
   const sortFieldOptions = [
     { value: 'status', label: '状态' },
     { value: 'priority', label: '优先级' },
@@ -272,6 +290,84 @@ const CreateViewPage: React.FC = () => {
         </div>
       </header>
 
+      {/* 模板选择器弹窗 */}
+      {showTemplateSelector && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="bg-white dark:bg-surface-dark rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+            {/* 弹窗头部 */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">选择视图模板</h3>
+              <button
+                onClick={() => setShowTemplateSelector(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <span className="material-symbols-outlined text-[24px]">close</span>
+              </button>
+            </div>
+
+            {/* 模板列表 */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="grid grid-cols-1 gap-3">
+                {VIEW_TEMPLATES.map((template) => (
+                  <div
+                    key={template.id}
+                    onClick={() => handleApplyTemplate(template)}
+                    className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary hover:bg-primary/5 cursor-pointer transition-all"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`size-10 rounded-lg flex items-center justify-center flex-shrink-0 ${template.color}`}>
+                        <span className="material-symbols-outlined text-[24px]">
+                          {template.icon}
+                        </span>
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold text-gray-900 dark:text-white">
+                            {template.name}
+                          </h4>
+                          <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded">
+                            {template.view_type === 'list' ? '列表' :
+                             template.view_type === 'board' ? '看板' :
+                             template.view_type === 'calendar' ? '日历' :
+                             template.view_type === 'table' ? '表格' :
+                             template.view_type === 'timeline' ? '时间轴' : '画廊'}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                          {template.description}
+                        </p>
+                        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                          {template.filters.length > 0 && (
+                            <span>{template.filters.length} 个筛选</span>
+                          )}
+                          {template.sorts.length > 0 && (
+                            <span>{template.sorts.length} 个排序</span>
+                          )}
+                          {template.group_by && (
+                            <span>按{template.group_by}分组</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 弹窗底部 */}
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => setShowTemplateSelector(false)}
+                className="w-full py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto pb-16 bg-white dark:bg-background-dark" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 60px)' }}>
         <div className="p-4 space-y-6">
@@ -287,7 +383,16 @@ const CreateViewPage: React.FC = () => {
 
           {/* 基本信息 */}
           <div className="space-y-4">
-            <h3 className="text-sm font-medium text-gray-900 dark:text-white">基本信息</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white">基本信息</h3>
+              <button
+                onClick={() => setShowTemplateSelector(true)}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
+                <span>应用模板</span>
+              </button>
+            </div>
             
             <div className="space-y-4">
               <div>
