@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCreateView } from '../hooks/useViews';
+import ViewRenderer from '../components/ViewRenderer';
+import { generateMockTasks, filterTasksByTemplate, sortTasksByTemplate } from '../utils/mockData';
 import type { ViewTemplate } from '../types/templates';
+import type { TaskView } from '../types/index';
 
 const ViewTemplatePreviewPage: React.FC = () => {
   const navigate = useNavigate();
@@ -10,6 +13,42 @@ const ViewTemplatePreviewPage: React.FC = () => {
   
   const [template, setTemplate] = useState<ViewTemplate | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'config' | 'preview'>('overview');
+
+  // 生成模拟数据用于预览
+  const mockTasks = useMemo(() => {
+    if (!template) return [];
+    const allTasks = generateMockTasks(30);
+    const filtered = filterTasksByTemplate(allTasks, template.filters);
+    const sorted = sortTasksByTemplate(filtered, template.sorts);
+    return sorted;
+  }, [template]);
+
+  // 创建模拟视图对象用于渲染
+  const mockView = useMemo((): TaskView | null => {
+    if (!template) return null;
+    
+    return {
+      uid: 'preview-view',
+      name: template.name,
+      view_type: template.view_type,
+      view_type_display: template.view_type === 'list' ? '列表视图' :
+                         template.view_type === 'board' ? '看板视图' :
+                         template.view_type === 'calendar' ? '日历视图' :
+                         template.view_type === 'table' ? '表格视图' :
+                         template.view_type === 'timeline' ? '时间轴视图' : '画廊视图',
+      is_default: false,
+      is_public: false,
+      is_visible_in_nav: true,
+      sort_order: 0,
+      filters: template.filters,
+      sorts: template.sorts,
+      group_by: template.group_by,
+      display_settings: template.display_settings,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      tasks_count: mockTasks.length,
+    } as TaskView;
+  }, [template, mockTasks]);
 
   useEffect(() => {
     const templateParam = searchParams.get('template');
@@ -488,34 +527,84 @@ const ViewTemplatePreviewPage: React.FC = () => {
 
           {activeTab === 'preview' && (
             <div className="space-y-6">
-              {/* Preview Placeholder */}
-              <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">效果预览</h2>
-                
-                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 text-center">
-                  <div className={`size-16 rounded-lg flex items-center justify-center mx-auto mb-4 ${template.color}`}>
-                    <span className="material-symbols-outlined text-[32px]">
-                      {getViewTypeIcon(template.view_type)}
-                    </span>
+              {/* Preview Header */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300 mb-2">
+                  <span className="material-symbols-outlined text-[16px]">info</span>
+                  <span className="font-medium">预览说明</span>
+                </div>
+                <p className="text-sm text-blue-600 dark:text-blue-400">
+                  以下是使用模拟数据生成的视图效果预览。实际使用时，将显示您的真实任务数据。
+                </p>
+                <div className="mt-2 text-xs text-blue-500 dark:text-blue-400">
+                  • 模拟任务数: {mockTasks.length} 个
+                  • 视图类型: {getViewTypeLabel(template.view_type)}
+                  {template.group_by && ` • 分组方式: ${getFieldLabel(template.group_by)}`}
+                </div>
+              </div>
+
+              {/* View Preview */}
+              {mockView && (
+                <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                  <ViewRenderer
+                    view={mockView}
+                    tasks={mockTasks}
+                    onTaskClick={(task) => {
+                      // 预览模式下不跳转，显示提示
+                      alert(`这是预览模式。实际使用时，点击任务"${task.title}"将打开任务详情页面。`);
+                    }}
+                    loading={false}
+                  />
+                </div>
+              )}
+
+              {/* Preview Stats */}
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">预览统计</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="text-gray-600 dark:text-gray-400">筛选后任务</div>
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">{mockTasks.length}</div>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    {getViewTypeLabel(template.view_type)}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    此模板将创建一个 {getViewTypeLabel(template.view_type).toLowerCase()}，
-                    {template.filters.length > 0 && `包含 ${template.filters.length} 个筛选条件`}
-                    {template.sorts.length > 0 && `，${template.sorts.length} 个排序规则`}
-                    {template.group_by && `，按${getFieldLabel(template.group_by)}分组`}。
-                  </p>
-                  
-                  <div className="bg-white dark:bg-surface-dark rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                      预览功能即将推出
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      点击"使用模板"创建视图后可查看实际效果
+                  <div>
+                    <div className="text-gray-600 dark:text-gray-400">已完成</div>
+                    <div className="text-lg font-bold text-green-500">
+                      {mockTasks.filter(t => t.is_completed).length}
                     </div>
                   </div>
+                  <div>
+                    <div className="text-gray-600 dark:text-gray-400">进行中</div>
+                    <div className="text-lg font-bold text-blue-500">
+                      {mockTasks.filter(t => !t.is_completed).length}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-gray-600 dark:text-gray-400">逾期</div>
+                    <div className="text-lg font-bold text-red-500">
+                      {mockTasks.filter(t => t.is_overdue).length}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Hint */}
+              <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                      喜欢这个视图？
+                    </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                      点击右上角"使用模板"按钮，立即创建属于你的视图
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleCreateFromTemplate}
+                    disabled={createView.isPending}
+                    className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-50 whitespace-nowrap"
+                  >
+                    {createView.isPending ? '创建中...' : '使用模板'}
+                  </button>
                 </div>
               </div>
             </div>
