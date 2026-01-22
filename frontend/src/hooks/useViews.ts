@@ -152,12 +152,18 @@ export const useToggleViewVisibility = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ uid, isVisible }: { uid: string; isVisible: boolean }) =>
-      viewApi.updateView(uid, { is_visible_in_nav: isVisible }),
+    mutationFn: ({ uid, isVisible, sortOrder }: { uid: string; isVisible: boolean; sortOrder?: number }) => {
+      const updateData: any = { is_visible_in_nav: isVisible };
+      if (sortOrder !== undefined) {
+        updateData.sort_order = sortOrder;
+      }
+      return viewApi.updateView(uid, updateData);
+    },
     onSuccess: (_, { uid }) => {
       queryClient.invalidateQueries({ queryKey: ['views'] });
       queryClient.invalidateQueries({ queryKey: ['view', uid] });
       queryClient.invalidateQueries({ queryKey: ['default-views'] });
+      queryClient.invalidateQueries({ queryKey: ['nav-views'] });
     },
   });
 };

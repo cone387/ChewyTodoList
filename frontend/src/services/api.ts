@@ -323,6 +323,7 @@ export const viewApi = {
     group_by: string;
     display_settings: Record<string, any>;
     is_visible_in_nav: boolean;
+    sort_order: number;
   }>) => api.patch<ApiResponse<TaskView>>(`/views/${uid}/`, data),
 
   // 删除视图
