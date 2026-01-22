@@ -265,16 +265,20 @@ const HomePage: React.FC = () => {
         </div>
       )}
       
-      <main className="flex-1 overflow-y-auto pb-16 bg-white dark:bg-background-dark px-4 pt-4">
+      <main className={`flex-1 pb-16 bg-white dark:bg-background-dark ${
+        viewData?.view_type === 'board' ? '' : 'overflow-y-auto px-4 pt-4'
+      }`}>
         {viewData && viewTasks?.results ? (
-          <ViewRenderer
-            view={viewData}
-            tasks={viewTasks.results}
-            onTaskClick={handleTaskClick}
-            onTaskUpdate={handleTaskUpdate}
-            showCompleted={showCompleted}
-            cardStyle={currentCardStyle}
-          />
+          <div className={viewData.view_type === 'board' ? 'h-full pt-4' : ''}>
+            <ViewRenderer
+              view={viewData}
+              tasks={viewTasks.results}
+              onTaskClick={handleTaskClick}
+              onTaskUpdate={handleTaskUpdate}
+              showCompleted={showCompleted}
+              cardStyle={currentCardStyle}
+            />
+          </div>
         ) : (
           <div className="flex items-center justify-center py-16">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
