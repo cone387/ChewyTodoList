@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useView, useViewTasks } from '../hooks/useViews';
 import { useUpdateTask } from '../hooks/useTasks';
-import EnhancedTaskList from '../components/EnhancedTaskList';
+import ViewRenderer from '../components/ViewRenderer';
 import type { Task } from '../types/index';
 
 const ViewPreviewPage: React.FC = () => {
@@ -50,6 +50,10 @@ const ViewPreviewPage: React.FC = () => {
         return 'calendar_month';
       case 'table':
         return 'table';
+      case 'timeline':
+        return 'timeline';
+      case 'gallery':
+        return 'photo_library';
       default:
         return 'list';
     }
@@ -65,6 +69,10 @@ const ViewPreviewPage: React.FC = () => {
         return 'text-purple-500 bg-purple-50 dark:bg-purple-900/20';
       case 'table':
         return 'text-orange-500 bg-orange-50 dark:bg-orange-900/20';
+      case 'timeline':
+        return 'text-red-500 bg-red-50 dark:bg-red-900/20';
+      case 'gallery':
+        return 'text-pink-500 bg-pink-50 dark:bg-pink-900/20';
       default:
         return 'text-gray-500 bg-gray-50 dark:bg-gray-900/20';
     }
@@ -167,11 +175,12 @@ const ViewPreviewPage: React.FC = () => {
             </div>
           ) : (
             <>
-              <EnhancedTaskList
-                tasks={tasks}
+              <ViewRenderer
                 view={view}
+                tasks={tasks}
                 onTaskClick={handleTaskClick}
                 onTaskUpdate={handleTaskUpdate}
+                loading={tasksLoading && page === 1}
               />
               
               {/* 加载更多 */}

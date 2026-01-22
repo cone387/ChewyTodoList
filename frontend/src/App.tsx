@@ -10,6 +10,8 @@ import ProjectsPage from './pages/ProjectsPage';
 import ViewsPage from './pages/ViewsPage';
 import ViewPreviewPage from './pages/ViewPreviewPage';
 import CreateViewPage from './pages/CreateViewPage';
+import ViewTemplateMarketPage from './pages/ViewTemplateMarketPage';
+import ViewTemplatePreviewPage from './pages/ViewTemplatePreviewPage';
 import './index.css';
 
 // 创建QueryClient实例
@@ -82,6 +84,24 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 <ProjectsPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/views/templates" 
+            element={
+              <ProtectedRoute>
+                <ViewTemplateMarketPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/views/template-preview" 
+            element={
+              <ProtectedRoute>
+                <ViewTemplatePreviewPage />
               </ProtectedRoute>
             } 
           />

@@ -306,7 +306,7 @@ export const viewApi = {
   createView: (data: {
     name: string;
     project_uid?: string;
-    view_type?: 'list' | 'board' | 'calendar' | 'table';
+    view_type?: 'list' | 'board' | 'calendar' | 'table' | 'timeline' | 'gallery';
     filters?: ViewFilter[];
     sorts?: ViewSort[];
     group_by?: string;
@@ -317,7 +317,7 @@ export const viewApi = {
   // 更新视图
   updateView: (uid: string, data: Partial<{
     name: string;
-    view_type: 'list' | 'board' | 'calendar' | 'table';
+    view_type: 'list' | 'board' | 'calendar' | 'table' | 'timeline' | 'gallery';
     filters: ViewFilter[];
     sorts: ViewSort[];
     group_by: string;

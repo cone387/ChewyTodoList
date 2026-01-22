@@ -36,7 +36,7 @@ const CreateViewPage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     project_uid: '',
-    view_type: 'list' as 'list' | 'board' | 'calendar' | 'table',
+    view_type: 'list' as 'list' | 'board' | 'calendar' | 'table' | 'timeline' | 'gallery',
     filters: [] as ViewFilter[],
     sorts: [] as ViewSort[],
     group_by: '',
@@ -351,6 +351,8 @@ const CreateViewPage: React.FC = () => {
                   <option value="board">看板视图</option>
                   <option value="calendar">日历视图</option>
                   <option value="table">表格视图</option>
+                  <option value="timeline">时间轴视图</option>
+                  <option value="gallery">画廊视图</option>
                 </select>
               </div>
             </div>

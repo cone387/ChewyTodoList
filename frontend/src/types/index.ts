@@ -145,7 +145,7 @@ export interface TaskView {
   uid: string;
   name: string;
   project?: Project;
-  view_type: 'list' | 'board' | 'calendar' | 'table';
+  view_type: 'list' | 'board' | 'calendar' | 'table' | 'timeline' | 'gallery';
   view_type_display: string;
   is_default: boolean;
   is_public: boolean;

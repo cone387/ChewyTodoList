@@ -530,6 +530,14 @@ const ViewsPage: React.FC = () => {
               </button>
             )}
             
+            <button 
+              onClick={() => navigate('/views/templates')}
+              className="text-purple-500 flex items-center justify-center size-10 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-full transition-colors"
+              title="模板市场"
+            >
+              <span className="material-symbols-outlined text-[20px]">store</span>
+            </button>
+            
             {isSelectionMode && selectedViews.length > 0 ? (
               <div className="flex items-center gap-1">
                 {activeTab === 'my' && (
