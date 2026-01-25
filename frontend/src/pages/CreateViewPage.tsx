@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useCreateView, useUpdateView, useDeleteView, useView } from '../hooks/useViews';
-import { useProjects } from '../hooks/useProjects';
 import FilterBuilder from '../components/FilterBuilder';
+import MobileSelect from '../components/MobileSelect';
 import { VIEW_TEMPLATES } from '../data/viewTemplates';
 import type { ViewFilter, ViewSort } from '../types/index';
 import type { ViewTemplate } from '../types/templates';
@@ -38,7 +38,6 @@ const CreateViewPage: React.FC = () => {
   
   const [formData, setFormData] = useState({
     name: '',
-    project_uid: '',
     view_type: 'list' as 'list' | 'board' | 'calendar' | 'table' | 'timeline' | 'gallery',
     filters: [] as ViewFilter[],
     sorts: [] as ViewSort[],
@@ -58,15 +57,11 @@ const CreateViewPage: React.FC = () => {
   const updateView = useUpdateView();
   const deleteView = useDeleteView();
   const { data: view, isLoading: viewLoading } = useView(uid!);
-  const { data: projectsResponse } = useProjects();
-
-  const projects = projectsResponse?.results || [];
 
   useEffect(() => {
     if (view) {
       setFormData({
         name: view.name,
-        project_uid: view.project?.uid || '',
         view_type: view.view_type,
         filters: view.filters || [],
         sorts: view.sorts || [],
@@ -154,7 +149,7 @@ const CreateViewPage: React.FC = () => {
       // Prepare data for backend - convert empty strings to undefined for optional fields
       const dataToSend = {
         ...formData,
-        project_uid: formData.project_uid || undefined, // Convert empty string to undefined
+        project_uid: undefined, // 不再发送项目关联
         group_by: formData.group_by || undefined, // Convert empty string to undefined
         filters: sanitizeFilters(formData.filters), // Sanitize filter values
       };
@@ -370,7 +365,7 @@ const CreateViewPage: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto pb-16 bg-white dark:bg-background-dark" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 60px)' }}>
-        <div className="p-4 space-y-6">
+        <div className="p-4 space-y-4">
           {/* Error Message */}
           {errorMessage && (
             <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
@@ -382,21 +377,21 @@ const CreateViewPage: React.FC = () => {
           )}
 
           {/* 基本信息 */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-gray-900 dark:text-white">基本信息</h3>
               <button
                 onClick={() => setShowTemplateSelector(true)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
+                className="flex items-center gap-1 px-2 py-1 text-xs text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
               >
-                <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
-                <span>应用模板</span>
+                <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+                <span>模板</span>
               </button>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   视图名称
                 </label>
                 <input
@@ -406,60 +401,53 @@ const CreateViewPage: React.FC = () => {
                     setFormData({ ...formData, name: e.target.value });
                     setErrorMessage(''); // Clear error when user starts typing
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="输入视图名称"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  关联项目
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  视图类型
                 </label>
-                <select
-                  value={formData.project_uid}
-                  onChange={(e) => setFormData({ ...formData, project_uid: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent appearance-none"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                    backgroundPosition: 'right 0.5rem center',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundSize: '1.5em 1.5em',
-                    paddingRight: '2.5rem'
-                  }}
-                >
-                  <option value="">全局视图</option>
-                  {projects.map((project) => (
-                    <option key={project.uid} value={project.uid}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
+                <MobileSelect
+                  value={formData.view_type}
+                  onChange={(value) => setFormData({ ...formData, view_type: value as any })}
+                  options={[
+                    { value: 'list', label: '列表' },
+                    { value: 'board', label: '看板' },
+                    { value: 'calendar', label: '日历' },
+                    { value: 'table', label: '表格' },
+                    { value: 'timeline', label: '时间轴' },
+                    { value: 'gallery', label: '画廊' },
+                  ]}
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  视图类型
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  分组方式
                 </label>
-                <select
-                  value={formData.view_type}
-                  onChange={(e) => setFormData({ ...formData, view_type: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent appearance-none"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                    backgroundPosition: 'right 0.5rem center',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundSize: '1.5em 1.5em',
-                    paddingRight: '2.5rem'
-                  }}
-                >
-                  <option value="list">列表视图</option>
-                  <option value="board">看板视图</option>
-                  <option value="calendar">日历视图</option>
-                  <option value="table">表格视图</option>
-                  <option value="timeline">时间轴视图</option>
-                  <option value="gallery">画廊视图</option>
-                </select>
+                <MobileSelect
+                  value={formData.group_by}
+                  onChange={(value) => setFormData({ ...formData, group_by: value as string })}
+                  options={groupByOptions}
+                />
               </div>
+
+              {/* 导航栏显示选项 - 移到基本信息区域 */}
+              <label className="flex items-center text-xs">
+                <input
+                  type="checkbox"
+                  checked={formData.is_visible_in_nav}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    is_visible_in_nav: e.target.checked,
+                  })}
+                  className="mr-2"
+                />
+                <span className="text-gray-700 dark:text-gray-300">在导航栏中显示</span>
+              </label>
             </div>
           </div>
 
@@ -470,223 +458,170 @@ const CreateViewPage: React.FC = () => {
           />
 
           {/* 排序规则 */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-gray-900 dark:text-white">排序规则</h3>
               <button
                 onClick={addSort}
-                className="text-primary text-sm font-medium hover:opacity-70"
+                className="flex items-center gap-1 text-primary text-xs font-medium hover:opacity-70"
               >
-                + 添加排序
+                <span className="material-symbols-outlined text-[16px]">add</span>
+                <span>添加</span>
               </button>
             </div>
 
-            {formData.sorts.map((sort, index) => (
-              <div key={index} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">排序规则 {index + 1}</span>
-                  <button
-                    onClick={() => removeSort(index)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">delete</span>
-                  </button>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-2">
-                  <select
-                    value={sort.field}
-                    onChange={(e) => updateSort(index, { ...sort, field: e.target.value })}
-                    className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                      backgroundPosition: 'right 0.25rem center',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundSize: '1em 1em',
-                      paddingRight: '1.5rem'
-                    }}
-                  >
-                    {sortFieldOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  
-                  <select
-                    value={sort.direction}
-                    onChange={(e) => updateSort(index, { ...sort, direction: e.target.value as 'asc' | 'desc' })}
-                    className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                      backgroundPosition: 'right 0.25rem center',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundSize: '1em 1em',
-                      paddingRight: '1.5rem'
-                    }}
-                  >
-                    <option value="asc">升序</option>
-                    <option value="desc">降序</option>
-                  </select>
-                </div>
+            {formData.sorts.length === 0 ? (
+              <div className="text-center py-6 text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                <span className="material-symbols-outlined text-[28px] mb-1 block opacity-50">sort</span>
+                <p className="text-xs">暂无排序规则</p>
               </div>
-            ))}
-          </div>
-
-          {/* 分组设置 */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium text-gray-900 dark:text-white">分组设置</h3>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                分组方式
-              </label>
-              <select
-                value={formData.group_by}
-                onChange={(e) => setFormData({ ...formData, group_by: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent appearance-none"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                  backgroundPosition: 'right 0.5rem center',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: '1.5em 1.5em',
-                  paddingRight: '2.5rem'
-                }}
-              >
-                {groupByOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
+            ) : (
+              <div className="space-y-2">
+                {formData.sorts.map((sort, index) => (
+                  <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-700">
+                    <div className="flex items-center gap-2">
+                      {/* 拖动手柄 */}
+                      <div className="flex-shrink-0 text-gray-400">
+                        <span className="material-symbols-outlined text-[18px]">drag_indicator</span>
+                      </div>
+                      
+                      {/* 字段选择 */}
+                      <div className="flex-1">
+                        <MobileSelect
+                          value={sort.field}
+                          onChange={(value) => updateSort(index, { ...sort, field: value as string })}
+                          options={sortFieldOptions}
+                          className="text-xs py-1.5"
+                        />
+                      </div>
+                      
+                      {/* 方向选择 */}
+                      <div className="w-24">
+                        <MobileSelect
+                          value={sort.direction}
+                          onChange={(value) => updateSort(index, { ...sort, direction: value as 'asc' | 'desc' })}
+                          options={[
+                            { value: 'asc', label: '升序' },
+                            { value: 'desc', label: '降序' },
+                          ]}
+                          className="text-xs py-1.5"
+                        />
+                      </div>
+                      
+                      {/* 删除按钮 */}
+                      <button
+                        onClick={() => removeSort(index)}
+                        className="flex-shrink-0 text-red-500 hover:text-red-700 p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                    </div>
+                  </div>
                 ))}
-              </select>
-            </div>
+              </div>
+            )}
           </div>
 
           {/* 显示设置 */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <h3 className="text-sm font-medium text-gray-900 dark:text-white">显示设置</h3>
             
-            <div className="space-y-3">
-              {/* 导航栏显示选项 */}
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">视图可见性</h4>
-                <label className="flex items-center text-sm">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_visible_in_nav}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      is_visible_in_nav: e.target.checked,
-                    })}
-                    className="mr-2"
-                  />
-                  <span className="text-gray-700 dark:text-gray-300">在导航栏中显示此视图</span>
-                </label>
-                <p className="text-xs text-gray-500 mt-1">
-                  勾选后，此视图会出现在任务页面的顶部导航栏中，方便快速切换
-                </p>
-              </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+              <label className="flex items-center text-xs">
+                <input
+                  type="checkbox"
+                  checked={formData.display_settings.show_project}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    display_settings: {
+                      ...formData.display_settings,
+                      show_project: e.target.checked,
+                    },
+                  })}
+                  className="mr-2"
+                />
+                <span className="text-gray-700 dark:text-gray-300">项目</span>
+              </label>
               
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">显示字段</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <label className="flex items-center text-sm">
-                    <input
-                      type="checkbox"
-                      checked={formData.display_settings.show_project}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        display_settings: {
-                          ...formData.display_settings,
-                          show_project: e.target.checked,
-                        },
-                      })}
-                      className="mr-2"
-                    />
-                    <span className="text-gray-700 dark:text-gray-300">显示项目</span>
-                  </label>
-                  
-                  <label className="flex items-center text-sm">
-                    <input
-                      type="checkbox"
-                      checked={formData.display_settings.show_tags}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        display_settings: {
-                          ...formData.display_settings,
-                          show_tags: e.target.checked,
-                        },
-                      })}
-                      className="mr-2"
-                    />
-                    <span className="text-gray-700 dark:text-gray-300">显示标签</span>
-                  </label>
-                  
-                  <label className="flex items-center text-sm">
-                    <input
-                      type="checkbox"
-                      checked={formData.display_settings.show_due_date}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        display_settings: {
-                          ...formData.display_settings,
-                          show_due_date: e.target.checked,
-                        },
-                      })}
-                      className="mr-2"
-                    />
-                    <span className="text-gray-700 dark:text-gray-300">显示截止日期</span>
-                  </label>
-                  
-                  <label className="flex items-center text-sm">
-                    <input
-                      type="checkbox"
-                      checked={formData.display_settings.show_priority}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        display_settings: {
-                          ...formData.display_settings,
-                          show_priority: e.target.checked,
-                        },
-                      })}
-                      className="mr-2"
-                    />
-                    <span className="text-gray-700 dark:text-gray-300">显示优先级</span>
-                  </label>
-                  
-                  <label className="flex items-center text-sm">
-                    <input
-                      type="checkbox"
-                      checked={formData.display_settings.show_status}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        display_settings: {
-                          ...formData.display_settings,
-                          show_status: e.target.checked,
-                        },
-                      })}
-                      className="mr-2"
-                    />
-                    <span className="text-gray-700 dark:text-gray-300">显示状态</span>
-                  </label>
-                  
-                  <label className="flex items-center text-sm col-span-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.display_settings.compact_mode}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        display_settings: {
-                          ...formData.display_settings,
-                          compact_mode: e.target.checked,
-                        },
-                      })}
-                      className="mr-2"
-                    />
-                    <span className="text-gray-700 dark:text-gray-300">紧凑模式</span>
-                  </label>
-                </div>
-              </div>
+              <label className="flex items-center text-xs">
+                <input
+                  type="checkbox"
+                  checked={formData.display_settings.show_tags}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    display_settings: {
+                      ...formData.display_settings,
+                      show_tags: e.target.checked,
+                    },
+                  })}
+                  className="mr-2"
+                />
+                <span className="text-gray-700 dark:text-gray-300">标签</span>
+              </label>
+              
+              <label className="flex items-center text-xs">
+                <input
+                  type="checkbox"
+                  checked={formData.display_settings.show_due_date}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    display_settings: {
+                      ...formData.display_settings,
+                      show_due_date: e.target.checked,
+                    },
+                  })}
+                  className="mr-2"
+                />
+                <span className="text-gray-700 dark:text-gray-300">截止日期</span>
+              </label>
+              
+              <label className="flex items-center text-xs">
+                <input
+                  type="checkbox"
+                  checked={formData.display_settings.show_priority}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    display_settings: {
+                      ...formData.display_settings,
+                      show_priority: e.target.checked,
+                    },
+                  })}
+                  className="mr-2"
+                />
+                <span className="text-gray-700 dark:text-gray-300">优先级</span>
+              </label>
+              
+              <label className="flex items-center text-xs">
+                <input
+                  type="checkbox"
+                  checked={formData.display_settings.show_status}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    display_settings: {
+                      ...formData.display_settings,
+                      show_status: e.target.checked,
+                    },
+                  })}
+                  className="mr-2"
+                />
+                <span className="text-gray-700 dark:text-gray-300">状态</span>
+              </label>
+              
+              <label className="flex items-center text-xs">
+                <input
+                  type="checkbox"
+                  checked={formData.display_settings.compact_mode}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    display_settings: {
+                      ...formData.display_settings,
+                      compact_mode: e.target.checked,
+                    },
+                  })}
+                  className="mr-2"
+                />
+                <span className="text-gray-700 dark:text-gray-300">紧凑模式</span>
+              </label>
             </div>
           </div>
 

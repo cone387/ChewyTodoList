@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import MobileSelect from './MobileSelect';
 import type { ViewFilter, FieldDefinition, OperatorDefinition } from '../types/index';
 import { TaskStatus, TaskPriority } from '../types/index';
 
@@ -184,47 +185,19 @@ const FilterBuilder: React.FC<FilterBuilderProps> = ({ filters, onChange }) => {
     // 根据字段类型和操作符类型渲染不同的输入组件
     if (fieldDef?.type === 'select' && fieldDef.options) {
       if (operatorDef.valueType === 'multiselect' || filter.operator === 'in' || filter.operator === 'not_in') {
-        // 多选
-        return (
-          <div className="space-y-2">
-            <select
-              multiple
-              value={Array.isArray(filter.value) ? filter.value : []}
-              onChange={(e) => {
-                const values = Array.from(e.target.selectedOptions, option => 
-                  isNaN(Number(option.value)) ? option.value : Number(option.value)
-                );
-                updateValue(values);
-              }}
-              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              size={Math.min(fieldDef.options.length, 4)}
-            >
-              {fieldDef.options.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-500">按住 Ctrl/Cmd 多选</p>
-          </div>
-        );
-      } else {
-        // 单选
+        // 多选 - 使用下拉框样式
         return (
           <select
-            value={filter.value}
+            multiple
+            value={Array.isArray(filter.value) ? filter.value : []}
             onChange={(e) => {
-              const value = isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value);
-              updateValue(value);
+              const values = Array.from(e.target.selectedOptions, option => 
+                isNaN(Number(option.value)) ? option.value : Number(option.value)
+              );
+              updateValue(values);
             }}
-            className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-              backgroundPosition: 'right 0.25rem center',
-              backgroundRepeat: 'no-repeat',
-              backgroundSize: '1em 1em',
-              paddingRight: '1.5rem'
-            }}
+            className="w-full px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
+            size={Math.min(fieldDef.options.length, 3)}
           >
             {fieldDef.options.map((option) => (
               <option key={option.value} value={option.value}>
@@ -232,6 +205,22 @@ const FilterBuilder: React.FC<FilterBuilderProps> = ({ filters, onChange }) => {
               </option>
             ))}
           </select>
+        );
+      } else {
+        // 单选
+        return (
+          <MobileSelect
+            value={filter.value}
+            onChange={(value) => {
+              const convertedValue = isNaN(Number(value)) ? value : Number(value);
+              updateValue(convertedValue);
+            }}
+            options={fieldDef.options.map(opt => ({
+              value: opt.value,
+              label: opt.label
+            }))}
+            className="text-xs py-1.5"
+          />
         );
       }
     }
@@ -241,20 +230,18 @@ const FilterBuilder: React.FC<FilterBuilderProps> = ({ filters, onChange }) => {
       
       if (filter.operator === 'between' || filter.operator === 'not_between') {
         return (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex gap-1">
             <input
               type={inputType}
               value={filter.value || ''}
               onChange={(e) => updateValue(e.target.value)}
-              className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              placeholder="开始"
+              className="flex-1 px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
             />
             <input
               type={inputType}
               value={filter.value2 || ''}
               onChange={(e) => updateValue(e.target.value, true)}
-              className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              placeholder="结束"
+              className="flex-1 px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
             />
           </div>
         );
@@ -264,7 +251,7 @@ const FilterBuilder: React.FC<FilterBuilderProps> = ({ filters, onChange }) => {
             type={inputType}
             value={filter.value || ''}
             onChange={(e) => updateValue(e.target.value)}
-            className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            className="w-full px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
           />
         );
       }
@@ -273,20 +260,18 @@ const FilterBuilder: React.FC<FilterBuilderProps> = ({ filters, onChange }) => {
     if (fieldDef?.type === 'number') {
       if (filter.operator === 'between' || filter.operator === 'not_between') {
         return (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex gap-1">
             <input
               type="number"
               value={filter.value || ''}
               onChange={(e) => updateValue(Number(e.target.value))}
-              className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              placeholder="最小值"
+              className="flex-1 px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
             />
             <input
               type="number"
               value={filter.value2 || ''}
               onChange={(e) => updateValue(Number(e.target.value), true)}
-              className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              placeholder="最大值"
+              className="flex-1 px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
             />
           </div>
         );
@@ -296,7 +281,7 @@ const FilterBuilder: React.FC<FilterBuilderProps> = ({ filters, onChange }) => {
             type="number"
             value={filter.value || ''}
             onChange={(e) => updateValue(Number(e.target.value))}
-            className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            className="w-full px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
           />
         );
       }
@@ -308,7 +293,7 @@ const FilterBuilder: React.FC<FilterBuilderProps> = ({ filters, onChange }) => {
         type="text"
         value={filter.value || ''}
         onChange={(e) => updateValue(e.target.value)}
-        className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+        className="w-full px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
         placeholder="输入值"
       />
     );
@@ -321,159 +306,138 @@ const FilterBuilder: React.FC<FilterBuilderProps> = ({ filters, onChange }) => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+            className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             {showAdvanced ? '简单模式' : '高级模式'}
           </button>
           <button
             onClick={addFilter}
-            className="text-primary text-sm font-medium hover:opacity-70"
+            className="flex items-center gap-1 text-primary text-xs font-medium hover:opacity-70"
           >
-            + 添加筛选
+            <span className="material-symbols-outlined text-[16px]">add</span>
+            <span>添加筛选</span>
           </button>
         </div>
       </div>
 
       {filters.length === 0 ? (
-        <div className="text-center py-8 text-gray-400">
-          <span className="material-symbols-outlined text-[32px] mb-2 block">filter_alt</span>
-          <p className="text-sm">暂无筛选条件</p>
+        <div className="text-center py-8 text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+          <span className="material-symbols-outlined text-[32px] mb-2 block opacity-50">filter_alt</span>
+          <p className="text-sm mb-3">暂无筛选条件</p>
           <button
             onClick={addFilter}
-            className="mt-2 text-primary text-sm font-medium hover:opacity-70"
+            className="text-primary text-sm font-medium hover:opacity-70 inline-flex items-center gap-1"
           >
-            添加第一个筛选条件
+            <span className="material-symbols-outlined text-[18px]">add_circle</span>
+            <span>添加第一个筛选条件</span>
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {filters.map((filter, index) => {
             const availableOperators = getAvailableOperators(filter.field);
+            const operatorDef = OPERATOR_DEFINITIONS.find(op => op.key === filter.operator);
             
             return (
-              <div key={filter.id || index} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg space-y-2">
-                {/* 逻辑连接符 */}
+              <div key={filter.id || index} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                {/* 逻辑连接符 - 只在第一个筛选条件之后显示 */}
                 {index > 0 && (
-                  <div className="flex items-center gap-2">
-                    <select
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">逻辑关系:</span>
+                    <MobileSelect
                       value={filter.logic || 'and'}
-                      onChange={(e) => updateFilter(index, { ...filter, logic: e.target.value as 'and' | 'or' })}
-                      className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                        backgroundPosition: 'right 0.25rem center',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundSize: '0.75em 0.75em',
-                        paddingRight: '1.25rem'
-                      }}
-                    >
-                      <option value="and">并且</option>
-                      <option value="or">或者</option>
-                    </select>
+                      onChange={(value) => updateFilter(index, { ...filter, logic: value as 'and' | 'or' })}
+                      options={[
+                        { value: 'and', label: '并且 (AND)' },
+                        { value: 'or', label: '或者 (OR)' },
+                      ]}
+                      className="text-xs py-1"
+                    />
                   </div>
                 )}
 
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">筛选条件 {index + 1}</span>
-                  <button
-                    onClick={() => removeFilter(index)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">delete</span>
-                  </button>
-                </div>
-                
-                <div className="grid grid-cols-1 gap-3">
-                  {/* 字段选择 */}
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      字段
-                    </label>
-                    <select
-                      value={filter.field}
-                      onChange={(e) => {
-                        const newField = e.target.value;
-                        const newFieldDef = getFieldDefinition(newField);
-                        const newAvailableOperators = getAvailableOperators(newField);
-                        const newOperator = newAvailableOperators.length > 0 ? newAvailableOperators[0].key : 'equals';
-                        const newOperatorDef = OPERATOR_DEFINITIONS.find(op => op.key === newOperator);
-                        
-                        // Set appropriate default value based on field type and operator
-                        let defaultValue;
-                        if (!newOperatorDef?.valueRequired) {
-                          defaultValue = null;
-                        } else if (newFieldDef?.type === 'select' && newFieldDef.options) {
-                          defaultValue = newFieldDef.options[0].value;
-                        } else {
-                          defaultValue = '';
-                        }
-                        
-                        updateFilter(index, {
-                          ...filter,
-                          field: newField,
-                          operator: newOperator as any,
-                          value: defaultValue,
-                          value2: undefined,
-                        });
-                      }}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                        backgroundPosition: 'right 0.25rem center',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundSize: '1em 1em',
-                        paddingRight: '1.5rem'
-                      }}
-                    >
-                      {FIELD_DEFINITIONS.map((field) => (
-                        <option key={field.key} value={field.key}>
-                          {field.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  {/* 操作符选择 */}
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      条件
-                    </label>
-                    <select
-                      value={filter.operator}
-                      onChange={(e) => {
-                        const newOperator = e.target.value;
-                        const operatorDef = OPERATOR_DEFINITIONS.find(op => op.key === newOperator);
-                        
-                        updateFilter(index, {
-                          ...filter,
-                          operator: newOperator as any,
-                          value: operatorDef?.valueRequired ? filter.value : null,
-                          value2: undefined,
-                        });
-                      }}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                        backgroundPosition: 'right 0.25rem center',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundSize: '1em 1em',
-                        paddingRight: '1.5rem'
-                      }}
-                    >
-                      {availableOperators.map((operator) => (
-                        <option key={operator.key} value={operator.key}>
-                          {operator.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  {/* 值输入 */}
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      值
-                    </label>
-                    {renderValueInput(filter, index)}
+                {/* 筛选条件主体 */}
+                <div className="p-3">
+                  <div className="flex items-start gap-2">
+                    {/* 字段选择 */}
+                    <div className="flex-shrink-0 w-24">
+                      <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-1 px-1">字段</div>
+                      <MobileSelect
+                        value={filter.field}
+                        onChange={(value) => {
+                          const newField = value as string;
+                          const newFieldDef = getFieldDefinition(newField);
+                          const newAvailableOperators = getAvailableOperators(newField);
+                          const newOperator = newAvailableOperators.length > 0 ? newAvailableOperators[0].key : 'equals';
+                          const newOperatorDef = OPERATOR_DEFINITIONS.find(op => op.key === newOperator);
+                          
+                          // Set appropriate default value based on field type and operator
+                          let defaultValue;
+                          if (!newOperatorDef?.valueRequired) {
+                            defaultValue = null;
+                          } else if (newFieldDef?.type === 'select' && newFieldDef.options) {
+                            defaultValue = newFieldDef.options[0].value;
+                          } else {
+                            defaultValue = '';
+                          }
+                          
+                          updateFilter(index, {
+                            ...filter,
+                            field: newField,
+                            operator: newOperator as any,
+                            value: defaultValue,
+                            value2: undefined,
+                          });
+                        }}
+                        options={FIELD_DEFINITIONS.map(field => ({
+                          value: field.key,
+                          label: field.label
+                        }))}
+                        className="text-xs py-1.5"
+                      />
+                    </div>
+                    
+                    {/* 操作符选择 */}
+                    <div className="flex-shrink-0 w-24">
+                      <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-1 px-1">条件</div>
+                      <MobileSelect
+                        value={filter.operator}
+                        onChange={(value) => {
+                          const newOperator = value as string;
+                          const newOperatorDef = OPERATOR_DEFINITIONS.find(op => op.key === newOperator);
+                          
+                          updateFilter(index, {
+                            ...filter,
+                            operator: newOperator as any,
+                            value: newOperatorDef?.valueRequired ? filter.value : null,
+                            value2: undefined,
+                          });
+                        }}
+                        options={availableOperators.map(op => ({
+                          value: op.key,
+                          label: op.label
+                        }))}
+                        className="text-xs py-1.5"
+                      />
+                    </div>
+                    
+                    {/* 值输入 - 占据剩余空间 */}
+                    {operatorDef?.valueRequired && (
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-1 px-1">值</div>
+                        {renderValueInput(filter, index)}
+                      </div>
+                    )}
+                    
+                    {/* 删除按钮 */}
+                    <div className={operatorDef?.valueRequired ? 'mt-5' : ''}>
+                      <button
+                        onClick={() => removeFilter(index)}
+                        className="flex-shrink-0 text-red-500 hover:text-red-700 p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -484,8 +448,8 @@ const FilterBuilder: React.FC<FilterBuilderProps> = ({ filters, onChange }) => {
 
       {/* 预设筛选模板 */}
       {filters.length === 0 && (
-        <div className="mt-6">
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">快速筛选模板</h4>
+        <div className="mt-4">
+          <h4 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-3 px-1">快速筛选模板</h4>
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => {
@@ -498,10 +462,13 @@ const FilterBuilder: React.FC<FilterBuilderProps> = ({ filters, onChange }) => {
                 };
                 onChange([todayFilter]);
               }}
-              className="p-2 text-xs text-left border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="p-3 text-xs text-left bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-700 rounded-xl hover:shadow-md transition-all"
             >
-              <div className="font-medium">今日到期</div>
-              <div className="text-gray-500">截止日期是今天</div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[16px]">today</span>
+                <span className="font-medium text-blue-900 dark:text-blue-100">今日到期</span>
+              </div>
+              <div className="text-blue-700 dark:text-blue-300 text-[10px]">截止日期是今天</div>
             </button>
             
             <button
@@ -515,10 +482,13 @@ const FilterBuilder: React.FC<FilterBuilderProps> = ({ filters, onChange }) => {
                 };
                 onChange([overdueFilter]);
               }}
-              className="p-2 text-xs text-left border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="p-3 text-xs text-left bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border border-red-200 dark:border-red-700 rounded-xl hover:shadow-md transition-all"
             >
-              <div className="font-medium">逾期任务</div>
-              <div className="text-gray-500">已经过期的任务</div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="material-symbols-outlined text-red-600 dark:text-red-400 text-[16px]">event_busy</span>
+                <span className="font-medium text-red-900 dark:text-red-100">逾期任务</span>
+              </div>
+              <div className="text-red-700 dark:text-red-300 text-[10px]">已经过期的任务</div>
             </button>
             
             <button
@@ -532,10 +502,13 @@ const FilterBuilder: React.FC<FilterBuilderProps> = ({ filters, onChange }) => {
                 };
                 onChange([highPriorityFilter]);
               }}
-              className="p-2 text-xs text-left border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="p-3 text-xs text-left bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border border-orange-200 dark:border-orange-700 rounded-xl hover:shadow-md transition-all"
             >
-              <div className="font-medium">高优先级</div>
-              <div className="text-gray-500">高优先级和紧急任务</div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="material-symbols-outlined text-orange-600 dark:text-orange-400 text-[16px]">priority_high</span>
+                <span className="font-medium text-orange-900 dark:text-orange-100">高优先级</span>
+              </div>
+              <div className="text-orange-700 dark:text-orange-300 text-[10px]">高优先级和紧急任务</div>
             </button>
             
             <button
@@ -549,10 +522,13 @@ const FilterBuilder: React.FC<FilterBuilderProps> = ({ filters, onChange }) => {
                 };
                 onChange([completedFilter]);
               }}
-              className="p-2 text-xs text-left border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="p-3 text-xs text-left bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border border-green-200 dark:border-green-700 rounded-xl hover:shadow-md transition-all"
             >
-              <div className="font-medium">已完成</div>
-              <div className="text-gray-500">已完成的任务</div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="material-symbols-outlined text-green-600 dark:text-green-400 text-[16px]">check_circle</span>
+                <span className="font-medium text-green-900 dark:text-green-100">已完成</span>
+              </div>
+              <div className="text-green-700 dark:text-green-300 text-[10px]">已完成的任务</div>
             </button>
           </div>
         </div>

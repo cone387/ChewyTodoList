@@ -171,3 +171,36 @@ input, textarea {
     padding-top: max(0px, env(safe-area-inset-top));
   }
 }
+
+/* Select 下拉选项样式 - iOS 白色主题 */
+select {
+  color-scheme: light;
+}
+
+select option {
+  background-color: white;
+  color: #111827;
+  padding: 12px 16px;
+}
+
+select option:checked {
+  background-color: #3b82f6;
+  color: white;
+}
+
+/* 深色模式下也强制使用白色主题 */
+@media (prefers-color-scheme: dark) {
+  select {
+    color-scheme: light;
+  }
+  
+  select option {
+    background-color: white;
+    color: #111827;
+  }
+  
+  select option:checked {
+    background-color: #3b82f6;
+    color: white;
+  }
+}

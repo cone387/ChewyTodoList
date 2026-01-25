@@ -277,7 +277,7 @@ const CreateTaskPage: React.FC = () => {
               <div className="flex items-center gap-1">
                 <input
                   type="datetime-local"
-                  className="text-sm text-gray-500 bg-transparent border-none focus:ring-0 focus:outline-none cursor-pointer"
+                  className="text-sm text-gray-500 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer"
                   value={formData.due_date}
                   onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                   placeholder="设置日期"
@@ -303,7 +303,7 @@ const CreateTaskPage: React.FC = () => {
               <div className="flex items-center gap-1">
                 <input
                   type="datetime-local"
-                  className="text-sm text-gray-500 bg-transparent border-none focus:ring-0 focus:outline-none cursor-pointer"
+                  className="text-sm text-gray-500 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer"
                   value={formData.start_date}
                   onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
                   placeholder="设置时间"
