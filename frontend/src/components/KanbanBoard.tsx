@@ -135,7 +135,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   }
 
   return (
-    <div className="flex gap-4 h-full overflow-x-auto overflow-y-hidden pb-4 hide-scrollbar">
+    <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar">
       {Object.entries(groupedTasks).map(([groupName, groupTasks]) => (
         <div
           key={groupName}
@@ -153,8 +153,8 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
             </div>
           </div>
 
-          {/* 任务卡片 - 使用flex-1和overflow-y-auto使其填满剩余空间 */}
-          <div className="p-3 space-y-3 flex-1 overflow-y-auto hide-scrollbar">
+          {/* 任务卡片 - 自适应高度 */}
+          <div className="p-3 space-y-3">
             {groupTasks.map((task) => (
               <div
                 key={task.uid}
