@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useViews, useSetDefaultView, useDuplicateView, useDeleteView, useToggleViewVisibility, useCreateView } from '../hooks/useViews';
 import type { TaskView, ViewFilter, ViewSort } from '../types/index';
 import { TaskStatus, TaskPriority } from '../types/index';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from '../components/ToastContainer';
+import { useConfirm } from '../hooks/useConfirm';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 // 预设视图模板
 interface ViewTemplate {
@@ -203,6 +207,8 @@ const ViewsPage: React.FC = () => {
   const deleteView = useDeleteView();
   const toggleViewVisibility = useToggleViewVisibility();
   const createView = useCreateView();
+  const { toasts, removeToast, info } = useToast();
+  const { confirmState, confirm, handleCancel } = useConfirm();
 
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedViews, setSelectedViews] = React.useState<string[]>([]);
@@ -355,7 +361,15 @@ const ViewsPage: React.FC = () => {
   };
 
   const handleDelete = async (view: TaskView) => {
-    if (window.confirm(`确定要删除视图"${view.name}"吗？此操作无法撤销。`)) {
+    const confirmed = await confirm({
+      title: '删除视图',
+      message: `确定要删除视图"${view.name}"吗？此操作无法撤销。`,
+      confirmText: '删除',
+      cancelText: '取消',
+      confirmColor: 'danger',
+    });
+    
+    if (confirmed) {
       try {
         await deleteView.mutateAsync(view.uid);
       } catch (error) {
@@ -371,7 +385,15 @@ const ViewsPage: React.FC = () => {
       views.find(v => v.uid === uid)?.name
     ).filter(Boolean).join('、');
     
-    if (window.confirm(`确定要删除选中的 ${selectedViews.length} 个视图吗？\n\n${viewNames}\n\n此操作无法撤销。`)) {
+    const confirmed = await confirm({
+      title: '批量删除视图',
+      message: `确定要删除选中的 ${selectedViews.length} 个视图吗？\n\n${viewNames}\n\n此操作无法撤销。`,
+      confirmText: '删除',
+      cancelText: '取消',
+      confirmColor: 'danger',
+    });
+    
+    if (confirmed) {
       try {
         await Promise.all(selectedViews.map(uid => deleteView.mutateAsync(uid)));
         setSelectedViews([]);
@@ -869,7 +891,7 @@ const ViewsPage: React.FC = () => {
                     <button
                       onClick={() => {
                         // 系统视图预览：直接在当前页面显示配置信息
-                        alert(`系统视图配置：\n\n视图类型：${viewTemplate.view_type === 'list' ? '列表' : viewTemplate.view_type === 'board' ? '看板' : viewTemplate.view_type === 'calendar' ? '日历' : '表格'}\n筛选条件：${viewTemplate.filters.length} 个\n排序规则：${viewTemplate.sorts.length} 个\n${viewTemplate.group_by ? `分组方式：${viewTemplate.group_by}` : '无分组'}\n\n${viewTemplate.description}`);
+                        info(`系统视图配置：\n\n视图类型：${viewTemplate.view_type === 'list' ? '列表' : viewTemplate.view_type === 'board' ? '看板' : viewTemplate.view_type === 'calendar' ? '日历' : '表格'}\n筛选条件：${viewTemplate.filters.length} 个\n排序规则：${viewTemplate.sorts.length} 个\n${viewTemplate.group_by ? `分组方式：${viewTemplate.group_by}` : '无分组'}\n\n${viewTemplate.description}`);
                       }}
                       className="py-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                       title="预览配置信息"
@@ -1268,6 +1290,19 @@ const ViewsPage: React.FC = () => {
           )}
         </div>
       </main>
+      
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      {confirmState.isOpen && (
+        <ConfirmDialog
+          title={confirmState.title}
+          message={confirmState.message}
+          confirmText={confirmState.confirmText}
+          cancelText={confirmState.cancelText}
+          confirmColor={confirmState.confirmColor}
+          onConfirm={confirmState.onConfirm}
+          onCancel={handleCancel}
+        />
+      )}
     </div>
   );
 };

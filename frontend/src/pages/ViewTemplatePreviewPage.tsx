@@ -5,11 +5,14 @@ import ViewRenderer from '../components/ViewRenderer';
 import { generateMockTasks, filterTasksByTemplate, sortTasksByTemplate } from '../utils/mockData';
 import type { ViewTemplate } from '../types/templates';
 import type { TaskView } from '../types/index';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from '../components/ToastContainer';
 
 const ViewTemplatePreviewPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const createView = useCreateView();
+  const { toasts, removeToast, info } = useToast();
   
   const [template, setTemplate] = useState<ViewTemplate | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'config' | 'preview'>('overview');
@@ -551,7 +554,7 @@ const ViewTemplatePreviewPage: React.FC = () => {
                     tasks={mockTasks}
                     onTaskClick={(task) => {
                       // 预览模式下不跳转，显示提示
-                      alert(`这是预览模式。实际使用时，点击任务"${task.title}"将打开任务详情页面。`);
+                      info(`这是预览模式。实际使用时，点击任务"${task.title}"将打开任务详情页面。`);
                     }}
                     loading={false}
                   />
@@ -611,6 +614,8 @@ const ViewTemplatePreviewPage: React.FC = () => {
           )}
         </div>
       </main>
+      
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 };

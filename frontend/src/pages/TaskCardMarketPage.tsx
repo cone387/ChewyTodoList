@@ -2,9 +2,12 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TASK_CARD_TEMPLATES } from '../types/taskCard';
 import type { TaskCardTemplate } from '../types/taskCard';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from '../components/ToastContainer';
 
 const TaskCardMarketPage: React.FC = () => {
   const navigate = useNavigate();
+  const { toasts, removeToast, info } = useToast();
 
   const handleBack = () => {
     navigate(-1);
@@ -17,7 +20,7 @@ const TaskCardMarketPage: React.FC = () => {
 
   const handleApply = (template: TaskCardTemplate) => {
     // TODO: 实现应用卡片样式到视图的功能
-    alert(`即将应用"${template.name}"样式`);
+    info(`即将应用"${template.name}"样式`);
   };
 
   const getLayoutIcon = (layout: string) => {
@@ -193,6 +196,8 @@ const TaskCardMarketPage: React.FC = () => {
           ))}
         </div>
       </main>
+      
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 };

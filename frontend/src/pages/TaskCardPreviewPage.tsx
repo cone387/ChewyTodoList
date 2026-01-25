@@ -4,10 +4,13 @@ import EnhancedTaskList from '../components/EnhancedTaskList';
 import type { TaskCardTemplate } from '../types/taskCard';
 import type { Task } from '../types/index';
 import { TaskStatus, TaskPriority } from '../types/index';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from '../components/ToastContainer';
 
 const TaskCardPreviewPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { toasts, removeToast, info } = useToast();
   
   // 从URL参数获取卡片模板数据
   const cardTemplate = useMemo(() => {
@@ -261,7 +264,7 @@ const TaskCardPreviewPage: React.FC = () => {
           <button
             onClick={() => {
               // TODO: 实现应用卡片样式的功能
-              alert('应用卡片样式功能即将推出');
+              info('应用卡片样式功能即将推出');
             }}
             className="flex-1 py-3 px-4 text-sm font-medium text-white bg-primary rounded-lg hover:opacity-80 transition-opacity"
           >
@@ -269,6 +272,8 @@ const TaskCardPreviewPage: React.FC = () => {
           </button>
         </div>
       </div>
+      
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 };

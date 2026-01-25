@@ -102,12 +102,42 @@ input, textarea {
   }
 }
 
+@keyframes slide-down {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
 
 .animate-glow {
   animation: glow 2s ease-in-out infinite;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
 }
 
 .shimmer {

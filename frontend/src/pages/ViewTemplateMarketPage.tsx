@@ -4,12 +4,15 @@ import { useCreateView, useViews, useUpdateView } from '../hooks/useViews';
 import { VIEW_TEMPLATES, TEMPLATE_CATEGORIES, getRecommendedTemplates } from '../data/viewTemplates';
 import type { ViewTemplate } from '../types/templates';
 import type { TaskView } from '../types/index';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from '../components/ToastContainer';
 
 const ViewTemplateMarketPage: React.FC = () => {
   const navigate = useNavigate();
   const createView = useCreateView();
   const updateView = useUpdateView();
   const { data: viewsResponse } = useViews();
+  const { toasts, removeToast, success, error } = useToast();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -117,11 +120,11 @@ const ViewTemplateMarketPage: React.FC = () => {
       });
       setShowViewSelector(false);
       setSelectedTemplate(null);
-      // 可以显示成功提示
-      alert(`已成功将"${selectedTemplate.name}"模板应用到视图"${view.name}"`);
-    } catch (error) {
-      console.error('应用模板失败:', error);
-      alert('应用模板失败，请重试');
+      // 显示成功提示
+      success(`已成功将"${selectedTemplate.name}"模板应用到视图"${view.name}"`);
+    } catch (err) {
+      console.error('应用模板失败:', err);
+      error('应用模板失败，请重试');
     }
   };
 
@@ -637,6 +640,8 @@ const ViewTemplateMarketPage: React.FC = () => {
           </div>
         </div>
       )}
+      
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 };

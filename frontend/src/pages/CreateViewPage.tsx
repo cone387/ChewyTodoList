@@ -7,6 +7,8 @@ import { VIEW_TEMPLATES } from '../data/viewTemplates';
 import { TASK_CARD_TEMPLATES } from '../types/taskCard';
 import type { ViewFilter, ViewSort } from '../types/index';
 import type { ViewTemplate } from '../types/templates';
+import { useConfirm } from '../hooks/useConfirm';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 // Import operator definitions for filter sanitization
 const OPERATOR_DEFINITIONS = [
@@ -59,6 +61,7 @@ const CreateViewPage: React.FC = () => {
   const updateView = useUpdateView();
   const deleteView = useDeleteView();
   const { data: view, isLoading: viewLoading } = useView(uid!);
+  const { confirmState, confirm, handleCancel } = useConfirm();
 
   useEffect(() => {
     if (view) {
@@ -185,12 +188,22 @@ const CreateViewPage: React.FC = () => {
   };
 
   const handleDelete = async () => {
-    if (isEditing && uid && window.confirm('确定要删除这个视图吗？')) {
-      try {
-        await deleteView.mutateAsync(uid);
-        navigate('/views');
-      } catch (error) {
-        console.error('删除视图失败:', error);
+    if (isEditing && uid) {
+      const confirmed = await confirm({
+        title: '删除视图',
+        message: '确定要删除这个视图吗？此操作无法撤销。',
+        confirmText: '删除',
+        cancelText: '取消',
+        confirmColor: 'danger',
+      });
+      
+      if (confirmed) {
+        try {
+          await deleteView.mutateAsync(uid);
+          navigate('/views');
+        } catch (error) {
+          console.error('删除视图失败:', error);
+        }
       }
     }
   };
@@ -721,6 +734,18 @@ const CreateViewPage: React.FC = () => {
           )}
         </div>
       </main>
+      
+      {confirmState.isOpen && (
+        <ConfirmDialog
+          title={confirmState.title}
+          message={confirmState.message}
+          confirmText={confirmState.confirmText}
+          cancelText={confirmState.cancelText}
+          confirmColor={confirmState.confirmColor}
+          onConfirm={confirmState.onConfirm}
+          onCancel={handleCancel}
+        />
+      )}
     </div>
   );
 };
