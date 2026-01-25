@@ -337,7 +337,7 @@ class TaskSerializer(serializers.ModelSerializer):
     """任务详情序列化器"""
     
     project = ProjectListSerializer(read_only=True)
-    project_uid = serializers.CharField(write_only=True)
+    project_uid = serializers.CharField(write_only=True, required=False, allow_null=True, allow_blank=True)
     parent = serializers.CharField(source='parent.uid', read_only=True)
     parent_uid = serializers.CharField(write_only=True, required=False, allow_null=True)
     tags = TagSerializer(many=True, read_only=True)
@@ -375,6 +375,10 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def validate_project_uid(self, value):
         """验证项目UID"""
+        # 如果没有提供项目，返回 None（后续会使用默认项目）
+        if not value or value == 'null' or value == '':
+            return None
+            
         user = self.context['request'].user
         try:
             project = Project.objects.get(uid=value, user=user)
@@ -433,13 +437,27 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """创建任务"""
-        project = validated_data.pop('project_uid')
+        user = self.context['request'].user
+        project = validated_data.pop('project_uid', None)
+        
+        # 如果没有指定项目，使用默认项目
+        if project is None:
+            try:
+                # 获取用户的默认项目（名为"默认项目"或第一个项目）
+                project = Project.objects.filter(user=user, name="默认项目").first()
+                if not project:
+                    project = Project.objects.filter(user=user).first()
+                if not project:
+                    raise serializers.ValidationError("请先创建项目")
+            except Exception as e:
+                raise serializers.ValidationError(f"获取默认项目失败: {str(e)}")
+        
         parent = validated_data.pop('parent_uid', None)
         tag_uids = validated_data.pop('tag_uids', [])
         
         validated_data['project'] = project
         validated_data['parent'] = parent
-        validated_data['user'] = self.context['request'].user
+        validated_data['user'] = user
         
         task = super().create(validated_data)
         

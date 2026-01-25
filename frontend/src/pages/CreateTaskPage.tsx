@@ -40,24 +40,19 @@ const CreateTaskPage: React.FC = () => {
       return;
     }
 
-    if (!formData.project_uid) {
-      // 使用第一个项目作为默认项目
-      if (projects.length > 0) {
-        formData.project_uid = projects[0].uid;
-      } else {
-        setError('请选择一个项目');
-        return;
-      }
-    }
-
+    // 项目现在是可选的，不需要强制选择
     try {
       const taskData: any = {
-        project_uid: formData.project_uid,
         title: formData.title.trim(),
         priority: formData.priority,
         tag_uids: formData.tag_uids,
         is_all_day: formData.is_all_day,
       };
+
+      // 只有选择了项目才添加 project_uid
+      if (formData.project_uid) {
+        taskData.project_uid = formData.project_uid;
+      }
 
       // 只有非空内容才添加
       if (formData.content.trim()) {
@@ -168,7 +163,7 @@ const CreateTaskPage: React.FC = () => {
     }
   };
 
-  const selectedProject = projects.find(p => p.uid === formData.project_uid) || projects[0];
+  const selectedProject = projects.find(p => p.uid === formData.project_uid);
 
   // 键盘快捷键
   useEffect(() => {
@@ -187,13 +182,6 @@ const CreateTaskPage: React.FC = () => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [formData]);
-
-  // 自动选择第一个项目
-  useEffect(() => {
-    if (projects.length > 0 && !formData.project_uid) {
-      setFormData(prev => ({ ...prev, project_uid: projects[0].uid }));
-    }
-  }, [projects, formData.project_uid]);
 
   return (
     <div className="relative flex h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-background-dark overflow-hidden pb-16">
@@ -259,10 +247,11 @@ const CreateTaskPage: React.FC = () => {
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-gray-400 dark:text-gray-500">list_alt</span>
                 <span className="text-sm font-medium">项目</span>
+                <span className="text-xs text-gray-400">(可选)</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-sm text-gray-500">
-                  {selectedProject ? selectedProject.name : '选择项目'}
+                  {selectedProject ? selectedProject.name : '默认项目'}
                 </span>
                 <span className="material-symbols-outlined text-gray-400 text-sm">chevron_right</span>
               </div>

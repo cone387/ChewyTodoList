@@ -301,6 +301,8 @@ class Task(BaseModel):
         to_field="uid",
         on_delete=models.CASCADE,
         related_name="tasks",
+        null=True,
+        blank=True,
         verbose_name="所属项目"
     )
     parent = models.ForeignKey(
