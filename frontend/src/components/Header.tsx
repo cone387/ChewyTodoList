@@ -118,12 +118,6 @@ const Header: React.FC<HeaderProps> = ({
               </button>
             )}
             
-            <button 
-              onClick={() => navigate('/views')}
-              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex items-center justify-center size-8 rounded-full transition-colors"
-            >
-              <span className="material-symbols-outlined text-[18px]">tune</span>
-            </button>
             <div className="size-8 rounded-full bg-gray-200 dark:bg-[#252f3a] flex items-center justify-center relative">
               <span className="material-symbols-outlined text-gray-500 dark:text-gray-400 text-[18px]">
                 person
@@ -182,13 +176,14 @@ const Header: React.FC<HeaderProps> = ({
             </button>
           ))}
           
-          {/* 添加自定义视图按钮 */}
+          {/* 视图管理按钮 - 固定在最右边 */}
           <button 
-            onClick={handleCreateView}
-            className="whitespace-nowrap text-gray-400 hover:text-gray-600 pb-1 flex items-center gap-1"
+            onClick={() => navigate('/views')}
+            className="ml-auto whitespace-nowrap text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 pb-1 flex items-center gap-1 sticky right-0 bg-white dark:bg-surface-dark pl-2"
+            title="视图管理"
           >
-            <span className="material-symbols-outlined text-[16px]">add</span>
-            <span>自定义</span>
+            <span className="material-symbols-outlined text-[16px]">tune</span>
+            <span>管理</span>
           </button>
         </div>
       </div>

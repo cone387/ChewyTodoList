@@ -399,20 +399,6 @@ const HomePage: React.FC = () => {
       }`}>
         {viewData && viewTasks?.results ? (
           <div className={viewData.view_type === 'board' ? 'pt-4' : ''}>
-            {/* 卡片样式徽章 */}
-            {currentCardStyle && viewData.view_type === 'list' && (
-              <div className="flex items-center justify-end mb-3 px-4">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 dark:bg-primary/20 rounded-full">
-                  <span className="material-symbols-outlined text-primary text-[14px]">
-                    {currentCardStyle.icon}
-                  </span>
-                  <span className="text-xs font-medium text-primary">
-                    {currentCardStyle.name}
-                  </span>
-                </div>
-              </div>
-            )}
-            
             <ViewRenderer
               view={viewData}
               tasks={viewTasks.results}
