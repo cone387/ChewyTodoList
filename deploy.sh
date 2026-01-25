@@ -20,8 +20,8 @@ NC='\033[0m' # No Color
 
 # 配置变量
 IMAGE_NAME="chewytodolist"
-CONTAINER_NAME="chewytodolist-app"
-PORT=80
+CONTAINER_NAME="chewy-todolist"
+PORT=8040
 
 # 打印带颜色的消息
 print_info() {

@@ -1,7 +1,7 @@
 # 多阶段构建 Dockerfile - 单容器部署前后端 + Nginx
 
 # ==================== 阶段 1: 构建前端 ====================
-FROM node:18-alpine AS frontend-builder
+FROM docker.m.daocloud.io/library/node:18-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
@@ -18,7 +18,7 @@ COPY frontend/ ./
 RUN npm run build -- --mode production
 
 # ==================== 阶段 2: 最终镜像 ====================
-FROM python:3.11-slim
+FROM docker.m.daocloud.io/library/python:3.11-slim
 
 # 安装 Nginx 和 Supervisor
 RUN apt-get update && apt-get install -y \

@@ -20,12 +20,30 @@ python manage.py collectstatic --noinput --clear
 echo "Creating superuser if not exists..."
 python manage.py shell << EOF
 from django.contrib.auth import get_user_model
+from apps.todolist.models import TaskView
+
 User = get_user_model()
 if not User.objects.filter(username="admin").exists():
-    User.objects.create_superuser("admin", "admin@example.com", "admin123")
+    admin = User.objects.create_superuser("admin", "admin@example.com", "admin123")
     print("✓ Superuser created: admin/admin123")
 else:
+    admin = User.objects.get(username="admin")
     print("✓ Superuser already exists")
+
+# 创建默认视图
+if not TaskView.objects.filter(user=admin, is_visible_in_nav=True).exists():
+    TaskView.objects.create(
+        name='所有任务',
+        view_type='list',
+        is_visible_in_nav=True,
+        is_default=True,
+        user=admin,
+        filters=[],
+        sorts=[{'field': 'created_at', 'order': 'desc'}]
+    )
+    print("✓ Default view created")
+else:
+    print("✓ Default views already exist")
 EOF
 
 echo "=========================================="

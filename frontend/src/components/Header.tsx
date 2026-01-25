@@ -37,10 +37,6 @@ const Header: React.FC<HeaderProps> = ({
     onSearch?.(query);
   };
 
-  const handleCreateView = () => {
-    navigate('/views/create');
-  };
-
   const handleEditView = (view: TaskView) => {
     navigate(`/views/edit/${view.uid}`);
   };

@@ -5,7 +5,7 @@ import ViewRenderer from '../components/ViewRenderer';
 import BottomNav from '../components/BottomNav';
 import FloatingAddButton from '../components/FloatingAddButton';
 import { useViewTasks, useNavViews, useView, useUpdateView } from '../hooks/useViews';
-import { TASK_CARD_TEMPLATES, type TaskCardTemplate } from '../types/taskCard';
+import { TASK_CARD_TEMPLATES } from '../types/taskCard';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
