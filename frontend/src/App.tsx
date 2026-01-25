@@ -12,6 +12,8 @@ import ViewPreviewPage from './pages/ViewPreviewPage';
 import CreateViewPage from './pages/CreateViewPage';
 import ViewTemplateMarketPage from './pages/ViewTemplateMarketPage';
 import ViewTemplatePreviewPage from './pages/ViewTemplatePreviewPage';
+import TaskCardMarketPage from './pages/TaskCardMarketPage';
+import TaskCardPreviewPage from './pages/TaskCardPreviewPage';
 import './index.css';
 
 // 创建QueryClient实例
@@ -138,6 +140,24 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 <ViewsPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/task-cards" 
+            element={
+              <ProtectedRoute>
+                <TaskCardMarketPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/task-card-preview" 
+            element={
+              <ProtectedRoute>
+                <TaskCardPreviewPage />
               </ProtectedRoute>
             } 
           />

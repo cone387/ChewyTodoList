@@ -538,6 +538,14 @@ const ViewsPage: React.FC = () => {
               <span className="material-symbols-outlined text-[20px]">store</span>
             </button>
             
+            <button 
+              onClick={() => navigate('/task-cards')}
+              className="text-blue-500 flex items-center justify-center size-10 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-colors"
+              title="卡片样式"
+            >
+              <span className="material-symbols-outlined text-[20px]">style</span>
+            </button>
+            
             {isSelectionMode && selectedViews.length > 0 ? (
               <div className="flex items-center gap-1">
                 {activeTab === 'my' && (
