@@ -24,42 +24,64 @@
 - **环境管理**: uv
 - **Python**: 3.13+
 
-### 前端 (计划中)
+### 前端
 - **框架**: React 18 + TypeScript
 - **构建工具**: Vite
-- **状态管理**: Zustand
-- **UI组件**: Tailwind CSS
+- **样式**: Tailwind CSS
 - **HTTP客户端**: Axios
+- **路由**: React Router
 
 ## 📁 项目结构
 
 ```
-todo-app/
+ChewyTodoList/
 ├── backend/                # Django 后端
 │   ├── config/            # Django 配置
+│   │   └── settings/      # 环境配置
 │   ├── apps/              # 应用模块
-│   │   ├── authentication/   # 用户认证
-│   │   ├── projects/         # 项目管理
-│   │   ├── tags/             # 标签系统
-│   │   ├── todos/            # 待办事项
-│   │   └── common/           # 公共模块
-│   ├── scripts/           # 脚本文件
-│   └── requirements.txt   # Python依赖
-├── frontend/              # React 前端 (计划中)
+│   │   └── todolist/      # 待办事项核心模块
+│   └── scripts/           # 脚本文件
+├── frontend/              # React 前端
+│   ├── src/
+│   │   ├── components/    # UI 组件
+│   │   ├── pages/         # 页面组件
+│   │   ├── hooks/         # 自定义 Hooks
+│   │   ├── services/      # API 服务
+│   │   └── types/         # TypeScript 类型
+│   └── public/            # 静态资源
+├── docker/                # Docker 配置文件
+│   ├── nginx.conf         # Nginx 配置
+│   ├── supervisord.conf   # Supervisor 配置
+│   └── entrypoint.sh      # 容器启动脚本
 ├── docs/                  # 项目文档
 ├── data/                  # 数据目录
-└── docker-compose.yml     # Docker 配置
+├── Dockerfile             # Docker 镜像构建
+├── deploy.sh              # 一键部署脚本
+└── docker-compose.yml     # Docker Compose 配置
 ```
 
 ## 🚀 快速开始
 
-### 方式一：使用 Docker (推荐)
+### 方式一：Docker 一键部署 (推荐)
 
 ```bash
 # 克隆项目
 git clone <repository-url>
-cd todo-app
+cd ChewyTodoList
 
+# 一键部署
+chmod +x deploy.sh
+./deploy.sh deploy
+```
+
+部署完成后访问 http://localhost
+- 默认管理员账号: `admin` / `admin123`
+
+详细部署说明请查看 [DEPLOY.md](DEPLOY.md)
+
+### 方式二：Docker Compose
+
+```bash
 # 启动服务
 docker-compose up -d
 
@@ -67,9 +89,9 @@ docker-compose up -d
 docker-compose logs -f backend
 ```
 
-访问 http://localhost:8000/api/v1/ 查看API
+访问 http://localhost:8000/api/ 查看API
 
-### 方式二：本地开发
+### 方式三：本地开发
 
 #### 1. 后端设置
 
@@ -87,7 +109,7 @@ pip install uv
 ./scripts/dev.sh
 ```
 
-#### 2. 前端设置 (计划中)
+#### 2. 前端设置
 
 ```bash
 # 进入前端目录
@@ -99,6 +121,8 @@ npm install
 # 启动开发服务器
 npm run dev
 ```
+
+访问 http://localhost:5173
 
 ## 📖 API 文档
 

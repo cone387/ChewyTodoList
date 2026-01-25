@@ -14,8 +14,9 @@ import type {
 } from '../types/index';
 
 // 创建axios实例
+// 使用相对路径，在生产环境中会自动使用当前域名
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -82,7 +83,10 @@ api.interceptors.response.use(
       if (refreshToken) {
         try {
           console.log('Attempting to refresh token...');
-          const response = await axios.post('http://localhost:8000/api/auth/refresh/', {
+          const refreshUrl = import.meta.env.VITE_API_URL 
+            ? `${import.meta.env.VITE_API_URL}/auth/refresh/`
+            : '/api/auth/refresh/';
+          const response = await axios.post(refreshUrl, {
             refresh: refreshToken,
           });
           
