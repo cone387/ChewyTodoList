@@ -64,6 +64,20 @@ ChewyTodoList/
 
 ### 方式一：Docker 一键部署 (推荐)
 
+**国内用户（推荐）：**
+
+```bash
+# 克隆项目
+git clone <repository-url>
+cd ChewyTodoList
+
+# 一键部署（使用国内镜像源）
+chmod +x deploy.sh
+./deploy.sh deploy-cn
+```
+
+**国际用户：**
+
 ```bash
 # 克隆项目
 git clone <repository-url>
@@ -74,7 +88,7 @@ chmod +x deploy.sh
 ./deploy.sh deploy
 ```
 
-部署完成后访问 http://localhost
+部署完成后访问 http://localhost:8040
 - 默认管理员账号: `admin` / `admin123`
 
 详细部署说明请查看 [DEPLOY.md](DEPLOY.md)

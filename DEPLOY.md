@@ -4,6 +4,8 @@
 
 ### 一键部署
 
+**标准部署（国际网络）：**
+
 ```bash
 # 赋予执行权限
 chmod +x deploy.sh
@@ -12,9 +14,25 @@ chmod +x deploy.sh
 ./deploy.sh deploy
 ```
 
+**国内镜像源部署（推荐国内用户）：**
+
+```bash
+# 使用国内镜像源部署（更快）
+./deploy.sh deploy-cn
+```
+
 部署完成后：
-- 访问地址: http://localhost
+- 访问地址: http://localhost:8040
 - 默认管理员账号: `admin` / `admin123`
+
+### 镜像源说明
+
+如果在国内网络环境下构建较慢或失败，建议使用国内镜像源版本：
+
+- **Docker 镜像**: DaoCloud (docker.m.daocloud.io)
+- **npm 镜像**: npmmirror (registry.npmmirror.com)
+- **pip 镜像**: 清华源 (pypi.tuna.tsinghua.edu.cn)
+- **apt 镜像**: 清华源 (mirrors.tuna.tsinghua.edu.cn)
 
 ## 详细说明
 
@@ -27,11 +45,17 @@ chmod +x deploy.sh
 ### 部署命令
 
 ```bash
-# 完整部署
+# 完整部署（国际网络）
 ./deploy.sh deploy
+
+# 完整部署（国内镜像源，推荐）
+./deploy.sh deploy-cn
 
 # 仅构建镜像
 ./deploy.sh build
+
+# 仅构建镜像（国内镜像源）
+./deploy.sh build-cn
 
 # 启动容器
 ./deploy.sh start

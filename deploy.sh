@@ -22,6 +22,13 @@ NC='\033[0m' # No Color
 IMAGE_NAME="chewytodolist"
 CONTAINER_NAME="chewy-todolist"
 PORT=8040
+DOCKERFILE="Dockerfile"  # 默认使用标准 Dockerfile
+
+# 检查是否使用国内镜像源
+if [ "$1" = "build-cn" ] || [ "$1" = "deploy-cn" ]; then
+    DOCKERFILE="Dockerfile.cn"
+    echo "使用国内镜像源版本"
+fi
 
 # 打印带颜色的消息
 print_info() {
@@ -48,7 +55,7 @@ check_docker() {
 # 构建镜像
 build_image() {
     print_info "开始构建 Docker 镜像..."
-    docker build -t ${IMAGE_NAME}:latest .
+    docker build -f ${DOCKERFILE} -t ${IMAGE_NAME}:latest .
     print_info "镜像构建完成！"
 }
 
@@ -151,6 +158,13 @@ full_deploy() {
     print_info "默认管理员账号: admin / admin123"
 }
 
+# 完整部署流程（国内镜像源）
+full_deploy_cn() {
+    DOCKERFILE="Dockerfile.cn"
+    print_info "使用国内镜像源进行部署..."
+    full_deploy
+}
+
 # 显示帮助信息
 show_help() {
     cat << EOF
@@ -161,7 +175,9 @@ ChewyTodoList 一键部署脚本
 
 命令:
     deploy      完整部署（构建 + 启动）
+    deploy-cn   完整部署（使用国内镜像源）
     build       仅构建 Docker 镜像
+    build-cn    仅构建 Docker 镜像（使用国内镜像源）
     start       启动容器
     stop        停止容器
     restart     重启容器
@@ -172,8 +188,13 @@ ChewyTodoList 一键部署脚本
 
 示例:
     ./deploy.sh deploy      # 一键部署
+    ./deploy.sh deploy-cn   # 一键部署（国内镜像源）
     ./deploy.sh logs        # 查看日志
     ./deploy.sh restart     # 重启服务
+
+注意:
+    - 如果在国内网络环境下构建较慢，建议使用 deploy-cn 或 build-cn
+    - 国内镜像源使用 DaoCloud、清华源、npmmirror 等
 
 EOF
 }
@@ -184,8 +205,16 @@ main() {
         deploy)
             full_deploy
             ;;
+        deploy-cn)
+            full_deploy_cn
+            ;;
         build)
             check_docker
+            build_image
+            ;;
+        build-cn)
+            check_docker
+            DOCKERFILE="Dockerfile.cn"
             build_image
             ;;
         start)
