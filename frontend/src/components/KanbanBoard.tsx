@@ -55,21 +55,41 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
     return groups;
   }, [tasks, view.group_by]);
 
-  const getColumnColor = (groupName: string) => {
-    // 根据分组名称返回不同的颜色
+  const getColumnStyle = (groupName: string) => {
+    // 根据分组名称返回不同的样式
     if (groupName.includes('未开始') || groupName.includes('待办')) {
-      return 'border-t-blue-500 bg-blue-50/50 dark:bg-blue-900/10';
+      return {
+        bg: 'bg-blue-50/30 dark:bg-blue-900/5',
+        headerBg: 'bg-blue-100/50 dark:bg-blue-900/20',
+        badge: 'bg-blue-500 text-white',
+      };
     }
     if (groupName.includes('进行中') || groupName.includes('处理中')) {
-      return 'border-t-yellow-500 bg-yellow-50/50 dark:bg-yellow-900/10';
+      return {
+        bg: 'bg-yellow-50/30 dark:bg-yellow-900/5',
+        headerBg: 'bg-yellow-100/50 dark:bg-yellow-900/20',
+        badge: 'bg-yellow-500 text-white',
+      };
     }
     if (groupName.includes('已完成') || groupName.includes('完成')) {
-      return 'border-t-green-500 bg-green-50/50 dark:bg-green-900/10';
+      return {
+        bg: 'bg-green-50/30 dark:bg-green-900/5',
+        headerBg: 'bg-green-100/50 dark:bg-green-900/20',
+        badge: 'bg-green-500 text-white',
+      };
     }
     if (groupName.includes('已放弃') || groupName.includes('取消')) {
-      return 'border-t-red-500 bg-red-50/50 dark:bg-red-900/10';
+      return {
+        bg: 'bg-red-50/30 dark:bg-red-900/5',
+        headerBg: 'bg-red-100/50 dark:bg-red-900/20',
+        badge: 'bg-red-500 text-white',
+      };
     }
-    return 'border-t-gray-500 bg-gray-50/50 dark:bg-gray-900/10';
+    return {
+      bg: 'bg-gray-50/30 dark:bg-gray-900/5',
+      headerBg: 'bg-gray-100/50 dark:bg-gray-900/20',
+      badge: 'bg-gray-500 text-white',
+    };
   };
 
   const getPriorityColor = (priority: number) => {
@@ -135,35 +155,38 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   }
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar">
-      {Object.entries(groupedTasks).map(([groupName, groupTasks]) => (
-        <div
-          key={groupName}
-          className={`flex-shrink-0 w-80 border-t-4 rounded-lg flex flex-col ${getColumnColor(groupName)}`}
-        >
-          {/* 列标题 */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900 dark:text-white">
-                {groupName}
-              </h3>
-              <span className="px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs rounded-full">
-                {groupTasks.length}
-              </span>
+    <div className="flex gap-4 overflow-x-auto pb-4 px-4 hide-scrollbar items-start">
+      {Object.entries(groupedTasks).map(([groupName, groupTasks]) => {
+        const columnStyle = getColumnStyle(groupName);
+        return (
+          <div
+            key={groupName}
+            className={`flex-shrink-0 w-80 rounded-xl ${columnStyle.bg} border border-gray-200/50 dark:border-gray-700/50 shadow-sm inline-block align-top`}
+          >
+            {/* 列标题 */}
+            <div className={`p-4 rounded-t-xl flex-shrink-0 ${columnStyle.headerBg}`}>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
+                  {groupName}
+                </h3>
+                <span className={`px-2.5 py-0.5 ${columnStyle.badge} text-xs rounded-full font-medium`}>
+                  {groupTasks.length}
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* 任务卡片 - 自适应高度 */}
-          <div className="p-3 space-y-3">
-            {groupTasks.map((task) => (
+            {/* 任务卡片容器 - 根据内容自适应高度 */}
+            <div className="p-3 space-y-2.5">
+              {groupTasks.map((task) => (
               <div
                 key={task.uid}
                 onClick={() => onTaskClick?.(task)}
                 className={`
-                  p-3 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 
-                  rounded-lg hover:shadow-md transition-all cursor-pointer
+                  bg-white dark:bg-gray-800 border border-gray-200/80 dark:border-gray-700 
+                  rounded-lg hover:shadow-lg hover:scale-[1.02] hover:border-gray-300 dark:hover:border-gray-600
+                  transition-all duration-200 cursor-pointer
                   ${task.is_completed ? 'opacity-60' : ''}
-                  ${displaySettings.compact_mode ? 'p-2' : 'p-3'}
+                  ${displaySettings.compact_mode ? 'p-2.5' : 'p-3.5'}
                 `}
               >
                 {/* 任务标题 */}
@@ -261,16 +284,17 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
               </div>
             ))}
             
-            {/* 空状态 */}
-            {groupTasks.length === 0 && (
-              <div className="text-center py-8 text-gray-400">
-                <span className="material-symbols-outlined text-[32px] mb-2 block">inbox</span>
-                <p className="text-sm">暂无任务</p>
-              </div>
-            )}
+              {/* 空状态 */}
+              {groupTasks.length === 0 && (
+                <div className="text-center py-12 text-gray-400">
+                  <span className="material-symbols-outlined text-[32px] mb-2 block opacity-50">inbox</span>
+                  <p className="text-xs">暂无任务</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };

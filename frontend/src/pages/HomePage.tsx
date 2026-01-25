@@ -85,7 +85,7 @@ const HomePage: React.FC = () => {
   ];
 
   return (
-    <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden">
+    <div className="relative w-full max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden min-h-screen">
       <Header 
         onSearch={handleSearch} 
         onFilter={handleFilter}
@@ -394,11 +394,11 @@ const HomePage: React.FC = () => {
         </div>
       )}
       
-      <main className={`flex-1 pb-16 bg-white dark:bg-background-dark ${
+      <main className={`pb-16 bg-white dark:bg-background-dark ${
         viewData?.view_type === 'board' ? '' : 'overflow-y-auto px-4 pt-4'
       }`}>
         {viewData && viewTasks?.results ? (
-          <div className={viewData.view_type === 'board' ? 'h-full pt-4' : ''}>
+          <div className={viewData.view_type === 'board' ? 'pt-4' : ''}>
             {/* 卡片样式徽章 */}
             {currentCardStyle && viewData.view_type === 'list' && (
               <div className="flex items-center justify-end mb-3 px-4">
