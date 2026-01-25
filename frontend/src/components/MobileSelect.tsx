@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface Option {
   value: string | number;
@@ -33,7 +33,8 @@ const MobileSelect: React.FC<MobileSelectProps> = ({
     if (isOpen) {
       const handleClickOutside = (e: MouseEvent) => {
         const target = e.target as HTMLElement;
-        if (!target.closest('.mobile-select-container')) {
+        // 检查是否点击在弹窗内部
+        if (!target.closest('.mobile-select-popup') && !target.closest('.mobile-select-container')) {
           setIsOpen(false);
         }
       };
@@ -60,9 +61,9 @@ const MobileSelect: React.FC<MobileSelectProps> = ({
 
       {/* iOS风格弹窗 */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-30 animate-fade-in">
+        <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black bg-opacity-30 animate-fade-in">
           <div 
-            className="w-full max-w-md bg-white rounded-t-2xl shadow-2xl animate-slide-up"
+            className="mobile-select-popup w-full max-w-md bg-white rounded-t-2xl shadow-2xl animate-slide-up"
             style={{ maxHeight: '60vh' }}
           >
             {/* 顶部拖动条 */}

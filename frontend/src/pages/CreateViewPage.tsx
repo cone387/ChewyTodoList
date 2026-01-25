@@ -4,6 +4,7 @@ import { useCreateView, useUpdateView, useDeleteView, useView } from '../hooks/u
 import FilterBuilder from '../components/FilterBuilder';
 import MobileSelect from '../components/MobileSelect';
 import { VIEW_TEMPLATES } from '../data/viewTemplates';
+import { TASK_CARD_TEMPLATES } from '../types/taskCard';
 import type { ViewFilter, ViewSort } from '../types/index';
 import type { ViewTemplate } from '../types/templates';
 
@@ -43,6 +44,7 @@ const CreateViewPage: React.FC = () => {
     sorts: [] as ViewSort[],
     group_by: '',
     is_visible_in_nav: true, // 默认显示在导航栏
+    card_template_id: 'default', // 默认卡片模板（会在视图类型改变时更新）
     display_settings: {
       show_project: true,
       show_tags: true,
@@ -67,6 +69,7 @@ const CreateViewPage: React.FC = () => {
         sorts: view.sorts || [],
         group_by: view.group_by || '',
         is_visible_in_nav: view.is_visible_in_nav ?? true,
+        card_template_id: (view.display_settings as any)?.card_template_id || 'default',
         display_settings: {
           show_project: view.display_settings?.show_project ?? true,
           show_tags: view.display_settings?.show_tags ?? true,
@@ -152,6 +155,10 @@ const CreateViewPage: React.FC = () => {
         project_uid: undefined, // 不再发送项目关联
         group_by: formData.group_by || undefined, // Convert empty string to undefined
         filters: sanitizeFilters(formData.filters), // Sanitize filter values
+        display_settings: {
+          ...formData.display_settings,
+          card_template_id: formData.card_template_id, // 保存卡片模板ID
+        },
       };
 
       if (isEditing && uid) {
@@ -247,6 +254,65 @@ const CreateViewPage: React.FC = () => {
     { value: 'due_date', label: '按截止日期分组' },
   ];
 
+  // 根据视图类型获取可用的卡片模板
+  const getAvailableCardTemplates = () => {
+    const viewType = formData.view_type;
+    
+    // 不同视图类型对应的卡片模板
+    const templatesByViewType: Record<string, string[]> = {
+      list: ['default', 'minimal', 'detailed', 'colorful', 'timeline'],
+      board: ['kanban', 'default', 'minimal', 'colorful'],
+      calendar: ['minimal', 'default', 'timeline'],
+      table: ['minimal', 'default'],
+      timeline: ['timeline', 'default', 'minimal'],
+      gallery: ['detailed', 'colorful', 'default'],
+    };
+
+    const availableIds = templatesByViewType[viewType] || ['default'];
+    
+    // 只返回该视图类型可用的模板
+    return TASK_CARD_TEMPLATES.filter(t => availableIds.includes(t.id));
+  };
+
+  // 获取视图类型的默认卡片模板
+  const getDefaultCardTemplate = (viewType: string): string => {
+    const defaultsByViewType: Record<string, string> = {
+      list: 'default',
+      board: 'kanban',
+      calendar: 'minimal',
+      table: 'minimal',
+      timeline: 'timeline',
+      gallery: 'detailed',
+    };
+    
+    return defaultsByViewType[viewType] || 'default';
+  };
+
+  // 当视图类型改变时，自动选择推荐的卡片模板
+  const handleViewTypeChange = (newViewType: string) => {
+    const templatesByViewType: Record<string, string[]> = {
+      list: ['default', 'minimal', 'detailed', 'colorful', 'timeline'],
+      board: ['kanban', 'default', 'minimal', 'colorful'],
+      calendar: ['minimal', 'default', 'timeline'],
+      table: ['minimal', 'default'],
+      timeline: ['timeline', 'default', 'minimal'],
+      gallery: ['detailed', 'colorful', 'default'],
+    };
+    
+    const availableIds = templatesByViewType[newViewType as keyof typeof templatesByViewType] || ['default'];
+    
+    // 如果当前卡片模板不在新视图类型的可用列表中，切换到默认模板
+    if (!availableIds.includes(formData.card_template_id)) {
+      setFormData({ 
+        ...formData, 
+        view_type: newViewType as any,
+        card_template_id: getDefaultCardTemplate(newViewType)
+      });
+    } else {
+      setFormData({ ...formData, view_type: newViewType as any });
+    }
+  };
+
   if (viewLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -258,7 +324,7 @@ const CreateViewPage: React.FC = () => {
   return (
     <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-30 bg-white dark:bg-surface-dark pt-safe border-b border-gray-100 dark:border-gray-800 max-w-md mx-auto">
+      <header className="fixed top-0 left-0 right-0 z-20 bg-white dark:bg-surface-dark pt-safe border-b border-gray-100 dark:border-gray-800 max-w-md mx-auto">
         <div className="flex items-center p-3 justify-between">
           <button 
             onClick={handleBack}
@@ -287,7 +353,7 @@ const CreateViewPage: React.FC = () => {
 
       {/* 模板选择器弹窗 */}
       {showTemplateSelector && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-50 p-4">
           <div className="bg-white dark:bg-surface-dark rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
             {/* 弹窗头部 */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
@@ -412,7 +478,7 @@ const CreateViewPage: React.FC = () => {
                 </label>
                 <MobileSelect
                   value={formData.view_type}
-                  onChange={(value) => setFormData({ ...formData, view_type: value as any })}
+                  onChange={(value) => handleViewTypeChange(value as string)}
                   options={[
                     { value: 'list', label: '列表' },
                     { value: 'board', label: '看板' },
@@ -421,6 +487,23 @@ const CreateViewPage: React.FC = () => {
                     { value: 'timeline', label: '时间轴' },
                     { value: 'gallery', label: '画廊' },
                   ]}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  卡片样式
+                </label>
+                <MobileSelect
+                  value={formData.card_template_id}
+                  onChange={(value) => setFormData({ ...formData, card_template_id: value as string })}
+                  options={getAvailableCardTemplates().map(template => {
+                    const isDefault = template.id === getDefaultCardTemplate(formData.view_type);
+                    return {
+                      value: template.id,
+                      label: isDefault ? `${template.name}（默认）` : template.name
+                    };
+                  })}
                 />
               </div>
 
