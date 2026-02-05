@@ -3,8 +3,10 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useCreateView, useUpdateView, useDeleteView, useView } from '../hooks/useViews';
 import FilterBuilder from '../components/FilterBuilder';
 import MobileSelect from '../components/MobileSelect';
+import TaskCardSelector from '../components/TaskCardSelector';
 import { VIEW_TEMPLATES } from '../data/viewTemplates';
 import { TASK_CARD_TEMPLATES } from '../types/taskCard';
+import type { TaskCardTemplate } from '../types/taskCard';
 import type { ViewFilter, ViewSort } from '../types/index';
 import type { ViewTemplate } from '../types/templates';
 import { useConfirm } from '../hooks/useConfirm';
@@ -38,6 +40,7 @@ const CreateViewPage: React.FC = () => {
   
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [showCardSelector, setShowCardSelector] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -267,26 +270,6 @@ const CreateViewPage: React.FC = () => {
     { value: 'due_date', label: '按截止日期分组' },
   ];
 
-  // 根据视图类型获取可用的卡片模板
-  const getAvailableCardTemplates = () => {
-    const viewType = formData.view_type;
-    
-    // 不同视图类型对应的卡片模板
-    const templatesByViewType: Record<string, string[]> = {
-      list: ['default', 'minimal', 'detailed', 'colorful', 'timeline'],
-      board: ['kanban', 'default', 'minimal', 'colorful'],
-      calendar: ['minimal', 'default', 'timeline'],
-      table: ['minimal', 'default'],
-      timeline: ['timeline', 'default', 'minimal'],
-      gallery: ['detailed', 'colorful', 'default'],
-    };
-
-    const availableIds = templatesByViewType[viewType] || ['default'];
-    
-    // 只返回该视图类型可用的模板
-    return TASK_CARD_TEMPLATES.filter(t => availableIds.includes(t.id));
-  };
-
   // 获取视图类型的默认卡片模板
   const getDefaultCardTemplate = (viewType: string): string => {
     const defaultsByViewType: Record<string, string> = {
@@ -507,17 +490,24 @@ const CreateViewPage: React.FC = () => {
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   卡片样式
                 </label>
-                <MobileSelect
-                  value={formData.card_template_id}
-                  onChange={(value) => setFormData({ ...formData, card_template_id: value as string })}
-                  options={getAvailableCardTemplates().map(template => {
-                    const isDefault = template.id === getDefaultCardTemplate(formData.view_type);
-                    return {
-                      value: template.id,
-                      label: isDefault ? `${template.name}（默认）` : template.name
-                    };
-                  })}
-                />
+                <button
+                  type="button"
+                  onClick={() => setShowCardSelector(true)}
+                  className="w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:border-primary transition-colors flex items-center justify-between"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-primary">
+                      {TASK_CARD_TEMPLATES.find(t => t.id === formData.card_template_id)?.icon || 'article'}
+                    </span>
+                    <span>
+                      {TASK_CARD_TEMPLATES.find(t => t.id === formData.card_template_id)?.name || '默认卡片'}
+                      {formData.card_template_id === getDefaultCardTemplate(formData.view_type) && (
+                        <span className="text-gray-500 dark:text-gray-400 ml-1">（推荐）</span>
+                      )}
+                    </span>
+                  </span>
+                  <span className="material-symbols-outlined text-[18px] text-gray-400">chevron_right</span>
+                </button>
               </div>
 
               <div>
@@ -734,6 +724,21 @@ const CreateViewPage: React.FC = () => {
           )}
         </div>
       </main>
+      
+      {/* 卡片样式选择弹窗 */}
+      {showCardSelector && (
+        <TaskCardSelector
+          selectedId={formData.card_template_id}
+          onSelect={(template: TaskCardTemplate) => {
+            setFormData({ ...formData, card_template_id: template.id });
+            setShowCardSelector(false);
+          }}
+          onClose={() => setShowCardSelector(false)}
+          viewType={formData.view_type}
+          isModal={true}
+          title="选择卡片样式"
+        />
+      )}
       
       {confirmState.isOpen && (
         <ConfirmDialog

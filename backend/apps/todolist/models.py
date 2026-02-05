@@ -559,6 +559,52 @@ class TaskView(BaseModel):
             is_default=True
         ).first()
 
+    @classmethod
+    def create_default_views_for_user(cls, user):
+        """为新用户创建默认视图"""
+        default_views = [
+            {
+                'name': '全部任务',
+                'view_type': cls.ViewType.LIST,
+                'is_default': True,
+                'is_visible_in_nav': True,
+                'filters': [],
+                'sorts': [{'field': 'updated_at', 'direction': 'desc'}],
+            },
+            {
+                'name': '今日任务',
+                'view_type': cls.ViewType.LIST,
+                'is_default': False,
+                'is_visible_in_nav': True,
+                'filters': [
+                    {'field': 'due_date', 'operator': 'is_today', 'value': None, 'logic': 'and'}
+                ],
+                'sorts': [{'field': 'priority', 'direction': 'desc'}],
+            },
+            {
+                'name': '看板',
+                'view_type': cls.ViewType.BOARD,
+                'is_default': False,
+                'is_visible_in_nav': True,
+                'filters': [],
+                'sorts': [{'field': 'sort_order', 'direction': 'asc'}],
+                'group_by': 'status',
+            },
+        ]
+        
+        created_views = []
+        for view_data in default_views:
+            view, created = cls.objects.get_or_create(
+                user=user,
+                name=view_data['name'],
+                project=None,
+                defaults=view_data
+            )
+            if created:
+                created_views.append(view)
+        
+        return created_views
+
     def apply_filters(self, queryset):
         """应用筛选条件到查询集"""
         if not self.filters:

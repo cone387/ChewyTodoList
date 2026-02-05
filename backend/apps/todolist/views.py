@@ -103,6 +103,9 @@ class UserRegistrationView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         
+        # 为新用户创建默认视图
+        TaskView.create_default_views_for_user(user)
+        
         # 生成JWT Token
         refresh = RefreshToken.for_user(user)
         

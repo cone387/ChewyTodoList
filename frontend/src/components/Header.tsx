@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNavViews } from '../hooks/useViews';
+import { useLogout, useProfile } from '../hooks/useAuth';
 import type { TaskView } from '../types/index';
 
 interface HeaderProps {
@@ -28,8 +29,34 @@ const Header: React.FC<HeaderProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchVisible, setIsSearchVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const { data: navViews } = useNavViews();
+  const { data: profileData } = useProfile();
+  const logout = useLogout();
+
+  // 点击外部关闭用户菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserMenu]);
+
+  const handleLogout = () => {
+    setShowUserMenu(false);
+    logout.mutate();
+  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
@@ -114,11 +141,44 @@ const Header: React.FC<HeaderProps> = ({
               </button>
             )}
             
-            <div className="size-8 rounded-full bg-gray-200 dark:bg-[#252f3a] flex items-center justify-center relative">
-              <span className="material-symbols-outlined text-gray-500 dark:text-gray-400 text-[18px]">
-                person
-              </span>
-              <div className="absolute bottom-0 right-0 size-2.5 bg-green-500 rounded-full border-2 border-white dark:border-surface-dark"></div>
+            {/* 用户头像和菜单 */}
+            <div className="relative" ref={userMenuRef}>
+              <button 
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="size-8 rounded-full bg-gray-200 dark:bg-[#252f3a] flex items-center justify-center relative hover:ring-2 hover:ring-primary/50 transition-all"
+              >
+                <span className="material-symbols-outlined text-gray-500 dark:text-gray-400 text-[18px]">
+                  person
+                </span>
+                <div className="absolute bottom-0 right-0 size-2.5 bg-green-500 rounded-full border-2 border-white dark:border-surface-dark"></div>
+              </button>
+
+              {/* 用户下拉菜单 */}
+              {showUserMenu && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
+                  {/* 用户信息 */}
+                  <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                      {profileData?.data?.username || '用户'}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                      {profileData?.data?.email || ''}
+                    </p>
+                  </div>
+
+                  {/* 菜单项 */}
+                  <div className="py-1">
+                    <button
+                      onClick={handleLogout}
+                      disabled={logout.isPending}
+                      className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 disabled:opacity-50"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">logout</span>
+                      {logout.isPending ? '退出中...' : '退出登录'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
