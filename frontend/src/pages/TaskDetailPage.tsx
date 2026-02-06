@@ -894,16 +894,17 @@ const TaskDetailPage: React.FC = () => {
 
       <BottomNav />
       
-      <ConfirmDialog
-        isOpen={confirmState.isOpen}
-        title={confirmState.title}
-        message={confirmState.message}
-        confirmText={confirmState.confirmText}
-        cancelText={confirmState.cancelText}
-        confirmColor={confirmState.confirmColor}
-        onConfirm={confirmState.onConfirm}
-        onCancel={handleCancel}
-      />
+      {confirmState.isOpen && (
+        <ConfirmDialog
+          title={confirmState.title}
+          message={confirmState.message}
+          confirmText={confirmState.confirmText}
+          cancelText={confirmState.cancelText}
+          confirmColor={confirmState.confirmColor}
+          onConfirm={confirmState.onConfirm}
+          onCancel={handleCancel}
+        />
+      )}
     </div>
   );
 };
