@@ -4,6 +4,7 @@ import { useCreateView, useUpdateView, useDeleteView, useView } from '../hooks/u
 import FilterBuilder from '../components/FilterBuilder';
 import MobileSelect from '../components/MobileSelect';
 import TaskCardSelector from '../components/TaskCardSelector';
+import ViewTypeSelector from '../components/ViewTypeSelector';
 import { VIEW_TEMPLATES } from '../data/viewTemplates';
 import { TASK_CARD_TEMPLATES } from '../types/taskCard';
 import type { TaskCardTemplate } from '../types/taskCard';
@@ -41,6 +42,7 @@ const CreateViewPage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [showCardSelector, setShowCardSelector] = useState(false);
+  const [showViewTypeSelector, setShowViewTypeSelector] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -57,6 +59,7 @@ const CreateViewPage: React.FC = () => {
       show_priority: true,
       show_status: true,
       compact_mode: false,
+      show_completed: false,
     },
   });
 
@@ -83,6 +86,7 @@ const CreateViewPage: React.FC = () => {
           show_priority: view.display_settings?.show_priority ?? true,
           show_status: view.display_settings?.show_status ?? true,
           compact_mode: view.display_settings?.compact_mode ?? false,
+          show_completed: view.display_settings?.show_completed ?? false,
         },
       });
     }
@@ -119,7 +123,7 @@ const CreateViewPage: React.FC = () => {
   }, [searchParams, isEditing]);
 
   const handleBack = () => {
-    navigate('/views');
+    navigate(-1);
   };
 
   const sanitizeFilters = (filters: ViewFilter[]): ViewFilter[] => {
@@ -172,10 +176,13 @@ const CreateViewPage: React.FC = () => {
           uid,
           data: dataToSend,
         });
+        // 编辑模式：返回上一页
+        navigate(-1);
       } else {
         await createView.mutateAsync(dataToSend);
+        // 创建模式：跳转到视图管理页
+        navigate('/views');
       }
-      navigate('/views');
     } catch (error: any) {
       console.error('保存视图失败:', error);
       
@@ -440,16 +447,7 @@ const CreateViewPage: React.FC = () => {
 
           {/* 基本信息 */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-white">基本信息</h3>
-              <button
-                onClick={() => setShowTemplateSelector(true)}
-                className="flex items-center gap-1 px-2 py-1 text-xs text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
-              >
-                <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
-                <span>模板</span>
-              </button>
-            </div>
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white">基本信息</h3>
             
             <div className="space-y-3">
               <div>
@@ -472,18 +470,29 @@ const CreateViewPage: React.FC = () => {
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   视图类型
                 </label>
-                <MobileSelect
-                  value={formData.view_type}
-                  onChange={(value) => handleViewTypeChange(value as string)}
-                  options={[
-                    { value: 'list', label: '列表' },
-                    { value: 'board', label: '看板' },
-                    { value: 'calendar', label: '日历' },
-                    { value: 'table', label: '表格' },
-                    { value: 'timeline', label: '时间轴' },
-                    { value: 'gallery', label: '画廊' },
-                  ]}
-                />
+                <button
+                  type="button"
+                  onClick={() => setShowViewTypeSelector(true)}
+                  className="w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:border-primary transition-colors flex items-center justify-between"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-primary">
+                      {formData.view_type === 'list' ? 'list' :
+                       formData.view_type === 'board' ? 'view_kanban' :
+                       formData.view_type === 'calendar' ? 'calendar_month' :
+                       formData.view_type === 'table' ? 'table' :
+                       formData.view_type === 'timeline' ? 'timeline' : 'grid_view'}
+                    </span>
+                    <span>
+                      {formData.view_type === 'list' ? '列表视图' :
+                       formData.view_type === 'board' ? '看板视图' :
+                       formData.view_type === 'calendar' ? '日历视图' :
+                       formData.view_type === 'table' ? '表格视图' :
+                       formData.view_type === 'timeline' ? '时间线视图' : '画廊视图'}
+                    </span>
+                  </span>
+                  <span className="material-symbols-outlined text-[18px] text-gray-400">chevron_right</span>
+                </button>
               </div>
 
               <div>
@@ -564,7 +573,7 @@ const CreateViewPage: React.FC = () => {
             ) : (
               <div className="space-y-2">
                 {formData.sorts.map((sort, index) => (
-                  <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-700">
+                  <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-300 dark:border-gray-600">
                     <div className="flex items-center gap-2">
                       {/* 拖动手柄 */}
                       <div className="flex-shrink-0 text-gray-400">
@@ -708,6 +717,22 @@ const CreateViewPage: React.FC = () => {
                 />
                 <span className="text-gray-700 dark:text-gray-300">紧凑模式</span>
               </label>
+              
+              <label className="flex items-center text-xs">
+                <input
+                  type="checkbox"
+                  checked={formData.display_settings.show_completed ?? false}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    display_settings: {
+                      ...formData.display_settings,
+                      show_completed: e.target.checked,
+                    },
+                  })}
+                  className="mr-2"
+                />
+                <span className="text-gray-700 dark:text-gray-300">显示已完成</span>
+              </label>
             </div>
           </div>
 
@@ -724,6 +749,20 @@ const CreateViewPage: React.FC = () => {
           )}
         </div>
       </main>
+      
+      {/* 视图类型选择弹窗 */}
+      {showViewTypeSelector && (
+        <ViewTypeSelector
+          selectedType={formData.view_type}
+          onSelect={(type) => {
+            handleViewTypeChange(type);
+            setShowViewTypeSelector(false);
+          }}
+          onClose={() => setShowViewTypeSelector(false)}
+          isModal={true}
+          title="选择视图类型"
+        />
+      )}
       
       {/* 卡片样式选择弹窗 */}
       {showCardSelector && (

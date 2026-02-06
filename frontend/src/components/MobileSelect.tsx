@@ -49,9 +49,9 @@ const MobileSelect: React.FC<MobileSelectProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className={`mobile-select-container w-full px-3 py-2 text-sm bg-white text-gray-900 rounded-lg border-0 shadow-sm text-left flex items-center justify-between ${className}`}
+        className={`mobile-select-container w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg border border-gray-300 dark:border-gray-600 text-left flex items-center justify-between hover:border-primary transition-colors ${className}`}
       >
-        <span className={selectedOption ? 'text-gray-900' : 'text-gray-400'}>
+        <span className={selectedOption ? 'text-gray-900 dark:text-white' : 'text-gray-400'}>
           {selectedOption?.label || placeholder}
         </span>
         <span className="material-symbols-outlined text-gray-400 text-[20px]">

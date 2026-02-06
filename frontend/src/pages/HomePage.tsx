@@ -4,25 +4,18 @@ import Header from '../components/Header';
 import ViewRenderer from '../components/ViewRenderer';
 import BottomNav from '../components/BottomNav';
 import FloatingAddButton from '../components/FloatingAddButton';
-import TaskCardSelector from '../components/TaskCardSelector';
-import { useViewTasks, useNavViews, useView, useUpdateView } from '../hooks/useViews';
+import { useViewTasks, useNavViews, useView } from '../hooks/useViews';
 import { TASK_CARD_TEMPLATES } from '../types/taskCard';
-import type { TaskCardTemplate } from '../types/taskCard';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [currentView, setCurrentView] = useState<string>('');
-  const [showCompleted, setShowCompleted] = useState<boolean>(false);
-  const [showTemplateSelector, setShowTemplateSelector] = useState<boolean>(false);
-  const [showTaskCardSelector, setShowTaskCardSelector] = useState<boolean>(false);
-  const [selectedTaskCard, setSelectedTaskCard] = useState<string>('default');
   const projectFilter = searchParams.get('project');
 
   const { data: navViews, isLoading: isNavViewsLoading, error: navViewsError } = useNavViews();
   const { data: viewTasks, isLoading: isViewTasksLoading } = useViewTasks(currentView);
   const { data: viewData, isLoading: isViewDataLoading } = useView(currentView);
-  const updateView = useUpdateView();
 
   // 计算加载状态
   const isLoading = isNavViewsLoading || (currentView && (isViewDataLoading || isViewTasksLoading));
@@ -66,29 +59,18 @@ const HomePage: React.FC = () => {
     console.log('Update task:', task, updates);
   };
 
-  const handleToggleCompleted = () => {
-    setShowCompleted(!showCompleted);
+  const handleOpenViewSettings = () => {
+    // 直接跳转到当前视图的编辑页面
+    if (currentView) {
+      navigate(`/views/edit/${currentView}`);
+    }
   };
 
-  const handleSelectTemplate = () => {
-    setShowTemplateSelector(!showTemplateSelector);
-  };
-
-  const handleSelectTaskCard = () => {
-    setShowTaskCardSelector(!showTaskCardSelector);
-  };
-
-  // 获取当前选择的卡片样式对象
-  const currentCardStyle = TASK_CARD_TEMPLATES.find(template => template.id === selectedTaskCard);
-
-  const viewTypes = [
-    { value: 'list', label: '列表视图', icon: 'list' },
-    { value: 'board', label: '看板视图', icon: 'view_kanban' },
-    { value: 'calendar', label: '日历视图', icon: 'calendar_month' },
-    { value: 'table', label: '表格视图', icon: 'table' },
-    { value: 'timeline', label: '时间线视图', icon: 'timeline' },
-    { value: 'gallery', label: '画廊视图', icon: 'grid_view' },
-  ];
+  // 获取当前视图的显示设置
+  const displaySettings = viewData?.display_settings as any;
+  const selectedCardId = displaySettings?.card_template_id || 'default';
+  const currentCardStyle = TASK_CARD_TEMPLATES.find(template => template.id === selectedCardId);
+  const showCompleted = displaySettings?.show_completed ?? false;
 
   return (
     <div className="relative w-full max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden min-h-screen">
@@ -97,90 +79,9 @@ const HomePage: React.FC = () => {
         onFilter={handleFilter}
         onViewChange={handleViewChange}
         currentView={currentView}
-        showCompleted={showCompleted}
-        onToggleCompleted={handleToggleCompleted}
-        onSelectTemplate={handleSelectTemplate}
-        onSelectTaskCard={handleSelectTaskCard}
+        onOpenViewSettings={handleOpenViewSettings}
       />
       
-      {/* 视图类型选择器 */}
-      {showTemplateSelector && viewData && (
-        <div className="fixed top-0 left-0 right-0 bottom-0 z-40 bg-black/50 flex items-end max-w-md mx-auto">
-          <div className="w-full bg-white dark:bg-surface-dark rounded-t-2xl p-4 pb-safe">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">选择视图类型</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">定义任务的展示格局</p>
-              </div>
-              <button
-                onClick={() => setShowTemplateSelector(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-              >
-                <span className="material-symbols-outlined text-[24px]">close</span>
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto">
-              {viewTypes.map((type) => (
-                <button
-                  key={type.value}
-                  onClick={async () => {
-                    if (viewData && currentView) {
-                      try {
-                        await updateView.mutateAsync({
-                          uid: currentView,
-                          data: { view_type: type.value }
-                        });
-                        setShowTemplateSelector(false);
-                      } catch (error) {
-                        console.error('切换视图类型失败:', error);
-                      }
-                    }
-                  }}
-                  disabled={updateView.isPending}
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    viewData.view_type === type.value
-                      ? 'border-primary bg-primary/5 dark:bg-primary/10'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                  } ${updateView.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <span className={`material-symbols-outlined text-[32px] ${
-                      viewData.view_type === type.value
-                        ? 'text-primary'
-                        : 'text-gray-400'
-                    }`}>
-                      {type.icon}
-                    </span>
-                    <span className={`text-sm font-medium ${
-                      viewData.view_type === type.value
-                        ? 'text-primary'
-                        : 'text-gray-700 dark:text-gray-300'
-                    }`}>
-                      {type.label}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 任务卡片样式选择器 */}
-      {showTaskCardSelector && (
-        <TaskCardSelector
-          selectedId={selectedTaskCard}
-          onSelect={(template: TaskCardTemplate) => {
-            setSelectedTaskCard(template.id);
-            setShowTaskCardSelector(false);
-          }}
-          onClose={() => setShowTaskCardSelector(false)}
-          viewType={viewData?.view_type}
-          isModal={true}
-          title="选择任务卡片样式"
-        />
-      )}
       
       <main className={`pb-16 bg-white dark:bg-background-dark ${
         viewData?.view_type === 'board' ? '' : 'overflow-y-auto px-4 pt-4'

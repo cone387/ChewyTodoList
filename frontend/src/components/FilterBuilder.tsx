@@ -339,7 +339,7 @@ const FilterBuilder: React.FC<FilterBuilderProps> = ({ filters, onChange }) => {
             const operatorDef = OPERATOR_DEFINITIONS.find(op => op.key === filter.operator);
             
             return (
-              <div key={filter.id || index} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+              <div key={filter.id || index} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
                 {/* 逻辑连接符 - 只在第一个筛选条件之后显示 */}
                 {index > 0 && (
                   <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
