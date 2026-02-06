@@ -15,7 +15,6 @@ const TaskDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'details' | 'activity'>('details');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
   const [showPrioritySelector, setShowPrioritySelector] = useState(false);
   const [showStatusSelector, setShowStatusSelector] = useState(false);
   const [showProjectSelector, setShowProjectSelector] = useState(false);
@@ -24,6 +23,8 @@ const TaskDetailPage: React.FC = () => {
   
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLTextAreaElement>(null);
+  const contentInputRef = useRef<HTMLTextAreaElement>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: task, isLoading } = useTask(uid!);
   const { data: activityLogs, isLoading: isActivityLoading } = useActivityLogs({ task: uid });
@@ -44,23 +45,47 @@ const TaskDetailPage: React.FC = () => {
     }
   }, [task]);
 
+  // 点击空白区域关闭所有弹窗
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-dropdown]')) {
         setShowMoreMenu(false);
+        setShowPrioritySelector(false);
+        setShowStatusSelector(false);
+        setShowProjectSelector(false);
+        setShowTagSelector(false);
+        setShowDatePicker(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    if (isEditing && titleInputRef.current) {
-      titleInputRef.current.focus();
-      const len = titleInputRef.current.value.length;
-      titleInputRef.current.setSelectionRange(len, len);
+  // 自动保存（防抖）
+  const autoSave = (newTitle: string, newContent: string) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
     }
-  }, [isEditing]);
+    saveTimeoutRef.current = setTimeout(() => {
+      if (task && newTitle.trim()) {
+        updateTask.mutate({
+          uid: task.uid,
+          data: { title: newTitle.trim(), content: newContent.trim() || undefined }
+        });
+      }
+    }, 1000);
+  };
+
+  const handleTitleChange = (value: string) => {
+    setEditForm(prev => ({ ...prev, title: value }));
+    autoSave(value, editForm.content);
+  };
+
+  const handleContentChange = (value: string) => {
+    setEditForm(prev => ({ ...prev, content: value }));
+    autoSave(editForm.title, value);
+  };
 
   const handleToggleStatus = () => {
     if (!task) return;
@@ -68,32 +93,18 @@ const TaskDetailPage: React.FC = () => {
     updateTask.mutate({ uid: task.uid, data: { status: newStatus } });
   };
 
-  const handleBack = () => navigate(-1);
-
-  const handleEdit = () => {
-    if (task) {
-      setEditForm({ title: task.title, content: task.content || '' });
+  const handleBack = () => {
+    // 离开前保存
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
     }
-    setIsEditing(true);
-    setShowMoreMenu(false);
-  };
-
-  const handleSaveEdit = async () => {
-    if (!task || !editForm.title.trim()) return;
-    try {
-      await updateTask.mutateAsync({
+    if (task && editForm.title.trim()) {
+      updateTask.mutate({
         uid: task.uid,
         data: { title: editForm.title.trim(), content: editForm.content.trim() || undefined }
       });
-      setIsEditing(false);
-    } catch (error) {
-      console.error('更新任务失败:', error);
     }
-  };
-
-  const handleCancelEdit = () => {
-    if (task) setEditForm({ title: task.title, content: task.content || '' });
-    setIsEditing(false);
+    navigate(-1);
   };
 
   const handleDelete = async () => {
@@ -267,63 +278,56 @@ const TaskDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden">
+    <div className="relative flex h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-30 bg-white dark:bg-surface-dark pt-safe border-b border-gray-100 dark:border-gray-800 max-w-md mx-auto">
+      <header className="flex-shrink-0 bg-white dark:bg-surface-dark pt-safe border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center p-2 justify-between">
           <button onClick={handleBack} className="text-[#5f6368] dark:text-white flex items-center justify-center size-9 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
             <span className="material-symbols-outlined text-[22px]">arrow_back</span>
           </button>
           
-          {isEditing ? (
-            <div className="flex items-center gap-1">
-              <button onClick={handleCancelEdit} className="text-gray-500 dark:text-gray-400 px-3 py-1 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">取消</button>
-              <button onClick={handleSaveEdit} disabled={!editForm.title.trim() || updateTask.isPending} className="text-primary px-3 py-1 text-sm font-medium hover:bg-primary/10 rounded-lg transition-colors disabled:opacity-50">
-                {updateTask.isPending ? '保存中...' : '保存'}
-              </button>
-            </div>
-          ) : (
-            <div className="relative" ref={moreMenuRef}>
-              <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="text-[#5f6368] dark:text-white flex items-center justify-center size-9 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-                <span className="material-symbols-outlined text-[22px]">more_horiz</span>
-              </button>
-              {showMoreMenu && (
-                <div className="absolute right-0 top-10 w-36 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-                  <button onClick={handleEdit} className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[16px]">edit</span>编辑
-                  </button>
-                  <button onClick={handleDelete} className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[16px]">delete</span>删除
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+          <div className="relative" ref={moreMenuRef} data-dropdown>
+            <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="text-[#5f6368] dark:text-white flex items-center justify-center size-9 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+              <span className="material-symbols-outlined text-[22px]">more_horiz</span>
+            </button>
+            {showMoreMenu && (
+              <div className="absolute right-0 top-10 w-36 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                <button onClick={handleDelete} className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px]">delete</span>删除
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Tabs */}
-        <div className="px-4 flex items-center gap-6">
-          <button onClick={() => setActiveTab('details')} className={`relative py-2 text-sm font-medium transition-colors ${activeTab === 'details' ? 'text-primary' : 'text-gray-500 hover:text-[#111418] dark:text-gray-400 dark:hover:text-white'}`}>
+        {/* Tabs - 占满一行，中间用 | 分隔 */}
+        <div className="flex items-center border-t border-gray-100 dark:border-gray-800">
+          <button 
+            onClick={() => setActiveTab('details')} 
+            className={`flex-1 py-2.5 text-sm font-medium text-center transition-colors ${activeTab === 'details' ? 'text-primary bg-primary/5' : 'text-gray-500 hover:text-[#111418] dark:text-gray-400 dark:hover:text-white'}`}
+          >
             详情
-            {activeTab === 'details' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
           </button>
-          <button onClick={() => setActiveTab('activity')} className={`relative py-2 text-sm font-medium transition-colors ${activeTab === 'activity' ? 'text-primary' : 'text-gray-500 hover:text-[#111418] dark:text-gray-400 dark:hover:text-white'}`}>
+          <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
+          <button 
+            onClick={() => setActiveTab('activity')} 
+            className={`flex-1 py-2.5 text-sm font-medium text-center transition-colors ${activeTab === 'activity' ? 'text-primary bg-primary/5' : 'text-gray-500 hover:text-[#111418] dark:text-gray-400 dark:hover:text-white'}`}
+          >
             动态
-            {activeTab === 'activity' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
           </button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-white dark:bg-background-dark pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 88px)' }}>
+      <main className="flex-1 overflow-y-auto bg-white dark:bg-background-dark flex flex-col">
         {activeTab === 'details' ? (
-          <div className="flex flex-col min-h-full">
-            {/* 属性区域 - 分两行 */}
-            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30">
+          <div className="flex flex-col flex-1">
+            {/* 属性区域 */}
+            <div className="flex-shrink-0 px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30">
               {/* 第一行：状态、优先级、截止日期 */}
               <div className="flex flex-wrap gap-2 mb-2">
                 {/* 状态 */}
-                <div className="relative">
+                <div className="relative" data-dropdown>
                   <div onClick={() => setShowStatusSelector(!showStatusSelector)} className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-medium ${getStatusColor(task.status)}`}>
                     {getStatusLabel(task.status)}
                     <span className="material-symbols-outlined text-[14px]">expand_more</span>
@@ -340,7 +344,7 @@ const TaskDetailPage: React.FC = () => {
                 </div>
 
                 {/* 优先级 */}
-                <div className="relative">
+                <div className="relative" data-dropdown>
                   <div onClick={() => setShowPrioritySelector(!showPrioritySelector)} className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-medium ${getPriorityColor(task.priority)}`}>
                     {getPriorityLabel(task.priority)}
                     <span className="material-symbols-outlined text-[14px]">expand_more</span>
@@ -357,7 +361,7 @@ const TaskDetailPage: React.FC = () => {
                 </div>
 
                 {/* 截止日期 */}
-                <div className="relative">
+                <div className="relative" data-dropdown>
                   <div onClick={() => setShowDatePicker(showDatePicker === 'due' ? null : 'due')} className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs ${task.is_overdue && !task.is_completed ? 'bg-red-100 dark:bg-red-900/30 text-red-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>
                     <span className="material-symbols-outlined text-[14px]">event</span>
                     {task.due_date ? formatDueDate(task.due_date) : '截止日期'}
@@ -374,7 +378,7 @@ const TaskDetailPage: React.FC = () => {
               {/* 第二行：项目、标签 */}
               <div className="flex flex-wrap gap-2">
                 {/* 项目 */}
-                <div className="relative">
+                <div className="relative" data-dropdown>
                   <div onClick={() => setShowProjectSelector(!showProjectSelector)} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
                     <span className="material-symbols-outlined text-[14px]">folder</span>
                     {task.project.name}
@@ -391,7 +395,7 @@ const TaskDetailPage: React.FC = () => {
                 </div>
 
                 {/* 标签 */}
-                <div className="relative">
+                <div className="relative" data-dropdown>
                   <div onClick={() => setShowTagSelector(!showTagSelector)} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
                     <span className="material-symbols-outlined text-[14px]">label</span>
                     {task.tags.length > 0 ? `${task.tags.length}个标签` : '标签'}
@@ -422,47 +426,44 @@ const TaskDetailPage: React.FC = () => {
             </div>
 
             {/* 标题区域 */}
-            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+            <div className="flex-shrink-0 px-4 py-3 border-b border-gray-100 dark:border-gray-800">
               <div className="flex items-start gap-3">
-                <button onClick={handleToggleStatus} disabled={isEditing} className={`mt-0.5 flex-shrink-0 transition-colors ${task.is_completed ? 'text-green-500' : 'text-gray-400 hover:text-primary'} ${isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                <button onClick={handleToggleStatus} className={`mt-1 flex-shrink-0 transition-colors ${task.is_completed ? 'text-green-500' : 'text-gray-400 hover:text-primary'}`}>
                   <span className={`material-symbols-outlined text-[22px] ${task.is_completed ? 'fill-1' : ''}`}>
                     {task.is_completed ? 'check_circle' : 'radio_button_unchecked'}
                   </span>
                 </button>
-                {isEditing ? (
-                  <textarea
-                    ref={titleInputRef}
-                    value={editForm.title}
-                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                    className="flex-1 text-base font-semibold bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 focus:ring-2 focus:ring-primary focus:border-transparent text-[#111418] dark:text-white placeholder-gray-400 resize-none"
-                    placeholder="任务标题"
-                    rows={2}
-                  />
-                ) : (
-                  <h1 className={`flex-1 text-base font-semibold leading-snug ${task.is_completed ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-[#111418] dark:text-white'}`}>{task.title}</h1>
-                )}
+                <textarea
+                  ref={titleInputRef}
+                  value={editForm.title}
+                  onChange={(e) => handleTitleChange(e.target.value)}
+                  className={`flex-1 text-base font-semibold bg-transparent border-none focus:ring-0 focus:outline-none resize-none placeholder-gray-400 ${task.is_completed ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-[#111418] dark:text-white'}`}
+                  placeholder="任务标题"
+                  rows={1}
+                  style={{ minHeight: '28px' }}
+                  onInput={(e) => {
+                    const target = e.target as HTMLTextAreaElement;
+                    target.style.height = 'auto';
+                    target.style.height = target.scrollHeight + 'px';
+                  }}
+                />
               </div>
             </div>
 
             {/* 内容区域 - 撑满剩余空间 */}
-            <div className="flex-1 px-4 py-3">
-              {isEditing ? (
-                <textarea
-                  value={editForm.content}
-                  onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
-                  className="w-full h-full min-h-[200px] text-sm bg-transparent border-none focus:ring-0 focus:outline-none text-gray-700 dark:text-gray-300 placeholder-gray-400 resize-none"
-                  placeholder="添加任务描述..."
-                />
-              ) : (
-                <p className={`text-sm leading-relaxed whitespace-pre-wrap ${task.content ? 'text-gray-600 dark:text-gray-400' : 'text-gray-400 italic'}`}>
-                  {task.content || '点击底部编辑按钮添加描述...'}
-                </p>
-              )}
+            <div className="flex-1 px-4 py-3 min-h-0">
+              <textarea
+                ref={contentInputRef}
+                value={editForm.content}
+                onChange={(e) => handleContentChange(e.target.value)}
+                className="w-full h-full text-sm bg-transparent border-none focus:ring-0 focus:outline-none text-gray-700 dark:text-gray-300 placeholder-gray-400 resize-none"
+                placeholder="添加任务描述..."
+              />
             </div>
 
             {/* 子任务进度 */}
             {task.subtasks_count > 0 && (
-              <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800">
+              <div className="flex-shrink-0 px-4 py-3 border-t border-gray-100 dark:border-gray-800">
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-[16px] text-gray-400">checklist</span>
@@ -477,7 +478,7 @@ const TaskDetailPage: React.FC = () => {
             )}
 
             {/* 更多信息 */}
-            <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800">
+            <div className="flex-shrink-0 px-4 py-3 border-t border-gray-100 dark:border-gray-800">
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
                 <span>创建于 {format(parseISO(task.created_at), 'M月d日 HH:mm', { locale: zhCN })}</span>
                 <span>更新于 {format(parseISO(task.updated_at), 'M月d日 HH:mm', { locale: zhCN })}</span>
@@ -486,7 +487,7 @@ const TaskDetailPage: React.FC = () => {
           </div>
         ) : (
           /* 动态 Tab */
-          <div className="px-4 py-4">
+          <div className="px-4 py-4 flex-1">
             {isActivityLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
@@ -526,30 +527,6 @@ const TaskDetailPage: React.FC = () => {
           </div>
         )}
       </main>
-
-      {/* 底部编辑工具栏 */}
-      {activeTab === 'details' && !isEditing && (
-        <div className="fixed bottom-0 left-0 right-0 z-20 bg-white dark:bg-surface-dark border-t border-gray-200 dark:border-gray-700 max-w-md mx-auto">
-          <div className="flex items-center justify-around py-2 px-4">
-            <button onClick={handleEdit} className="flex flex-col items-center gap-0.5 px-4 py-1.5 text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">
-              <span className="material-symbols-outlined text-[20px]">edit</span>
-              <span className="text-[10px]">编辑</span>
-            </button>
-            <button onClick={() => setShowDatePicker('due')} className="flex flex-col items-center gap-0.5 px-4 py-1.5 text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">
-              <span className="material-symbols-outlined text-[20px]">event</span>
-              <span className="text-[10px]">日期</span>
-            </button>
-            <button onClick={() => setShowTagSelector(true)} className="flex flex-col items-center gap-0.5 px-4 py-1.5 text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">
-              <span className="material-symbols-outlined text-[20px]">label</span>
-              <span className="text-[10px]">标签</span>
-            </button>
-            <button onClick={handleDelete} className="flex flex-col items-center gap-0.5 px-4 py-1.5 text-gray-600 dark:text-gray-400 hover:text-red-500 transition-colors">
-              <span className="material-symbols-outlined text-[20px]">delete</span>
-              <span className="text-[10px]">删除</span>
-            </button>
-          </div>
-        </div>
-      )}
       
       {confirmState.isOpen && (
         <ConfirmDialog title={confirmState.title} message={confirmState.message} confirmText={confirmState.confirmText} cancelText={confirmState.cancelText} confirmColor={confirmState.confirmColor} onConfirm={confirmState.onConfirm} onCancel={handleCancel} />
