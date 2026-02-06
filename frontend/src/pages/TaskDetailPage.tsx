@@ -36,17 +36,11 @@ const TaskDetailPage: React.FC = () => {
   const projects = projectsResponse?.results || [];
   const allTags = tagsResponse?.results || [];
 
-  const [editForm, setEditForm] = useState({
-    title: '',
-    content: '',
-  });
+  const [editForm, setEditForm] = useState({ title: '', content: '' });
 
   useEffect(() => {
     if (task) {
-      setEditForm({
-        title: task.title,
-        content: task.content || '',
-      });
+      setEditForm({ title: task.title, content: task.content || '' });
     }
   }, [task]);
 
@@ -73,9 +67,7 @@ const TaskDetailPage: React.FC = () => {
     updateTask.mutate({ uid: task.uid, data: { status: newStatus } });
   };
 
-  const handleBack = () => {
-    navigate(-1);
-  };
+  const handleBack = () => navigate(-1);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -87,10 +79,7 @@ const TaskDetailPage: React.FC = () => {
     try {
       await updateTask.mutateAsync({
         uid: task.uid,
-        data: {
-          title: editForm.title.trim(),
-          content: editForm.content.trim() || undefined,
-        }
+        data: { title: editForm.title.trim(), content: editForm.content.trim() || undefined }
       });
       setIsEditing(false);
     } catch (error) {
@@ -99,9 +88,7 @@ const TaskDetailPage: React.FC = () => {
   };
 
   const handleCancelEdit = () => {
-    if (task) {
-      setEditForm({ title: task.title, content: task.content || '' });
-    }
+    if (task) setEditForm({ title: task.title, content: task.content || '' });
     setIsEditing(false);
   };
 
@@ -225,10 +212,8 @@ const TaskDetailPage: React.FC = () => {
 
   const getPriorityLabel = (priority: number) => {
     const labels: Record<number, string> = {
-      [TaskPriority.URGENT]: 'P0 紧急',
-      [TaskPriority.HIGH]: 'P1 高',
-      [TaskPriority.MEDIUM]: 'P2 中',
-      [TaskPriority.LOW]: 'P3 低',
+      [TaskPriority.URGENT]: 'P0 紧急', [TaskPriority.HIGH]: 'P1 高',
+      [TaskPriority.MEDIUM]: 'P2 中', [TaskPriority.LOW]: 'P3 低',
     };
     return labels[priority] || 'P3 低';
   };
@@ -245,10 +230,8 @@ const TaskDetailPage: React.FC = () => {
 
   const getStatusLabel = (status: number) => {
     const labels: Record<number, string> = {
-      [TaskStatus.UNASSIGNED]: '待分配',
-      [TaskStatus.TODO]: '待办',
-      [TaskStatus.COMPLETED]: '已完成',
-      [TaskStatus.ABANDONED]: '已放弃',
+      [TaskStatus.UNASSIGNED]: '待分配', [TaskStatus.TODO]: '待办',
+      [TaskStatus.COMPLETED]: '已完成', [TaskStatus.ABANDONED]: '已放弃',
     };
     return labels[status] || '待办';
   };
@@ -285,29 +268,13 @@ const TaskDetailPage: React.FC = () => {
     );
   }
 
-  // 属性行组件
-  const PropertyRow = ({ 
-    icon, 
-    label, 
-    children, 
-    onClick 
-  }: { 
-    icon: string; 
-    label: string; 
-    children: React.ReactNode; 
-    onClick?: () => void;
-  }) => (
-    <div 
-      className={`flex items-center py-3 ${onClick ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 -mx-4 px-4 transition-colors' : ''}`}
-      onClick={onClick}
-    >
+  const PropertyRow = ({ icon, label, children, onClick }: { icon: string; label: string; children: React.ReactNode; onClick?: () => void }) => (
+    <div className={`flex items-center py-3 ${onClick ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 -mx-4 px-4 transition-colors' : ''}`} onClick={onClick}>
       <div className="flex items-center gap-3 w-28 flex-shrink-0">
         <span className="material-symbols-outlined text-[18px] text-gray-400">{icon}</span>
         <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
       </div>
-      <div className="flex-1 flex items-center justify-end">
-        {children}
-      </div>
+      <div className="flex-1 flex items-center justify-end">{children}</div>
     </div>
   );
 
@@ -319,10 +286,6 @@ const TaskDetailPage: React.FC = () => {
           <button onClick={handleBack} className="text-[#5f6368] dark:text-white flex items-center justify-center size-10 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
             <span className="material-symbols-outlined text-[24px]">arrow_back</span>
           </button>
-          
-          <div className="flex items-center gap-1">
-            <span className="text-base font-semibold">{isEditing ? '编辑任务' : '任务详情'}</span>
-          </div>
           
           {isEditing ? (
             <div className="flex items-center gap-1">
@@ -349,202 +312,207 @@ const TaskDetailPage: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Tabs - 紧跟在 Header 下面 */}
+        <div className="px-4 flex items-center gap-6 border-t border-gray-100 dark:border-gray-800">
+          <button onClick={() => setActiveTab('details')} className={`relative py-3 text-sm font-medium transition-colors ${activeTab === 'details' ? 'text-primary' : 'text-gray-500 hover:text-[#111418] dark:text-gray-400 dark:hover:text-white'}`}>
+            详情
+            {activeTab === 'details' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
+          </button>
+          <button onClick={() => setActiveTab('activity')} className={`relative py-3 text-sm font-medium transition-colors ${activeTab === 'activity' ? 'text-primary' : 'text-gray-500 hover:text-[#111418] dark:text-gray-400 dark:hover:text-white'}`}>
+            动态
+            {activeTab === 'activity' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
+          </button>
+        </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-white dark:bg-background-dark" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 60px)' }}>
-        {/* 属性区域 */}
-        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-          {/* 状态 */}
-          <div className="relative">
-            <PropertyRow icon="check_circle" label="状态" onClick={() => setShowStatusSelector(!showStatusSelector)}>
-              <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${getStatusColor(task.status)}`}>
-                {getStatusLabel(task.status)}
-              </span>
-              <span className="material-symbols-outlined text-[16px] text-gray-400 ml-1">chevron_right</span>
-            </PropertyRow>
-            {showStatusSelector && (
-              <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-                {[TaskStatus.TODO, TaskStatus.COMPLETED, TaskStatus.UNASSIGNED, TaskStatus.ABANDONED].map((status) => (
-                  <button key={status} onClick={() => handleUpdateStatus(status)} className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-between ${task.status === status ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>
-                    <span>{getStatusLabel(status)}</span>
-                    {task.status === status && <span className="material-symbols-outlined text-[16px]">check</span>}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 优先级 */}
-          <div className="relative">
-            <PropertyRow icon="flag" label="优先级" onClick={() => setShowPrioritySelector(!showPrioritySelector)}>
-              <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                {getPriorityLabel(task.priority)}
-              </span>
-              <span className="material-symbols-outlined text-[16px] text-gray-400 ml-1">chevron_right</span>
-            </PropertyRow>
-            {showPrioritySelector && (
-              <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-                {[TaskPriority.URGENT, TaskPriority.HIGH, TaskPriority.MEDIUM, TaskPriority.LOW].map((priority) => (
-                  <button key={priority} onClick={() => handleUpdatePriority(priority)} className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-between ${task.priority === priority ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>
-                    <span>{getPriorityLabel(priority)}</span>
-                    {task.priority === priority && <span className="material-symbols-outlined text-[16px]">check</span>}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 截止日期 */}
-          <div className="relative">
-            <PropertyRow icon="event" label="截止日期" onClick={() => setShowDatePicker(showDatePicker === 'due' ? null : 'due')}>
-              <span className={`text-sm ${task.is_overdue && !task.is_completed ? 'text-red-500 font-medium' : 'text-gray-700 dark:text-gray-300'}`}>
-                {task.due_date ? formatDueDate(task.due_date) : '未设置'}
-              </span>
-              <span className="material-symbols-outlined text-[16px] text-gray-400 ml-1">chevron_right</span>
-            </PropertyRow>
-            {showDatePicker === 'due' && (
-              <div className="absolute right-0 top-full mt-1 w-64 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 z-50">
-                <input type="datetime-local" value={formatDateForInput(task.due_date)} onChange={(e) => handleUpdateDate('due', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
-                {task.due_date && <button onClick={() => handleClearDate('due')} className="w-full mt-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">清除日期</button>}
-              </div>
-            )}
-          </div>
-
-          {/* 开始日期 */}
-          <div className="relative">
-            <PropertyRow icon="schedule" label="开始日期" onClick={() => setShowDatePicker(showDatePicker === 'start' ? null : 'start')}>
-              <span className="text-sm text-gray-700 dark:text-gray-300">{task.start_date ? formatDueDate(task.start_date) : '未设置'}</span>
-              <span className="material-symbols-outlined text-[16px] text-gray-400 ml-1">chevron_right</span>
-            </PropertyRow>
-            {showDatePicker === 'start' && (
-              <div className="absolute right-0 top-full mt-1 w-64 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 z-50">
-                <input type="datetime-local" value={formatDateForInput(task.start_date)} onChange={(e) => handleUpdateDate('start', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
-                {task.start_date && <button onClick={() => handleClearDate('start')} className="w-full mt-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">清除日期</button>}
-              </div>
-            )}
-          </div>
-
-          {/* 项目 */}
-          <div className="relative">
-            <PropertyRow icon="folder" label="项目" onClick={() => setShowProjectSelector(!showProjectSelector)}>
-              <span className="text-sm text-gray-700 dark:text-gray-300">{task.project.name}</span>
-              <span className="material-symbols-outlined text-[16px] text-gray-400 ml-1">chevron_right</span>
-            </PropertyRow>
-            {showProjectSelector && (
-              <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50 max-h-60 overflow-y-auto">
-                {projects.map((project) => (
-                  <button key={project.uid} onClick={() => handleUpdateProject(project.uid)} className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-between ${task.project.uid === project.uid ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>
-                    <span className="truncate">{project.name}</span>
-                    {task.project.uid === project.uid && <span className="material-symbols-outlined text-[16px] flex-shrink-0">check</span>}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 标签 */}
-          <div className="relative">
-            <PropertyRow icon="label" label="标签" onClick={() => setShowTagSelector(!showTagSelector)}>
-              {task.tags.length > 0 ? (
-                <div className="flex gap-1 flex-wrap justify-end">
-                  {task.tags.map((tag) => (
-                    <span key={tag.uid} className="px-2 py-0.5 rounded text-xs font-medium" style={{ backgroundColor: `${tag.color}20`, color: tag.color }}>{tag.name}</span>
-                  ))}
-                </div>
-              ) : (
-                <span className="text-sm text-gray-400">未设置</span>
-              )}
-              <span className="material-symbols-outlined text-[16px] text-gray-400 ml-1">chevron_right</span>
-            </PropertyRow>
-            {showTagSelector && (
-              <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50 max-h-60 overflow-y-auto">
-                {allTags.length > 0 ? allTags.map((tag) => {
-                  const isSelected = task.tags.some(t => t.uid === tag.uid);
-                  return (
-                    <button key={tag.uid} onClick={() => handleToggleTag(tag.uid)} className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: tag.color }} />
-                        <span className="text-gray-700 dark:text-gray-300">{tag.name}</span>
-                      </span>
-                      {isSelected && <span className="material-symbols-outlined text-[16px] text-primary">check</span>}
-                    </button>
-                  );
-                }) : <div className="px-4 py-3 text-sm text-gray-500 text-center">暂无标签</div>}
-              </div>
-            )}
-          </div>
-
-          {/* 分组 */}
-          <PropertyRow icon="workspaces" label="分组">
-            <span className="text-sm text-gray-700 dark:text-gray-300">{task.project.group.name}</span>
-          </PropertyRow>
-        </div>
-
-        {/* 标题区域 */}
-        <div className="px-4 py-4 border-b border-gray-100 dark:border-gray-800">
-          <div className="flex items-start gap-3">
-            <button onClick={handleToggleStatus} disabled={isEditing} className={`mt-0.5 flex-shrink-0 transition-colors ${task.is_completed ? 'text-green-500' : 'text-gray-400 hover:text-primary'} ${isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
-              <span className={`material-symbols-outlined text-[22px] ${task.is_completed ? 'fill-1' : ''}`}>
-                {task.is_completed ? 'check_circle' : 'radio_button_unchecked'}
-              </span>
-            </button>
-            {isEditing ? (
-              <textarea ref={titleInputRef} value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} className="flex-1 text-lg font-semibold bg-transparent border-none focus:ring-0 focus:outline-none text-[#111418] dark:text-white placeholder-gray-400 resize-none" placeholder="任务标题" rows={2} />
-            ) : (
-              <h1 className={`flex-1 text-lg font-semibold leading-snug ${task.is_completed ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-[#111418] dark:text-white'}`}>{task.title}</h1>
-            )}
-          </div>
-        </div>
-
-        {/* 内容区域 */}
-        <div className="px-4 py-4">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="material-symbols-outlined text-[18px] text-gray-400">description</span>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">描述</span>
-          </div>
-          {isEditing ? (
-            <textarea value={editForm.content} onChange={(e) => setEditForm({ ...editForm, content: e.target.value })} className="w-full text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 focus:ring-2 focus:ring-primary focus:border-transparent text-gray-700 dark:text-gray-300 placeholder-gray-400 resize-none min-h-[120px]" placeholder="添加任务描述..." rows={6} />
-          ) : task.content ? (
-            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap">{task.content}</p>
-          ) : (
-            <p className="text-sm text-gray-400 italic">暂无描述</p>
-          )}
-        </div>
-
-        {/* 子任务进度 */}
-        {task.subtasks_count > 0 && (
-          <div className="px-4 py-4 border-t border-gray-100 dark:border-gray-800">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-gray-400">checklist</span>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">子任务</span>
-              </div>
-              <span className="text-xs text-gray-500">{task.completed_subtasks_count}/{task.subtasks_count}</span>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-              <div className="bg-primary h-1.5 rounded-full transition-all" style={{ width: `${(task.completed_subtasks_count / task.subtasks_count) * 100}%` }} />
-            </div>
-          </div>
-        )}
-
-        {/* Tabs */}
-        <div className="px-4 flex items-center gap-6 border-t border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
-          <button onClick={() => setActiveTab('details')} className={`relative py-3 text-sm font-medium transition-colors ${activeTab === 'details' ? 'text-primary after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-primary' : 'text-gray-500 hover:text-[#111418] dark:text-gray-400 dark:hover:text-white'}`}>更多信息</button>
-          <button onClick={() => setActiveTab('activity')} className={`relative py-3 text-sm font-medium transition-colors ${activeTab === 'activity' ? 'text-primary after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-primary' : 'text-gray-500 hover:text-[#111418] dark:text-gray-400 dark:hover:text-white'}`}>动态</button>
-        </div>
-
-        {/* Tab Content */}
+      <main className="flex-1 overflow-y-auto bg-white dark:bg-background-dark" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 108px)' }}>
         {activeTab === 'details' ? (
-          <div className="px-4 py-4">
-            <PropertyRow icon="schedule" label="创建时间">
-              <span className="text-sm text-gray-500">{format(parseISO(task.created_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}</span>
-            </PropertyRow>
-            <PropertyRow icon="update" label="更新时间">
-              <span className="text-sm text-gray-500">{format(parseISO(task.updated_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}</span>
-            </PropertyRow>
-          </div>
+          <>
+            {/* 属性区域 */}
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+              {/* 状态 */}
+              <div className="relative">
+                <PropertyRow icon="check_circle" label="状态" onClick={() => setShowStatusSelector(!showStatusSelector)}>
+                  <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${getStatusColor(task.status)}`}>{getStatusLabel(task.status)}</span>
+                  <span className="material-symbols-outlined text-[16px] text-gray-400 ml-1">chevron_right</span>
+                </PropertyRow>
+                {showStatusSelector && (
+                  <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                    {[TaskStatus.TODO, TaskStatus.COMPLETED, TaskStatus.UNASSIGNED, TaskStatus.ABANDONED].map((status) => (
+                      <button key={status} onClick={() => handleUpdateStatus(status)} className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-between ${task.status === status ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>
+                        <span>{getStatusLabel(status)}</span>
+                        {task.status === status && <span className="material-symbols-outlined text-[16px]">check</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 优先级 */}
+              <div className="relative">
+                <PropertyRow icon="flag" label="优先级" onClick={() => setShowPrioritySelector(!showPrioritySelector)}>
+                  <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${getPriorityColor(task.priority)}`}>{getPriorityLabel(task.priority)}</span>
+                  <span className="material-symbols-outlined text-[16px] text-gray-400 ml-1">chevron_right</span>
+                </PropertyRow>
+                {showPrioritySelector && (
+                  <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                    {[TaskPriority.URGENT, TaskPriority.HIGH, TaskPriority.MEDIUM, TaskPriority.LOW].map((priority) => (
+                      <button key={priority} onClick={() => handleUpdatePriority(priority)} className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-between ${task.priority === priority ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>
+                        <span>{getPriorityLabel(priority)}</span>
+                        {task.priority === priority && <span className="material-symbols-outlined text-[16px]">check</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 截止日期 */}
+              <div className="relative">
+                <PropertyRow icon="event" label="截止日期" onClick={() => setShowDatePicker(showDatePicker === 'due' ? null : 'due')}>
+                  <span className={`text-sm ${task.is_overdue && !task.is_completed ? 'text-red-500 font-medium' : 'text-gray-700 dark:text-gray-300'}`}>
+                    {task.due_date ? formatDueDate(task.due_date) : '未设置'}
+                  </span>
+                  <span className="material-symbols-outlined text-[16px] text-gray-400 ml-1">chevron_right</span>
+                </PropertyRow>
+                {showDatePicker === 'due' && (
+                  <div className="absolute right-0 top-full mt-1 w-64 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 z-50">
+                    <input type="datetime-local" value={formatDateForInput(task.due_date)} onChange={(e) => handleUpdateDate('due', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+                    {task.due_date && <button onClick={() => handleClearDate('due')} className="w-full mt-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">清除日期</button>}
+                  </div>
+                )}
+              </div>
+
+              {/* 开始日期 */}
+              <div className="relative">
+                <PropertyRow icon="schedule" label="开始日期" onClick={() => setShowDatePicker(showDatePicker === 'start' ? null : 'start')}>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">{task.start_date ? formatDueDate(task.start_date) : '未设置'}</span>
+                  <span className="material-symbols-outlined text-[16px] text-gray-400 ml-1">chevron_right</span>
+                </PropertyRow>
+                {showDatePicker === 'start' && (
+                  <div className="absolute right-0 top-full mt-1 w-64 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 z-50">
+                    <input type="datetime-local" value={formatDateForInput(task.start_date)} onChange={(e) => handleUpdateDate('start', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+                    {task.start_date && <button onClick={() => handleClearDate('start')} className="w-full mt-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">清除日期</button>}
+                  </div>
+                )}
+              </div>
+
+              {/* 项目 */}
+              <div className="relative">
+                <PropertyRow icon="folder" label="项目" onClick={() => setShowProjectSelector(!showProjectSelector)}>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">{task.project.name}</span>
+                  <span className="material-symbols-outlined text-[16px] text-gray-400 ml-1">chevron_right</span>
+                </PropertyRow>
+                {showProjectSelector && (
+                  <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50 max-h-60 overflow-y-auto">
+                    {projects.map((project) => (
+                      <button key={project.uid} onClick={() => handleUpdateProject(project.uid)} className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-between ${task.project.uid === project.uid ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>
+                        <span className="truncate">{project.name}</span>
+                        {task.project.uid === project.uid && <span className="material-symbols-outlined text-[16px] flex-shrink-0">check</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 标签 */}
+              <div className="relative">
+                <PropertyRow icon="label" label="标签" onClick={() => setShowTagSelector(!showTagSelector)}>
+                  {task.tags.length > 0 ? (
+                    <div className="flex gap-1 flex-wrap justify-end">
+                      {task.tags.map((tag) => (
+                        <span key={tag.uid} className="px-2 py-0.5 rounded text-xs font-medium" style={{ backgroundColor: `${tag.color}20`, color: tag.color }}>{tag.name}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-sm text-gray-400">未设置</span>
+                  )}
+                  <span className="material-symbols-outlined text-[16px] text-gray-400 ml-1">chevron_right</span>
+                </PropertyRow>
+                {showTagSelector && (
+                  <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50 max-h-60 overflow-y-auto">
+                    {allTags.length > 0 ? allTags.map((tag) => {
+                      const isSelected = task.tags.some(t => t.uid === tag.uid);
+                      return (
+                        <button key={tag.uid} onClick={() => handleToggleTag(tag.uid)} className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-between">
+                          <span className="flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: tag.color }} />
+                            <span className="text-gray-700 dark:text-gray-300">{tag.name}</span>
+                          </span>
+                          {isSelected && <span className="material-symbols-outlined text-[16px] text-primary">check</span>}
+                        </button>
+                      );
+                    }) : <div className="px-4 py-3 text-sm text-gray-500 text-center">暂无标签</div>}
+                  </div>
+                )}
+              </div>
+
+              {/* 分组 */}
+              <PropertyRow icon="workspaces" label="分组">
+                <span className="text-sm text-gray-700 dark:text-gray-300">{task.project.group.name}</span>
+              </PropertyRow>
+
+              {/* 创建时间 */}
+              <PropertyRow icon="schedule" label="创建时间">
+                <span className="text-sm text-gray-500">{format(parseISO(task.created_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}</span>
+              </PropertyRow>
+
+              {/* 更新时间 */}
+              <PropertyRow icon="update" label="更新时间">
+                <span className="text-sm text-gray-500">{format(parseISO(task.updated_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}</span>
+              </PropertyRow>
+            </div>
+
+            {/* 标题区域 */}
+            <div className="px-4 py-4 border-b border-gray-100 dark:border-gray-800">
+              <div className="flex items-start gap-3">
+                <button onClick={handleToggleStatus} disabled={isEditing} className={`mt-0.5 flex-shrink-0 transition-colors ${task.is_completed ? 'text-green-500' : 'text-gray-400 hover:text-primary'} ${isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                  <span className={`material-symbols-outlined text-[22px] ${task.is_completed ? 'fill-1' : ''}`}>
+                    {task.is_completed ? 'check_circle' : 'radio_button_unchecked'}
+                  </span>
+                </button>
+                {isEditing ? (
+                  <textarea ref={titleInputRef} value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} className="flex-1 text-lg font-semibold bg-transparent border-none focus:ring-0 focus:outline-none text-[#111418] dark:text-white placeholder-gray-400 resize-none" placeholder="任务标题" rows={2} />
+                ) : (
+                  <h1 className={`flex-1 text-lg font-semibold leading-snug ${task.is_completed ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-[#111418] dark:text-white'}`}>{task.title}</h1>
+                )}
+              </div>
+            </div>
+
+            {/* 内容区域 */}
+            <div className="px-4 py-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="material-symbols-outlined text-[18px] text-gray-400">description</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">描述</span>
+              </div>
+              {isEditing ? (
+                <textarea value={editForm.content} onChange={(e) => setEditForm({ ...editForm, content: e.target.value })} className="w-full text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 focus:ring-2 focus:ring-primary focus:border-transparent text-gray-700 dark:text-gray-300 placeholder-gray-400 resize-none min-h-[120px]" placeholder="添加任务描述..." rows={6} />
+              ) : task.content ? (
+                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap">{task.content}</p>
+              ) : (
+                <p className="text-sm text-gray-400 italic">暂无描述</p>
+              )}
+            </div>
+
+            {/* 子任务进度 */}
+            {task.subtasks_count > 0 && (
+              <div className="px-4 py-4 border-t border-gray-100 dark:border-gray-800">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-gray-400">checklist</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">子任务</span>
+                  </div>
+                  <span className="text-xs text-gray-500">{task.completed_subtasks_count}/{task.subtasks_count}</span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                  <div className="bg-primary h-1.5 rounded-full transition-all" style={{ width: `${(task.completed_subtasks_count / task.subtasks_count) * 100}%` }} />
+                </div>
+              </div>
+            )}
+          </>
         ) : (
+          /* 动态 Tab */
           <div className="px-4 py-4">
             {isActivityLoading ? (
               <div className="flex items-center justify-center py-8">
