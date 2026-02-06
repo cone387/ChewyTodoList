@@ -124,6 +124,15 @@ input, textarea {
   }
 }
 
+@keyframes slide-up {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
@@ -138,6 +147,10 @@ input, textarea {
 
 .animate-scale-in {
   animation: scale-in 0.2s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
 }
 
 .shimmer {

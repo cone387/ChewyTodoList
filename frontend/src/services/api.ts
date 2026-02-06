@@ -215,6 +215,7 @@ export const taskApi = {
     content: string;
     status: number;
     priority: number;
+    project_uid: string;
     tag_uids: string[];
     due_date: string;
     start_date: string;

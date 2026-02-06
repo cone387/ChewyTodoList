@@ -56,14 +56,56 @@ export const useCreateTask = () => {
   });
 };
 
-// 更新任务
+// 更新任务（支持乐观更新）
 export const useUpdateTask = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: any }) =>
       taskApi.updateTask(uid, data),
-    onSuccess: (_, { uid }) => {
+    onMutate: async ({ uid, data }) => {
+      // 取消正在进行的查询
+      await queryClient.cancelQueries({ queryKey: ['task', uid] });
+      await queryClient.cancelQueries({ queryKey: ['tasks'] });
+      
+      // 保存之前的数据用于回滚
+      const previousTask = queryClient.getQueryData(['task', uid]);
+      const previousTasks = queryClient.getQueryData(['tasks']);
+      
+      // 乐观更新任务详情
+      if (previousTask) {
+        queryClient.setQueryData(['task', uid], (old: any) => {
+          if (!old) return old;
+          // 处理 project_uid 的特殊情况
+          const updatedData = { ...data };
+          if (data.project_uid) {
+            // 需要从 projects 中找到对应的项目信息
+            const projectsData = queryClient.getQueryData(['projects']) as any;
+            const projects = projectsData?.results || [];
+            const project = projects.find((p: any) => p.uid === data.project_uid);
+            if (project) {
+              updatedData.project = project;
+            }
+            delete updatedData.project_uid;
+          }
+          return { ...old, ...updatedData };
+        });
+      }
+      
+      return { previousTask, previousTasks };
+    },
+    onError: (err, { uid }, context) => {
+      // 发生错误时回滚
+      if (context?.previousTask) {
+        queryClient.setQueryData(['task', uid], context.previousTask);
+      }
+      if (context?.previousTasks) {
+        queryClient.setQueryData(['tasks'], context.previousTasks);
+      }
+      console.error('更新任务失败:', err);
+    },
+    onSettled: (_, __, { uid }) => {
+      // 无论成功还是失败，都重新获取最新数据
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['task', uid] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
