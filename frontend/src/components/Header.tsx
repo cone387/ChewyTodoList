@@ -360,7 +360,7 @@ const Header: React.FC<HeaderProps> = ({
                       <span>{option.label}</span>
                     </button>
                     
-                    {/* 排序方式按钮：点击切换但不关闭弹窗 */}
+                    {/* 排序方式按钮：点击选中排序字段和方式，然后关闭弹窗 */}
                     {option.value && (
                       <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                         <button
@@ -368,6 +368,7 @@ const Header: React.FC<HeaderProps> = ({
                             e.preventDefault();
                             e.stopPropagation();
                             onSortChange?.(option.value, 'asc');
+                            setTimeout(() => setActiveDropdown(null), 0);
                           }}
                           className={`px-2 py-1 rounded ${
                             sortField === option.value && sortDirection === 'asc'
@@ -383,6 +384,7 @@ const Header: React.FC<HeaderProps> = ({
                             e.preventDefault();
                             e.stopPropagation();
                             onSortChange?.(option.value, 'desc');
+                            setTimeout(() => setActiveDropdown(null), 0);
                           }}
                           className={`px-2 py-1 rounded ${
                             sortField === option.value && sortDirection === 'desc'
