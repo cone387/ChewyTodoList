@@ -315,17 +315,18 @@ const TaskDetailPage: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-white dark:bg-background-dark" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 88px)' }}>
+      <main className="flex-1 overflow-y-auto bg-white dark:bg-background-dark pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 88px)' }}>
         {activeTab === 'details' ? (
-          <>
-            {/* 紧凑属性区域 */}
-            <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30">
-              <div className="flex flex-wrap gap-1">
+          <div className="flex flex-col min-h-full">
+            {/* 属性区域 - 分两行 */}
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30">
+              {/* 第一行：状态、优先级、截止日期 */}
+              <div className="flex flex-wrap gap-2 mb-2">
                 {/* 状态 */}
                 <div className="relative">
-                  <div onClick={() => setShowStatusSelector(!showStatusSelector)} className={`flex items-center gap-1 px-2 py-1 rounded-md cursor-pointer text-xs font-medium ${getStatusColor(task.status)}`}>
+                  <div onClick={() => setShowStatusSelector(!showStatusSelector)} className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-medium ${getStatusColor(task.status)}`}>
                     {getStatusLabel(task.status)}
-                    <span className="material-symbols-outlined text-[12px]">expand_more</span>
+                    <span className="material-symbols-outlined text-[14px]">expand_more</span>
                   </div>
                   {showStatusSelector && (
                     <div className="absolute left-0 top-full mt-1 w-28 bg-white dark:bg-surface-dark rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
@@ -340,9 +341,9 @@ const TaskDetailPage: React.FC = () => {
 
                 {/* 优先级 */}
                 <div className="relative">
-                  <div onClick={() => setShowPrioritySelector(!showPrioritySelector)} className={`flex items-center gap-1 px-2 py-1 rounded-md cursor-pointer text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                  <div onClick={() => setShowPrioritySelector(!showPrioritySelector)} className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-medium ${getPriorityColor(task.priority)}`}>
                     {getPriorityLabel(task.priority)}
-                    <span className="material-symbols-outlined text-[12px]">expand_more</span>
+                    <span className="material-symbols-outlined text-[14px]">expand_more</span>
                   </div>
                   {showPrioritySelector && (
                     <div className="absolute left-0 top-full mt-1 w-24 bg-white dark:bg-surface-dark rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
@@ -357,8 +358,8 @@ const TaskDetailPage: React.FC = () => {
 
                 {/* 截止日期 */}
                 <div className="relative">
-                  <div onClick={() => setShowDatePicker(showDatePicker === 'due' ? null : 'due')} className={`flex items-center gap-1 px-2 py-1 rounded-md cursor-pointer text-xs ${task.is_overdue && !task.is_completed ? 'bg-red-100 dark:bg-red-900/30 text-red-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>
-                    <span className="material-symbols-outlined text-[12px]">event</span>
+                  <div onClick={() => setShowDatePicker(showDatePicker === 'due' ? null : 'due')} className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs ${task.is_overdue && !task.is_completed ? 'bg-red-100 dark:bg-red-900/30 text-red-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>
+                    <span className="material-symbols-outlined text-[14px]">event</span>
                     {task.due_date ? formatDueDate(task.due_date) : '截止日期'}
                   </div>
                   {showDatePicker === 'due' && (
@@ -368,11 +369,14 @@ const TaskDetailPage: React.FC = () => {
                     </div>
                   )}
                 </div>
+              </div>
 
+              {/* 第二行：项目、标签 */}
+              <div className="flex flex-wrap gap-2">
                 {/* 项目 */}
                 <div className="relative">
-                  <div onClick={() => setShowProjectSelector(!showProjectSelector)} className="flex items-center gap-1 px-2 py-1 rounded-md cursor-pointer text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
-                    <span className="material-symbols-outlined text-[12px]">folder</span>
+                  <div onClick={() => setShowProjectSelector(!showProjectSelector)} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+                    <span className="material-symbols-outlined text-[14px]">folder</span>
                     {task.project.name}
                   </div>
                   {showProjectSelector && (
@@ -388,18 +392,18 @@ const TaskDetailPage: React.FC = () => {
 
                 {/* 标签 */}
                 <div className="relative">
-                  <div onClick={() => setShowTagSelector(!showTagSelector)} className="flex items-center gap-1 px-2 py-1 rounded-md cursor-pointer text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
-                    <span className="material-symbols-outlined text-[12px]">label</span>
+                  <div onClick={() => setShowTagSelector(!showTagSelector)} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+                    <span className="material-symbols-outlined text-[14px]">label</span>
                     {task.tags.length > 0 ? `${task.tags.length}个标签` : '标签'}
                   </div>
                   {showTagSelector && (
-                    <div className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-surface-dark rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50 max-h-48 overflow-y-auto">
+                    <div className="absolute left-0 top-full mt-1 w-44 bg-white dark:bg-surface-dark rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50 max-h-48 overflow-y-auto">
                       {allTags.length > 0 ? allTags.map((tag) => {
                         const isSelected = task.tags.some(t => t.uid === tag.uid);
                         return (
                           <button key={tag.uid} onClick={() => handleToggleTag(tag.uid)} className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-between">
                             <span className="flex items-center gap-1.5">
-                              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }} />
+                              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: tag.color }} />
                               <span className="text-gray-700 dark:text-gray-300">{tag.name}</span>
                             </span>
                             {isSelected && <span className="material-symbols-outlined text-[14px] text-primary">check</span>}
@@ -409,16 +413,12 @@ const TaskDetailPage: React.FC = () => {
                     </div>
                   )}
                 </div>
-              </div>
 
-              {/* 标签展示 */}
-              {task.tags.length > 0 && (
-                <div className="flex gap-1 mt-1.5 flex-wrap">
-                  {task.tags.map((tag) => (
-                    <span key={tag.uid} className="px-1.5 py-0.5 rounded text-[10px] font-medium" style={{ backgroundColor: `${tag.color}20`, color: tag.color }}>{tag.name}</span>
-                  ))}
-                </div>
-              )}
+                {/* 标签展示 */}
+                {task.tags.length > 0 && task.tags.map((tag) => (
+                  <span key={tag.uid} className="px-2 py-1 rounded-lg text-xs font-medium" style={{ backgroundColor: `${tag.color}20`, color: tag.color }}>{tag.name}</span>
+                ))}
+              </div>
             </div>
 
             {/* 标题区域 */}
@@ -444,24 +444,19 @@ const TaskDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* 内容区域 */}
-            <div className="px-4 py-3">
-              <div className="flex items-center gap-1.5 mb-2">
-                <span className="material-symbols-outlined text-[16px] text-gray-400">description</span>
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">描述</span>
-              </div>
+            {/* 内容区域 - 撑满剩余空间 */}
+            <div className="flex-1 px-4 py-3">
               {isEditing ? (
                 <textarea
                   value={editForm.content}
                   onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
-                  className="w-full text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 focus:ring-2 focus:ring-primary focus:border-transparent text-gray-700 dark:text-gray-300 placeholder-gray-400 resize-none min-h-[100px]"
+                  className="w-full h-full min-h-[200px] text-sm bg-transparent border-none focus:ring-0 focus:outline-none text-gray-700 dark:text-gray-300 placeholder-gray-400 resize-none"
                   placeholder="添加任务描述..."
-                  rows={5}
                 />
-              ) : task.content ? (
-                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap">{task.content}</p>
               ) : (
-                <p className="text-sm text-gray-400 italic">暂无描述</p>
+                <p className={`text-sm leading-relaxed whitespace-pre-wrap ${task.content ? 'text-gray-600 dark:text-gray-400' : 'text-gray-400 italic'}`}>
+                  {task.content || '点击底部编辑按钮添加描述...'}
+                </p>
               )}
             </div>
 
@@ -488,7 +483,7 @@ const TaskDetailPage: React.FC = () => {
                 <span>更新于 {format(parseISO(task.updated_at), 'M月d日 HH:mm', { locale: zhCN })}</span>
               </div>
             </div>
-          </>
+          </div>
         ) : (
           /* 动态 Tab */
           <div className="px-4 py-4">
@@ -531,6 +526,30 @@ const TaskDetailPage: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* 底部编辑工具栏 */}
+      {activeTab === 'details' && !isEditing && (
+        <div className="fixed bottom-0 left-0 right-0 z-20 bg-white dark:bg-surface-dark border-t border-gray-200 dark:border-gray-700 max-w-md mx-auto">
+          <div className="flex items-center justify-around py-2 px-4">
+            <button onClick={handleEdit} className="flex flex-col items-center gap-0.5 px-4 py-1.5 text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">
+              <span className="material-symbols-outlined text-[20px]">edit</span>
+              <span className="text-[10px]">编辑</span>
+            </button>
+            <button onClick={() => setShowDatePicker('due')} className="flex flex-col items-center gap-0.5 px-4 py-1.5 text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">
+              <span className="material-symbols-outlined text-[20px]">event</span>
+              <span className="text-[10px]">日期</span>
+            </button>
+            <button onClick={() => setShowTagSelector(true)} className="flex flex-col items-center gap-0.5 px-4 py-1.5 text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">
+              <span className="material-symbols-outlined text-[20px]">label</span>
+              <span className="text-[10px]">标签</span>
+            </button>
+            <button onClick={handleDelete} className="flex flex-col items-center gap-0.5 px-4 py-1.5 text-gray-600 dark:text-gray-400 hover:text-red-500 transition-colors">
+              <span className="material-symbols-outlined text-[20px]">delete</span>
+              <span className="text-[10px]">删除</span>
+            </button>
+          </div>
+        </div>
+      )}
       
       {confirmState.isOpen && (
         <ConfirmDialog title={confirmState.title} message={confirmState.message} confirmText={confirmState.confirmText} cancelText={confirmState.cancelText} confirmColor={confirmState.confirmColor} onConfirm={confirmState.onConfirm} onCancel={handleCancel} />
