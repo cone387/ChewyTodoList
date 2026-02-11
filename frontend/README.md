@@ -45,7 +45,7 @@ npm install
 npm run dev
 ```
 
-应用将在 http://localhost:5173 启动
+应用将在 http://localhost:4030 启动
 
 ### 构建生产版本
 
@@ -93,7 +93,7 @@ frontend/
 
 前端通过代理配置与后端API通信：
 
-- 开发环境：`http://localhost:8000/api`
+- 开发环境：`http://localhost:8030/api`
 - 生产环境：需要配置实际的API地址
 
 ### 主要API端点

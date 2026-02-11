@@ -141,7 +141,7 @@ uv run python manage.py create_sample_data
 ```
 
 ### 测试账户
-- 管理员: `admin` / `admin123`
+- 管理员: 通过 `.env` 中 `DEFAULT_ADMIN_USERNAME` / `DEFAULT_ADMIN_PASSWORD` 配置（默认 `admin` / `admin123456`）
 - 演示用户: `demo` / `demo123`
 
 ## API 响应格式

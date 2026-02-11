@@ -804,7 +804,7 @@ RUN uv run python manage.py collectstatic --noinput
 EXPOSE 8000
 
 # 启动命令
-CMD ["uv", "run", "gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["uv", "run", "gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8030"]
 ```
 
 #### 1.2 前端 Dockerfile
@@ -878,7 +878,7 @@ services:
       - db
       - redis
     ports:
-      - "8000:8000"
+      - "4030:4030"
     volumes:
       - ./backend:/app
       - media_volume:/app/media

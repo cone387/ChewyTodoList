@@ -143,7 +143,7 @@ def apply_filters(self, queryset):
 
 1. **通过 API**：
 ```bash
-curl -X PUT http://localhost:8000/api/views/5tPYgOzOSUGoW4h2gdEVJA/ \
+curl -X PUT http://localhost:8030/api/views/5tPYgOzOSUGoW4h2gdEVJA/ \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

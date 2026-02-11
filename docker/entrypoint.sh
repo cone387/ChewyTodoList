@@ -16,19 +16,24 @@ python manage.py migrate --noinput
 echo "Collecting static files..."
 python manage.py collectstatic --noinput --clear
 
-# 创建超级用户（如果不存在）
-echo "Creating superuser if not exists..."
+# 创建默认用户（从环境变量读取）
+echo "Creating default user if not exists..."
 python manage.py shell << EOF
+import os
 from django.contrib.auth import get_user_model
 from apps.todolist.models import TaskView, Group, Project
 
 User = get_user_model()
-if not User.objects.filter(username="admin").exists():
-    admin = User.objects.create_superuser("admin", "admin@example.com", "admin123")
-    print("✓ Superuser created: admin/admin123")
+username = os.environ.get('DEFAULT_ADMIN_USERNAME', 'admin')
+password = os.environ.get('DEFAULT_ADMIN_PASSWORD', 'admin123456')
+email = os.environ.get('DEFAULT_ADMIN_EMAIL', 'admin@example.com')
+
+if not User.objects.filter(username=username).exists():
+    admin = User.objects.create_superuser(username, email, password)
+    print(f"\u2713 Superuser created: {username}")
 else:
-    admin = User.objects.get(username="admin")
-    print("✓ Superuser already exists")
+    admin = User.objects.get(username=username)
+    print(f"\u2713 Superuser already exists: {username}")
 
 # 创建默认分组
 default_group, created = Group.objects.get_or_create(

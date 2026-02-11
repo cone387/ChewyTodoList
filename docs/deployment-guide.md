@@ -141,8 +141,8 @@ vim .env.local
 
 **.env.local 文件配置**:
 ```env
-VITE_API_BASE_URL=http://localhost:8000/api/v1
-VITE_WS_BASE_URL=ws://localhost:8000/ws
+VITE_API_BASE_URL=http://localhost:8030/api/v1
+VITE_WS_BASE_URL=ws://localhost:8030/ws
 VITE_APP_TITLE=待办事项管理系统
 VITE_APP_VERSION=1.0.0
 ```
@@ -170,9 +170,9 @@ uv run celery -A config worker -l info
 ```
 
 ### 4. 验证部署
-- 后端 API: http://localhost:8000/api/v1/
-- 前端应用: http://localhost:5173/
-- Django Admin: http://localhost:8000/admin/
+- 后端 API: http://localhost:8030/api/v1/
+- 前端应用: http://localhost:4030/
+- Django Admin: http://localhost:8030/admin/
 
 ## Docker 部署
 
@@ -232,23 +232,23 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "8000:8000"
+      - "4030:4030"
     volumes:
       - media_volume:/app/media
       - static_volume:/app/static
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
-             gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+             gunicorn config.wsgi:application --bind 0.0.0.0:8030"
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_BASE_URL=http://localhost:8000/api/v1
+        - VITE_API_BASE_URL=http://localhost:8030/api/v1
     ports:
-      - "80:80"
+      - "4030:4030"
     depends_on:
       - backend
 
@@ -334,14 +334,14 @@ ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH="/app"
 
 # 暴露端口
-EXPOSE 8000
+EXPOSE 8030
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health/ || exit 1
+    CMD curl -f http://localhost:8030/health/ || exit 1
 
 # 启动命令
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8030", "--workers", "4"]
 ```
 
 #### 前端 Dockerfile
@@ -473,7 +473,7 @@ server {
 
     # 前端静态文件
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:4030;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -482,7 +482,7 @@ server {
 
     # API 代理
     location /api/ {
-        proxy_pass http://localhost:8000;
+        proxy_pass http://localhost:8030;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -496,7 +496,7 @@ server {
 
     # WebSocket 支持
     location /ws/ {
-        proxy_pass http://localhost:8000;
+        proxy_pass http://localhost:8030;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -595,7 +595,7 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "8000:8000"
+      - "4030:4030"
     volumes:
       - media_volume:/app/media
       - static_volume:/app/static

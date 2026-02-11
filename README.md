@@ -88,8 +88,8 @@ chmod +x deploy.sh
 ./deploy.sh deploy
 ```
 
-部署完成后访问 http://localhost:8040
-- 默认管理员账号: `admin` / `admin123`
+部署完成后访问 http://localhost:4030
+- 默认管理员账号: 通过 `.env` 中 `DEFAULT_ADMIN_USERNAME` / `DEFAULT_ADMIN_PASSWORD` 配置（默认 `admin` / `admin123456`）
 
 详细部署说明请查看 [DEPLOY.md](DEPLOY.md)
 
@@ -103,7 +103,7 @@ docker-compose up -d
 docker-compose logs -f backend
 ```
 
-访问 http://localhost:8000/api/ 查看API
+访问 http://localhost:4030/api/ 查看API
 
 ### 方式三：本地开发
 
@@ -136,7 +136,7 @@ npm install
 npm run dev
 ```
 
-访问 http://localhost:5173
+访问 http://localhost:4030
 
 ## 📖 API 文档
 

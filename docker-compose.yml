@@ -4,7 +4,7 @@ services:
   backend:
     build: ./backend
     ports:
-      - "8000:8000"
+      - "4030:4030"
     volumes:
       - ./data:/app/data
     environment:
@@ -12,7 +12,10 @@ services:
       - SECRET_KEY=dev-secret-key-change-in-production
       - DATABASE_URL=sqlite:///data/db.sqlite3
       - ALLOWED_HOSTS=localhost,127.0.0.1
-      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173
+      - CORS_ALLOWED_ORIGINS=http://localhost:4030,http://127.0.0.1:4030
+      - DEFAULT_ADMIN_USERNAME=admin
+      - DEFAULT_ADMIN_PASSWORD=admin123456
+      - DEFAULT_ADMIN_EMAIL=admin@example.com
     restart: unless-stopped
 
 volumes:

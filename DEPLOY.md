@@ -22,8 +22,8 @@ chmod +x deploy.sh
 ```
 
 部署完成后：
-- 访问地址: http://localhost:8040
-- 默认管理员账号: `admin` / `admin123`
+- 访问地址: http://localhost:4030
+- 默认管理员账号: 通过环境变量 `DEFAULT_ADMIN_USERNAME` / `DEFAULT_ADMIN_PASSWORD` 配置（默认 `admin` / `admin123456`）
 
 ### 镜像源说明
 
@@ -99,7 +99,7 @@ PORT=8080  # 改为你想要的端口
 ```bash
 docker run -d \
   --name chewytodolist-app \
-  -p 80:80 \
+  -p 80:4030 \
   -e DJANGO_SECRET_KEY=your-secret-key \
   -e ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com \
   -e USE_HTTPS=true \
@@ -134,7 +134,7 @@ docker run -d \
        ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
        
        location / {
-           proxy_pass http://localhost:80;
+           proxy_pass http://localhost:4030;
            proxy_set_header Host $host;
            proxy_set_header X-Real-IP $remote_addr;
            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -153,7 +153,7 @@ docker run -d \
    ```bash
    docker run -d \
      --name chewytodolist-app \
-     -p 8080:80 \
+     -p 8080:4030 \
      -e USE_HTTPS=true \
      -e ALLOWED_HOSTS=yourdomain.com \
      -v $(pwd)/data:/app/data \
@@ -187,7 +187,7 @@ docker run -d \
 docker logs chewytodolist-app
 
 # 检查端口占用
-lsof -i :80
+lsof -i :4030
 ```
 
 #### 数据库迁移失败
@@ -240,14 +240,14 @@ rm -rf data/
 │  ┌──────────┐  ┌──────────────┐   │
 │  │  Nginx   │  │  Supervisor  │   │
 │  │  (Port   │  │              │   │
-│  │   80)    │  └──────┬───────┘   │
+│  │  4030)   │  └──────┬───────┘   │
 │  └────┬─────┘         │           │
 │       │               │           │
 │       │         ┌─────┴─────┐     │
 │       │         │           │     │
 │       │    ┌────▼────┐ ┌───▼───┐ │
 │       └───►│ Django  │ │ Nginx │ │
-│            │ (8000)  │ │       │ │
+│            │ (8030)  │ │       │ │
 │            └─────────┘ └───────┘ │
 │                                   │
 │  ┌─────────────────────────────┐ │

@@ -21,7 +21,7 @@ NC='\033[0m' # No Color
 # 配置变量
 IMAGE_NAME="chewytodolist"
 CONTAINER_NAME="chewy-todolist"
-PORT=8040
+PORT=4030
 DOCKERFILE="Dockerfile"  # 默认使用标准 Dockerfile
 
 # 检查是否使用国内镜像源
@@ -80,14 +80,14 @@ start_container() {
     print_info "创建并启动新容器..."
     docker run -d \
         --name ${CONTAINER_NAME} \
-        -p ${PORT}:80 \
+        -p ${PORT}:4030 \
         -v $(pwd)/data:/app/data \
         --restart unless-stopped \
         ${IMAGE_NAME}:latest
     
     print_info "容器已启动！"
     print_info "访问地址: http://localhost:${PORT}"
-    print_info "默认管理员账号: admin / admin123"
+    print_info "默认管理员账号: 通过环境变量 DEFAULT_ADMIN_USERNAME/DEFAULT_ADMIN_PASSWORD 配置"
 }
 
 # 停止容器
@@ -155,7 +155,7 @@ full_deploy() {
     show_status
     print_info "部署完成！"
     print_info "访问地址: http://localhost:${PORT}"
-    print_info "默认管理员账号: admin / admin123"
+    print_info "默认管理员账号: 通过环境变量 DEFAULT_ADMIN_USERNAME/DEFAULT_ADMIN_PASSWORD 配置"
 }
 
 # 完整部署流程（国内镜像源）

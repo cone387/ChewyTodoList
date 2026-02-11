@@ -66,11 +66,11 @@ ENV PYTHONUNBUFFERED=1 \
     PORT=8000
 
 # 暴露端口
-EXPOSE 80
+EXPOSE 4030
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost/health || exit 1
+    CMD curl -f http://localhost:4030/health || exit 1
 
 # 启动脚本
 ENTRYPOINT ["/app/entrypoint.sh"]

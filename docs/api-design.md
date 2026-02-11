@@ -4,7 +4,7 @@
 
 ### 基础信息
 - **API 版本**: v1
-- **基础 URL**: `http://localhost:8000/api/v1/`
+- **基础 URL**: `http://localhost:8030/api/v1/`
 - **认证方式**: JWT Token
 - **数据格式**: JSON
 - **字符编码**: UTF-8
@@ -767,7 +767,7 @@ X-RateLimit-Reset: 1642694400
 
 ### 实时更新连接
 ```javascript
-const ws = new WebSocket('ws://localhost:8000/ws/tasks/');
+const ws = new WebSocket('ws://localhost:8030/ws/tasks/');
 
 ws.onmessage = function(event) {
   const data = JSON.parse(event.data);

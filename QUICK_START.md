@@ -14,8 +14,8 @@ chmod +x deploy.sh
 ./deploy.sh deploy-cn
 
 # 3. 等待构建完成（首次约 3-5 分钟）
-# 4. 访问 http://localhost:8040
-# 5. 使用默认账号登录: admin / admin123
+# 4. 访问 http://localhost:4030
+# 5. 使用 .env 中配置的账号登录（默认 admin / admin123456）
 ```
 
 ### 国际用户
@@ -30,8 +30,8 @@ chmod +x deploy.sh
 ./deploy.sh deploy
 
 # 3. 等待构建完成
-# 4. 访问 http://localhost:8040
-# 5. 使用默认账号登录: admin / admin123
+# 4. 访问 http://localhost:4030
+# 5. 使用 .env 中配置的账号登录（默认 admin / admin123456）
 ```
 
 ## 📋 常用命令
@@ -80,7 +80,7 @@ python manage.py changepassword admin
 
 ```bash
 # 查看占用端口的进程
-lsof -i :8040
+lsof -i :4030
 
 # 或修改 deploy.sh 中的 PORT 变量
 ```
@@ -122,7 +122,7 @@ docker logs chewy-todolist
 ## 💡 提示
 
 1. **首次部署**会自动创建：
-   - 管理员账号（admin/admin123）
+   - 管理员账号（通过 .env 配置，默认 admin/admin123456）
    - 默认分组
    - 默认项目
    - 默认视图
@@ -143,9 +143,9 @@ docker logs chewy-todolist
 
 ## 🎉 开始使用
 
-部署完成后，打开浏览器访问 http://localhost:8040
+部署完成后，打开浏览器访问 http://localhost:4030
 
-1. 使用 `admin` / `admin123` 登录
+1. 使用 .env 中配置的账号登录（默认 `admin` / `admin123456`）
 2. 开始创建你的第一个任务
 3. 探索视图、项目、标签等功能
 
