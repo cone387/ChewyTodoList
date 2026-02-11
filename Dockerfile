@@ -1,7 +1,7 @@
 # 多阶段构建 Dockerfile - 单容器部署前后端 + Nginx
 
 # ==================== 阶段 1: 构建前端 ====================
-FROM docker.m.daocloud.io/library/node:18-alpine AS frontend-builder
+FROM docker.m.daocloud.io/library/node:22-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
@@ -18,7 +18,7 @@ COPY frontend/ ./
 RUN npm run build -- --mode production
 
 # ==================== 阶段 2: 最终镜像 ====================
-FROM docker.m.daocloud.io/library/python:3.11-slim
+FROM docker.m.daocloud.io/library/python:3.13-slim
 
 # 安装 Nginx 和 Supervisor
 RUN apt-get update && apt-get install -y \
@@ -62,8 +62,7 @@ RUN chmod +x /app/entrypoint.sh
 
 # 设置环境变量
 ENV PYTHONUNBUFFERED=1 \
-    DJANGO_SETTINGS_MODULE=config.settings.production \
-    PORT=8000
+    DJANGO_SETTINGS_MODULE=config.settings.production
 
 # 暴露端口
 EXPOSE 4030

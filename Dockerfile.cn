@@ -1,7 +1,7 @@
 # 多阶段构建 Dockerfile - 单容器部署前后端 + Nginx（国内镜像源版本）
 
 # ==================== 阶段 1: 构建前端 ====================
-FROM docker.m.daocloud.io/library/node:18-alpine AS frontend-builder
+FROM docker.m.daocloud.io/library/node:22-alpine AS frontend-builder
 
 # 使用国内 npm 镜像源
 RUN npm config set registry https://registry.npmmirror.com
@@ -21,7 +21,7 @@ COPY frontend/ ./
 RUN npm run build -- --mode production
 
 # ==================== 阶段 2: 最终镜像 ====================
-FROM docker.m.daocloud.io/library/python:3.11-slim
+FROM docker.m.daocloud.io/library/python:3.13-slim
 
 # 使用国内 apt 镜像源（清华源）
 RUN sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list.d/debian.sources
@@ -71,15 +71,14 @@ RUN chmod +x /app/entrypoint.sh
 
 # 设置环境变量
 ENV PYTHONUNBUFFERED=1 \
-    DJANGO_SETTINGS_MODULE=config.settings.production \
-    PORT=8000
+    DJANGO_SETTINGS_MODULE=config.settings.production
 
 # 暴露端口
-EXPOSE 80
+EXPOSE 4030
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost/health || exit 1
+    CMD curl -f http://localhost:4030/health || exit 1
 
 # 启动脚本
 ENTRYPOINT ["/app/entrypoint.sh"]

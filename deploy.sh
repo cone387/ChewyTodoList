@@ -1,251 +1,133 @@
 #!/bin/bash
 
-# ChewyTodoList 一键部署脚本
-# 使用方法: ./deploy.sh [选项]
-# 选项:
-#   build   - 构建 Docker 镜像
-#   start   - 启动容器
-#   stop    - 停止容器
-#   restart - 重启容器
-#   logs    - 查看日志
-#   clean   - 清理容器和镜像
+# ChewyTodoList 单容器部署脚本
+# 用法: ./deploy.sh [命令] [--cn]
 
 set -e
 
-# 颜色输出
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# 配置变量
+# 配置
 IMAGE_NAME="chewytodolist"
 CONTAINER_NAME="chewy-todolist"
 PORT=4030
-DOCKERFILE="Dockerfile"  # 默认使用标准 Dockerfile
 
-# 检查是否使用国内镜像源
-if [ "$1" = "build-cn" ] || [ "$1" = "deploy-cn" ]; then
-    DOCKERFILE="Dockerfile.cn"
-    echo "使用国内镜像源版本"
-fi
+# 颜色
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
 
-# 打印带颜色的消息
-print_info() {
-    echo -e "${GREEN}[INFO]${NC} $1"
-}
+info()  { echo -e "${GREEN}[INFO]${NC} $1"; }
+warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
+error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-print_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
-}
+# 解析 --cn 标志
+DOCKERFILE="Dockerfile"
+for arg in "$@"; do
+    if [ "$arg" = "--cn" ]; then
+        DOCKERFILE="Dockerfile.cn"
+        info "使用国内镜像源"
+    fi
+done
+# 去掉 --cn，保留命令
+CMD="${1:-deploy}"
+[[ "$CMD" == "--cn" ]] && CMD="deploy"
 
-print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-# 检查 Docker 是否安装
+# 检查 Docker
 check_docker() {
-    if ! command -v docker &> /dev/null; then
-        print_error "Docker 未安装，请先安装 Docker"
-        exit 1
-    fi
-    print_info "Docker 已安装: $(docker --version)"
+    command -v docker &>/dev/null || { error "Docker 未安装"; exit 1; }
 }
 
-# 构建镜像
-build_image() {
-    print_info "开始构建 Docker 镜像..."
+# 构建
+build() {
+    info "构建镜像 (${DOCKERFILE})..."
     docker build -f ${DOCKERFILE} -t ${IMAGE_NAME}:latest .
-    print_info "镜像构建完成！"
+    info "构建完成"
 }
 
-# 启动容器
-start_container() {
-    print_info "检查是否有运行中的容器..."
-    
-    if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-        print_warn "容器 ${CONTAINER_NAME} 已存在"
-        
-        if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-            print_info "容器正在运行中"
-            return
-        else
-            print_info "启动已存在的容器..."
-            docker start ${CONTAINER_NAME}
-            print_info "容器已启动！"
-            return
-        fi
+# 启动
+start() {
+    if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+        info "容器已在运行"
+        return
     fi
-    
-    print_info "创建并启动新容器..."
-    docker run -d \
-        --name ${CONTAINER_NAME} \
-        -p ${PORT}:4030 \
-        -v $(pwd)/data:/app/data \
-        --restart unless-stopped \
-        ${IMAGE_NAME}:latest
-    
-    print_info "容器已启动！"
-    print_info "访问地址: http://localhost:${PORT}"
-    print_info "默认管理员账号: 通过环境变量 DEFAULT_ADMIN_USERNAME/DEFAULT_ADMIN_PASSWORD 配置"
+
+    if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+        info "启动已有容器..."
+        docker start ${CONTAINER_NAME}
+    else
+        info "创建并启动容器..."
+        docker run -d \
+            --name ${CONTAINER_NAME} \
+            -p ${PORT}:4030 \
+            -v $(pwd)/data:/app/data \
+            -e DEFAULT_ADMIN_USERNAME=${DEFAULT_ADMIN_USERNAME:-admin} \
+            -e DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD:-admin123456} \
+            -e DEFAULT_ADMIN_EMAIL=${DEFAULT_ADMIN_EMAIL:-admin@example.com} \
+            --restart unless-stopped \
+            ${IMAGE_NAME}:latest
+    fi
+
+    info "访问: http://localhost:${PORT}"
+    info "账号: ${DEFAULT_ADMIN_USERNAME:-admin} / ${DEFAULT_ADMIN_PASSWORD:-admin123456}"
 }
 
-# 停止容器
-stop_container() {
-    print_info "停止容器..."
+# 停止
+stop() {
     if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
         docker stop ${CONTAINER_NAME}
-        print_info "容器已停止"
+        info "已停止"
     else
-        print_warn "容器未运行"
+        warn "容器未运行"
     fi
 }
 
-# 重启容器
-restart_container() {
-    print_info "重启容器..."
-    stop_container
-    sleep 2
-    start_container
+# 清理
+clean() {
+    docker stop ${CONTAINER_NAME} 2>/dev/null || true
+    docker rm ${CONTAINER_NAME} 2>/dev/null || true
+    docker rmi ${IMAGE_NAME}:latest 2>/dev/null || true
+    info "已清理"
 }
 
-# 查看日志
-show_logs() {
-    print_info "显示容器日志 (Ctrl+C 退出)..."
-    docker logs -f ${CONTAINER_NAME}
-}
-
-# 清理容器和镜像
-clean_all() {
-    print_warn "这将删除容器和镜像，数据卷将保留"
-    read -p "确认继续? (y/N): " -n 1 -r
-    echo
-    
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        print_info "停止并删除容器..."
-        docker stop ${CONTAINER_NAME} 2>/dev/null || true
-        docker rm ${CONTAINER_NAME} 2>/dev/null || true
-        
-        print_info "删除镜像..."
-        docker rmi ${IMAGE_NAME}:latest 2>/dev/null || true
-        
-        print_info "清理完成！"
-    else
-        print_info "取消清理"
-    fi
-}
-
-# 显示状态
-show_status() {
-    print_info "容器状态:"
-    if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-        docker ps -a --filter "name=${CONTAINER_NAME}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-    else
-        print_warn "容器不存在"
-    fi
-}
-
-# 完整部署流程
-full_deploy() {
-    print_info "开始完整部署流程..."
-    check_docker
-    build_image
-    start_container
-    sleep 5
-    show_status
-    print_info "部署完成！"
-    print_info "访问地址: http://localhost:${PORT}"
-    print_info "默认管理员账号: 通过环境变量 DEFAULT_ADMIN_USERNAME/DEFAULT_ADMIN_PASSWORD 配置"
-}
-
-# 完整部署流程（国内镜像源）
-full_deploy_cn() {
-    DOCKERFILE="Dockerfile.cn"
-    print_info "使用国内镜像源进行部署..."
-    full_deploy
-}
-
-# 显示帮助信息
-show_help() {
-    cat << EOF
-ChewyTodoList 一键部署脚本
-
-使用方法:
-    ./deploy.sh [命令]
+# 主逻辑
+check_docker
+case "$CMD" in
+    deploy)
+        clean
+        build
+        start
+        sleep 3
+        docker ps --filter "name=${CONTAINER_NAME}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+        ;;
+    build)  build ;;
+    start)  start ;;
+    stop)   stop ;;
+    restart) stop; sleep 2; start ;;
+    logs)   docker logs -f ${CONTAINER_NAME} ;;
+    status) docker ps -a --filter "name=${CONTAINER_NAME}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" ;;
+    clean)  clean ;;
+    *)
+        cat <<EOF
+用法: ./deploy.sh [命令] [--cn]
 
 命令:
-    deploy      完整部署（构建 + 启动）
-    deploy-cn   完整部署（使用国内镜像源）
-    build       仅构建 Docker 镜像
-    build-cn    仅构建 Docker 镜像（使用国内镜像源）
-    start       启动容器
-    stop        停止容器
-    restart     重启容器
-    logs        查看容器日志
-    status      查看容器状态
-    clean       清理容器和镜像
-    help        显示此帮助信息
+  deploy   构建并启动（默认）
+  build    仅构建镜像
+  start    启动容器
+  stop     停止容器
+  restart  重启容器
+  logs     查看日志
+  status   查看状态
+  clean    清理容器和镜像
+
+选项:
+  --cn     使用国内镜像源 (Dockerfile.cn)
 
 示例:
-    ./deploy.sh deploy      # 一键部署
-    ./deploy.sh deploy-cn   # 一键部署（国内镜像源）
-    ./deploy.sh logs        # 查看日志
-    ./deploy.sh restart     # 重启服务
-
-注意:
-    - 如果在国内网络环境下构建较慢，建议使用 deploy-cn 或 build-cn
-    - 国内镜像源使用 DaoCloud、清华源、npmmirror 等
-
+  ./deploy.sh              # 部署
+  ./deploy.sh --cn         # 国内镜像部署
+  ./deploy.sh build --cn   # 仅构建（国内镜像）
+  ./deploy.sh logs         # 查看日志
 EOF
-}
-
-# 主函数
-main() {
-    case "${1:-deploy}" in
-        deploy)
-            full_deploy
-            ;;
-        deploy-cn)
-            full_deploy_cn
-            ;;
-        build)
-            check_docker
-            build_image
-            ;;
-        build-cn)
-            check_docker
-            DOCKERFILE="Dockerfile.cn"
-            build_image
-            ;;
-        start)
-            check_docker
-            start_container
-            ;;
-        stop)
-            stop_container
-            ;;
-        restart)
-            restart_container
-            ;;
-        logs)
-            show_logs
-            ;;
-        status)
-            show_status
-            ;;
-        clean)
-            clean_all
-            ;;
-        help|--help|-h)
-            show_help
-            ;;
-        *)
-            print_error "未知命令: $1"
-            show_help
-            exit 1
-            ;;
-    esac
-}
-
-# 执行主函数
-main "$@"
+        ;;
+esac
