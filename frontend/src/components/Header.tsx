@@ -75,6 +75,12 @@ const Header: React.FC<HeaderProps> = ({
   const { data: profileData } = useProfile();
   const logout = useLogout();
 
+  // 检查是否有激活的筛选条件
+  const hasActiveFilters = 
+    !!sortField || 
+    !!groupBy || 
+    displaySettings.show_completed !== defaultDisplaySettings.show_completed;
+
   // 点击外部关闭用户菜单和下拉框
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -252,7 +258,7 @@ const Header: React.FC<HeaderProps> = ({
             <button 
               onClick={onToggleFilterBar}
               className={`whitespace-nowrap pb-1 flex items-center gap-0.5 transition-colors ${
-                showFilterBar 
+                showFilterBar || hasActiveFilters
                   ? 'text-primary' 
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
@@ -260,6 +266,10 @@ const Header: React.FC<HeaderProps> = ({
             >
               <span className="material-symbols-outlined text-[16px]">filter_alt</span>
               <span>过滤</span>
+              {/* 有筛选条件时显示小圆点 */}
+              {hasActiveFilters && !showFilterBar && (
+                <span className="size-1.5 rounded-full bg-primary ml-0.5"></span>
+              )}
             </button>
             
             {/* 视图管理按钮 */}

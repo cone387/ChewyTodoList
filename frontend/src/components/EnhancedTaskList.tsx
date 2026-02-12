@@ -233,16 +233,8 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
   const incompleteTasks = tasks.filter(task => !task.is_completed);
   const completedTasks = tasks.filter(task => task.is_completed);
 
-  if (tasks.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-        <span className="material-symbols-outlined text-[48px] mb-4">task_alt</span>
-        <p className="text-sm">没有找到匹配的任务</p>
-      </div>
-    );
-  }
-
   // 根据视图分组设置对任务进行分组（只对未完成任务分组）
+  // 必须在任何条件返回之前调用所有 Hooks
   const groupedTasks = React.useMemo(() => {
     if (!view?.group_by) {
       return { '': incompleteTasks };
@@ -292,6 +284,16 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
     
     return groups;
   }, [incompleteTasks, view?.group_by]);
+
+  // 在所有 Hooks 调用之后进行条件返回
+  if (tasks.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+        <span className="material-symbols-outlined text-[48px] mb-4">task_alt</span>
+        <p className="text-sm">没有找到匹配的任务</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

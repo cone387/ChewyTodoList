@@ -108,6 +108,7 @@ export const useUpdateTask = () => {
       // 无论成功还是失败，都重新获取最新数据
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['task', uid] });
+      queryClient.invalidateQueries({ queryKey: ['view-tasks'] }); // 刷新所有视图任务
       queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
   });

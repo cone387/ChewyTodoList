@@ -6,6 +6,7 @@ import BottomNav from '../components/BottomNav';
 import FloatingAddButton from '../components/FloatingAddButton';
 import { useViewTasks, useNavViews, useView } from '../hooks/useViews';
 import { useCheckInitialized, useInitializeUser } from '../hooks/useAuth';
+import { useUpdateTask } from '../hooks/useTasks';
 import { TASK_CARD_TEMPLATES } from '../types/taskCard';
 import type { Task, TaskView } from '../types/index';
 
@@ -43,6 +44,7 @@ const HomePage: React.FC = () => {
   const { data: viewData, isLoading: isViewDataLoading } = useView(currentView);
   const { data: isInitialized, isLoading: isCheckingInit } = useCheckInitialized();
   const initializeUser = useInitializeUser();
+  const updateTask = useUpdateTask();
 
   // 用户初始化检查
   useEffect(() => {
@@ -94,8 +96,18 @@ const HomePage: React.FC = () => {
   };
 
   const handleTaskUpdate = (task: any, updates: any) => {
-    // TODO: 实现任务更新功能
-    console.log('Update task:', task, updates);
+    // 乐观更新：立即更新任务
+    updateTask.mutate(
+      {
+        uid: task.uid,
+        data: updates,
+      },
+      {
+        onError: (error: any) => {
+          console.error('更新任务失败:', error);
+        },
+      }
+    );
   };
 
   const handleOpenViewSettings = () => {
