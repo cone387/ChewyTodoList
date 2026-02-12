@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTask, useUpdateTask, useDeleteTask } from '../hooks/useTasks';
+import { useTask, useUpdateTask, useDeleteTask, useCreateTask } from '../hooks/useTasks';
 import { useProjects } from '../hooks/useProjects';
 import { useTags, useCreateTag } from '../hooks/useTags';
 import { useActivityLogs } from '../hooks/useActivityLogs';
@@ -15,6 +15,8 @@ import { attachmentApi } from '../services/api';
 const TaskDetailPage: React.FC = () => {
   const { uid } = useParams<{ uid: string }>();
   const navigate = useNavigate();
+  const isCreateMode = !uid; // 新建模式
+  
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showProjectSelector, setShowProjectSelector] = useState(false);
   const [showTagSelector, setShowTagSelector] = useState(false);
@@ -30,25 +32,45 @@ const TaskDetailPage: React.FC = () => {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: task, isLoading } = useTask(uid!);
-  const { data: activityLogs, isLoading: isActivityLoading } = useActivityLogs({ task: uid });
+  const { data: task, isLoading } = useTask(uid!, { enabled: !isCreateMode });
+  const { data: activityLogs, isLoading: isActivityLoading } = useActivityLogs({ task: uid }, { enabled: !isCreateMode });
   const { data: projectsResponse } = useProjects();
   const { data: tagsResponse } = useTags();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
+  const createTask = useCreateTask();
   const createTag = useCreateTag();
   const { confirmState, confirm, handleCancel } = useConfirm();
 
   const projects = projectsResponse?.results || [];
   const allTags = tagsResponse?.results || [];
 
+  // 新建模式的表单状态
+  const [createForm, setCreateForm] = useState({
+    title: '',
+    content: '',
+    project_uid: '',
+    priority: TaskPriority.MEDIUM as TaskPriority,
+    tag_uids: [] as string[],
+    due_date: '',
+    start_date: '',
+  });
+
+  // 编辑模式的表单状态
   const [editForm, setEditForm] = useState({ title: '', content: '' });
 
   useEffect(() => {
-    if (task) {
+    if (task && !isCreateMode) {
       setEditForm({ title: task.title, content: task.content || '' });
     }
-  }, [task]);
+  }, [task, isCreateMode]);
+
+  // 新建模式自动聚焦
+  useEffect(() => {
+    if (isCreateMode) {
+      setTimeout(() => titleInputRef.current?.focus(), 100);
+    }
+  }, [isCreateMode]);
 
   // 点击空白区域关闭更多菜单（不包括 BottomSheet，它有自己的关闭逻辑）
   useEffect(() => {
@@ -62,8 +84,9 @@ const TaskDetailPage: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // 自动保存（防抖）
+  // 自动保存（防抖）- 仅编辑模式
   const autoSave = (newTitle: string, newContent: string) => {
+    if (isCreateMode) return;
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
@@ -78,33 +101,73 @@ const TaskDetailPage: React.FC = () => {
   };
 
   const handleTitleChange = (value: string) => {
-    setEditForm(prev => ({ ...prev, title: value }));
-    autoSave(value, editForm.content);
+    if (isCreateMode) {
+      setCreateForm(prev => ({ ...prev, title: value }));
+    } else {
+      setEditForm(prev => ({ ...prev, title: value }));
+      autoSave(value, editForm.content);
+    }
   };
 
   const handleContentChange = (value: string) => {
-    setEditForm(prev => ({ ...prev, content: value }));
-    autoSave(editForm.title, value);
+    if (isCreateMode) {
+      setCreateForm(prev => ({ ...prev, content: value }));
+    } else {
+      setEditForm(prev => ({ ...prev, content: value }));
+      autoSave(editForm.title, value);
+    }
   };
 
   const handleToggleStatus = () => {
-    if (!task) return;
+    if (!task || isCreateMode) return;
     const newStatus = task.is_completed ? TaskStatus.TODO : TaskStatus.COMPLETED;
     updateTask.mutate({ uid: task.uid, data: { status: newStatus } });
   };
 
   const handleBack = () => {
-    // 离开前保存
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
-    if (task && editForm.title.trim()) {
-      updateTask.mutate({
-        uid: task.uid,
-        data: { title: editForm.title.trim(), content: editForm.content.trim() || undefined }
-      });
+    // 只有内容真正改变时才保存
+    if (!isCreateMode && task && editForm.title.trim()) {
+      const titleChanged = editForm.title.trim() !== task.title;
+      const contentChanged = (editForm.content.trim() || '') !== (task.content || '');
+      if (titleChanged || contentChanged) {
+        updateTask.mutate({
+          uid: task.uid,
+          data: { title: editForm.title.trim(), content: editForm.content.trim() || undefined }
+        });
+      }
     }
     navigate(-1);
+  };
+
+  // 新建模式提交
+  const handleCreate = () => {
+    if (!createForm.title.trim()) return;
+
+    const taskData: any = {
+      title: createForm.title.trim(),
+      priority: createForm.priority,
+      tag_uids: createForm.tag_uids,
+    };
+
+    if (createForm.project_uid) {
+      taskData.project_uid = createForm.project_uid;
+    }
+    if (createForm.content.trim()) {
+      taskData.content = createForm.content.trim();
+    }
+    if (createForm.due_date) {
+      taskData.due_date = createForm.due_date;
+    }
+    if (createForm.start_date) {
+      taskData.start_date = createForm.start_date;
+    }
+
+    // 乐观更新：立即跳转
+    navigate(-1);
+    createTask.mutate(taskData);
   };
 
   const handleDelete = async () => {
@@ -127,18 +190,24 @@ const TaskDetailPage: React.FC = () => {
   };
 
   const handleUpdatePriority = (priority: number) => {
-    if (!task) return;
-    updateTask.mutate({ uid: task.uid, data: { priority } });
+    if (isCreateMode) {
+      setCreateForm(prev => ({ ...prev, priority: priority as TaskPriority }));
+    } else if (task) {
+      updateTask.mutate({ uid: task.uid, data: { priority } });
+    }
   };
 
   const handleCreateTag = async () => {
-    if (!newTagName.trim() || !task) return;
+    if (!newTagName.trim()) return;
     try {
       const result = await createTag.mutateAsync({ name: newTagName.trim() });
       const newTag = result.data.data;
-      // 创建后自动添加到任务
-      const currentTagUids = task.tags.map(t => t.uid);
-      updateTask.mutate({ uid: task.uid, data: { tag_uids: [...currentTagUids, newTag.uid] } });
+      if (isCreateMode) {
+        setCreateForm(prev => ({ ...prev, tag_uids: [...prev.tag_uids, newTag.uid] }));
+      } else if (task) {
+        const currentTagUids = task.tags.map(t => t.uid);
+        updateTask.mutate({ uid: task.uid, data: { tag_uids: [...currentTagUids, newTag.uid] } });
+      }
       setNewTagName('');
     } catch (error) {
       console.error('创建标签失败:', error);
@@ -146,37 +215,75 @@ const TaskDetailPage: React.FC = () => {
   };
 
   const handleUpdateStatus = (status: number) => {
-    if (!task) return;
+    if (!task || isCreateMode) return;
     updateTask.mutate({ uid: task.uid, data: { status } });
   };
 
   const handleUpdateProject = async (projectUid: string) => {
-    if (!task) return;
-    updateTask.mutate({ uid: task.uid, data: { project_uid: projectUid } });
+    if (isCreateMode) {
+      setCreateForm(prev => ({ ...prev, project_uid: projectUid }));
+    } else if (task) {
+      updateTask.mutate({ uid: task.uid, data: { project_uid: projectUid } });
+    }
     setShowProjectSelector(false);
   };
 
   const handleToggleTag = (tagUid: string) => {
-    if (!task) return;
-    const currentTagUids = task.tags.map(t => t.uid);
-    const newTagUids = currentTagUids.includes(tagUid)
-      ? currentTagUids.filter(id => id !== tagUid)
-      : [...currentTagUids, tagUid];
-    updateTask.mutate({ uid: task.uid, data: { tag_uids: newTagUids } });
+    if (isCreateMode) {
+      const newTagUids = createForm.tag_uids.includes(tagUid)
+        ? createForm.tag_uids.filter(uid => uid !== tagUid)
+        : [...createForm.tag_uids, tagUid];
+      setCreateForm(prev => ({ ...prev, tag_uids: newTagUids }));
+    } else if (task) {
+      const currentTagUids = task.tags.map(t => t.uid);
+      const newTagUids = currentTagUids.includes(tagUid)
+        ? currentTagUids.filter(id => id !== tagUid)
+        : [...currentTagUids, tagUid];
+      updateTask.mutate({ uid: task.uid, data: { tag_uids: newTagUids } });
+    }
   };
 
   const handleUpdateDate = (type: 'due' | 'start', dateValue: string) => {
-    if (!task) return;
-    const data: Record<string, string | null> = {};
-    data[type === 'due' ? 'due_date' : 'start_date'] = dateValue ? new Date(dateValue).toISOString() : null;
-    updateTask.mutate({ uid: task.uid, data });
+    const isoValue = dateValue ? new Date(dateValue).toISOString() : '';
+    if (isCreateMode) {
+      if (type === 'due') {
+        setCreateForm(prev => ({ ...prev, due_date: isoValue }));
+      } else {
+        setCreateForm(prev => ({ ...prev, start_date: isoValue }));
+      }
+    } else if (task) {
+      const data: Record<string, string | null> = {};
+      data[type === 'due' ? 'due_date' : 'start_date'] = dateValue ? new Date(dateValue).toISOString() : null;
+      updateTask.mutate({ uid: task.uid, data });
+    }
   };
 
   const handleClearDate = (type: 'due' | 'start') => {
-    if (!task) return;
-    const data: Record<string, null> = {};
-    data[type === 'due' ? 'due_date' : 'start_date'] = null;
-    updateTask.mutate({ uid: task.uid, data });
+    if (isCreateMode) {
+      if (type === 'due') {
+        setCreateForm(prev => ({ ...prev, due_date: '' }));
+      } else {
+        setCreateForm(prev => ({ ...prev, start_date: '' }));
+      }
+    } else if (task) {
+      const data: Record<string, null> = {};
+      data[type === 'due' ? 'due_date' : 'start_date'] = null;
+      updateTask.mutate({ uid: task.uid, data });
+    }
+  };
+
+  const handleQuickDate = (type: 'due' | 'start', isoValue: string) => {
+    if (isCreateMode) {
+      if (type === 'due') {
+        setCreateForm(prev => ({ ...prev, due_date: isoValue }));
+      } else {
+        setCreateForm(prev => ({ ...prev, start_date: isoValue }));
+      }
+    } else if (task) {
+      const data: Record<string, string> = {};
+      data[type === 'due' ? 'due_date' : 'start_date'] = isoValue;
+      updateTask.mutate({ uid: task.uid, data });
+    }
   };
 
 
@@ -218,13 +325,6 @@ const TaskDetailPage: React.FC = () => {
     }
   };
 
-  const handleQuickDate = (type: 'due' | 'start', isoValue: string) => {
-    if (!task) return;
-    const data: Record<string, string> = {};
-    data[type === 'due' ? 'due_date' : 'start_date'] = isoValue;
-    updateTask.mutate({ uid: task.uid, data });
-  };
-
   // 处理文件上传
   const handleFileUpload = async (file: File, isImage: boolean) => {
     if (!file) return;
@@ -234,7 +334,6 @@ const TaskDetailPage: React.FC = () => {
       const response = await attachmentApi.upload(file, true);
       const attachment = response.data;
       
-      // 根据文件类型插入不同的Markdown格式
       let insertText = '';
       if (isImage) {
         insertText = `\n![${attachment.original_name}](${attachment.preview_url})\n`;
@@ -242,8 +341,12 @@ const TaskDetailPage: React.FC = () => {
         insertText = `\n[${attachment.original_name}](${attachment.preview_url})\n`;
       }
       
-      setEditForm(prev => ({ ...prev, content: prev.content + insertText }));
-      autoSave(editForm.title, editForm.content + insertText);
+      if (isCreateMode) {
+        setCreateForm(prev => ({ ...prev, content: prev.content + insertText }));
+      } else {
+        setEditForm(prev => ({ ...prev, content: prev.content + insertText }));
+        autoSave(editForm.title, editForm.content + insertText);
+      }
       contentInputRef.current?.focus();
     } catch (error) {
       console.error('上传失败:', error);
@@ -272,14 +375,15 @@ const TaskDetailPage: React.FC = () => {
 
   // 格式化时间显示
   const getTimeDisplayText = () => {
-    if (!task) return '未设置';
-    if (!task.start_date && !task.due_date) return '未设置';
+    const startDate = isCreateMode ? createForm.start_date : task?.start_date;
+    const dueDate = isCreateMode ? createForm.due_date : task?.due_date;
+    if (!startDate && !dueDate) return '未设置';
     const parts: string[] = [];
-    if (task.start_date) {
-      parts.push(`开始: ${formatDisplayDate(task.start_date)}`);
+    if (startDate) {
+      parts.push(`开始: ${formatDisplayDate(startDate)}`);
     }
-    if (task.due_date) {
-      parts.push(`截止: ${formatDisplayDate(task.due_date)}`);
+    if (dueDate) {
+      parts.push(`截止: ${formatDisplayDate(dueDate)}`);
     }
     return parts.join(' → ');
   };
@@ -321,7 +425,20 @@ const TaskDetailPage: React.FC = () => {
     return colors[priority] || 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300';
   };
 
-  if (isLoading) {
+  // 获取当前数据（统一新建/编辑模式）
+  const currentTitle = isCreateMode ? createForm.title : editForm.title;
+  const currentContent = isCreateMode ? createForm.content : editForm.content;
+  const currentPriority = isCreateMode ? createForm.priority : (task?.priority ?? TaskPriority.MEDIUM);
+  const currentTags = isCreateMode 
+    ? allTags.filter(t => createForm.tag_uids.includes(t.uid))
+    : (task?.tags || []);
+  const currentProject = isCreateMode 
+    ? projects.find(p => p.uid === createForm.project_uid)
+    : task?.project;
+  const currentDueDate = isCreateMode ? createForm.due_date : task?.due_date;
+  const currentStartDate = isCreateMode ? createForm.start_date : task?.start_date;
+
+  if (!isCreateMode && isLoading) {
     return (
       <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden">
         <div className="flex items-center justify-center py-16">
@@ -331,7 +448,7 @@ const TaskDetailPage: React.FC = () => {
     );
   }
 
-  if (!task) {
+  if (!isCreateMode && !task) {
     return (
       <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden">
         <div className="flex flex-col items-center justify-center py-16 gap-4">
@@ -349,7 +466,7 @@ const TaskDetailPage: React.FC = () => {
       <header className="flex-shrink-0 bg-white dark:bg-surface-dark pt-safe border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center p-2 justify-between">
           <button onClick={handleBack} className="text-[#5f6368] dark:text-white flex items-center justify-center size-9 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-            <span className="material-symbols-outlined text-[22px]">arrow_back</span>
+            <span className="material-symbols-outlined text-[22px]">{isCreateMode ? 'close' : 'arrow_back'}</span>
           </button>
           
           {/* 项目选择器 */}
@@ -359,55 +476,63 @@ const TaskDetailPage: React.FC = () => {
               className="px-3 py-1.5 rounded-full text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-1"
             >
               <span className="material-symbols-outlined text-[16px]">folder</span>
-              <span className="truncate max-w-[120px]">{task.project?.name || '收集箱'}</span>
+              <span className="truncate max-w-[120px]">{currentProject?.name || '收集箱'}</span>
               <span className="material-symbols-outlined text-[14px]">expand_more</span>
             </button>
           </div>
 
-          <div className="flex items-center gap-1">
-            {/* 动态按钮 */}
+          {isCreateMode ? (
             <button 
-              onClick={() => setShowActivitySheet(true)}
-              className="text-[#5f6368] dark:text-white flex items-center justify-center size-9 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+              onClick={handleCreate}
+              disabled={!createForm.title.trim()}
+              className="text-primary font-medium text-sm px-3 py-1.5 hover:bg-primary/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span className="material-symbols-outlined text-[22px]">history</span>
+              创建
             </button>
-            
-            {/* 更多菜单 */}
-            <div className="relative" ref={moreMenuRef} data-dropdown>
-              <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="text-[#5f6368] dark:text-white flex items-center justify-center size-9 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-                <span className="material-symbols-outlined text-[22px]">more_horiz</span>
+          ) : (
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={() => setShowActivitySheet(true)}
+                className="text-[#5f6368] dark:text-white flex items-center justify-center size-9 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+              >
+                <span className="material-symbols-outlined text-[22px]">history</span>
               </button>
-              {showMoreMenu && (
-                <div className="absolute right-0 top-10 w-40 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-                  {task.status !== TaskStatus.COMPLETED && (
-                    <button onClick={() => { handleUpdateStatus(TaskStatus.COMPLETED); setShowMoreMenu(false); }} className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[16px]">check_circle</span>标记完成
+              
+              <div className="relative" ref={moreMenuRef} data-dropdown>
+                <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="text-[#5f6368] dark:text-white flex items-center justify-center size-9 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+                  <span className="material-symbols-outlined text-[22px]">more_horiz</span>
+                </button>
+                {showMoreMenu && (
+                  <div className="absolute right-0 top-10 w-40 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                    {task?.status !== TaskStatus.COMPLETED && (
+                      <button onClick={() => { handleUpdateStatus(TaskStatus.COMPLETED); setShowMoreMenu(false); }} className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[16px]">check_circle</span>标记完成
+                      </button>
+                    )}
+                    {task?.status === TaskStatus.COMPLETED && (
+                      <button onClick={() => { handleUpdateStatus(TaskStatus.TODO); setShowMoreMenu(false); }} className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[16px]">radio_button_unchecked</span>取消完成
+                      </button>
+                    )}
+                    {task?.status !== TaskStatus.ABANDONED && (
+                      <button onClick={() => { handleUpdateStatus(TaskStatus.ABANDONED); setShowMoreMenu(false); }} className="w-full px-3 py-2 text-left text-sm text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[16px]">block</span>放弃任务
+                      </button>
+                    )}
+                    {task?.status === TaskStatus.ABANDONED && (
+                      <button onClick={() => { handleUpdateStatus(TaskStatus.TODO); setShowMoreMenu(false); }} className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[16px]">undo</span>恢复任务
+                      </button>
+                    )}
+                    <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                    <button onClick={handleDelete} className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[16px]">delete</span>删除任务
                     </button>
-                  )}
-                  {task.status === TaskStatus.COMPLETED && (
-                    <button onClick={() => { handleUpdateStatus(TaskStatus.TODO); setShowMoreMenu(false); }} className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[16px]">radio_button_unchecked</span>取消完成
-                    </button>
-                  )}
-                  {task.status !== TaskStatus.ABANDONED && (
-                    <button onClick={() => { handleUpdateStatus(TaskStatus.ABANDONED); setShowMoreMenu(false); }} className="w-full px-3 py-2 text-left text-sm text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[16px]">block</span>放弃任务
-                    </button>
-                  )}
-                  {task.status === TaskStatus.ABANDONED && (
-                    <button onClick={() => { handleUpdateStatus(TaskStatus.TODO); setShowMoreMenu(false); }} className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[16px]">undo</span>恢复任务
-                    </button>
-                  )}
-                  <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                  <button onClick={handleDelete} className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[16px]">delete</span>删除任务
-                  </button>
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </header>
 
@@ -417,16 +542,30 @@ const TaskDetailPage: React.FC = () => {
         <div className="flex-shrink-0 bg-white dark:bg-surface-dark rounded-2xl shadow-sm">
           <div className="px-4 py-4">
             <div className="flex items-start gap-3">
-              <button onClick={handleToggleStatus} className={`flex-shrink-0 transition-all h-7 flex items-center ${task.is_completed ? 'text-green-500' : 'text-gray-300 hover:text-primary'}`}>
-                <span className={`material-symbols-outlined text-[26px] ${task.is_completed ? 'fill-1' : ''}`}>
-                  {task.is_completed ? 'check_circle' : 'radio_button_unchecked'}
+              <button 
+                onClick={handleToggleStatus} 
+                disabled={isCreateMode}
+                className={`flex-shrink-0 transition-all h-7 flex items-center ${
+                  isCreateMode 
+                    ? 'text-gray-300 dark:text-gray-600 cursor-default' 
+                    : task?.is_completed 
+                      ? 'text-green-500' 
+                      : 'text-gray-300 hover:text-primary'
+                }`}
+              >
+                <span className={`material-symbols-outlined text-[26px] ${!isCreateMode && task?.is_completed ? 'fill-1' : ''}`}>
+                  {!isCreateMode && task?.is_completed ? 'check_circle' : 'radio_button_unchecked'}
                 </span>
               </button>
               <textarea
                 ref={titleInputRef}
-                value={editForm.title}
+                value={currentTitle}
                 onChange={(e) => handleTitleChange(e.target.value)}
-                className={`flex-1 text-lg font-semibold bg-transparent border-none focus:ring-0 focus:outline-none resize-none placeholder-gray-300 leading-7 ${task.is_completed ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-900 dark:text-white'}`}
+                className={`flex-1 text-lg font-semibold bg-transparent border-none focus:ring-0 focus:outline-none resize-none placeholder-gray-300 leading-7 ${
+                  !isCreateMode && task?.is_completed 
+                    ? 'text-gray-400 dark:text-gray-500 line-through' 
+                    : 'text-gray-900 dark:text-white'
+                }`}
                 placeholder="任务标题"
                 rows={1}
                 style={{ minHeight: '28px' }}
@@ -454,7 +593,7 @@ const TaskDetailPage: React.FC = () => {
                   key={priority} 
                   onClick={() => handleUpdatePriority(priority)} 
                   className={`w-10 h-8 rounded-lg text-xs font-bold transition-all ${
-                    task.priority === priority 
+                    currentPriority === priority 
                       ? getPriorityColor(priority) + ' shadow-sm scale-105'
                       : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
@@ -467,25 +606,65 @@ const TaskDetailPage: React.FC = () => {
 
           <div className="h-px bg-gray-100 dark:bg-gray-800 mx-4" />
 
-          {/* 时间 */}
-          <button 
-            onClick={() => setShowDateSheet(true)}
-            className="flex items-center px-4 py-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-          >
+          {/* 时间 - 快捷按钮 */}
+          <div className="flex items-center px-4 py-3">
             <div className="flex items-center gap-2 w-20 flex-shrink-0">
               <span className="material-symbols-outlined text-[18px] text-gray-400">schedule</span>
               <span className="text-sm text-gray-500 dark:text-gray-400">时间</span>
             </div>
-            <div className={`flex-1 text-sm text-right ${
-              task.is_overdue && !task.is_completed 
-                ? 'text-red-500 font-medium' 
-                : (task.start_date || task.due_date) ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400'
-            }`}>
-              {getTimeDisplayText()}
-              {task.is_overdue && !task.is_completed && <span className="ml-1 text-xs bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded">(已逾期)</span>}
+            <div className="flex-1 flex items-center gap-2 justify-end">
+              {(() => {
+                const today = new Date();
+                today.setHours(18, 0, 0, 0);
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                tomorrow.setHours(18, 0, 0, 0);
+                
+                const dueDateObj = currentDueDate ? new Date(currentDueDate) : null;
+                const isToday = dueDateObj && dueDateObj.toDateString() === new Date().toDateString();
+                const isTomorrow = dueDateObj && dueDateObj.toDateString() === tomorrow.toDateString();
+                const isOther = currentDueDate && !isToday && !isTomorrow;
+                
+                return (
+                  <>
+                    <button
+                      onClick={() => handleQuickDate('due', today.toISOString())}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        isToday 
+                          ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 shadow-sm' 
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[14px]">sunny</span>
+                      今天
+                    </button>
+                    <button
+                      onClick={() => handleQuickDate('due', tomorrow.toISOString())}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        isTomorrow 
+                          ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 shadow-sm' 
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[14px]">wb_twilight</span>
+                      明天
+                    </button>
+                    <button
+                      onClick={() => setShowDateSheet(true)}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        isOther 
+                          ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 shadow-sm' 
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-600 dark:hover:text-violet-400'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[14px]">calendar_month</span>
+                      其他
+                    </button>
+                  </>
+                );
+              })()}
             </div>
-            <span className="material-symbols-outlined text-[18px] text-gray-300 ml-2">chevron_right</span>
-          </button>
+          </div>
 
           <div className="h-px bg-gray-100 dark:bg-gray-800 mx-4" />
 
@@ -496,7 +675,7 @@ const TaskDetailPage: React.FC = () => {
               <span className="text-sm text-gray-500 dark:text-gray-400">标签</span>
             </div>
             <div className="flex-1 flex flex-wrap items-center gap-2 justify-end">
-              {task.tags.map((tag) => (
+              {currentTags.map((tag) => (
                 <span 
                   key={tag.uid} 
                   className="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium shadow-sm" 
@@ -526,7 +705,7 @@ const TaskDetailPage: React.FC = () => {
           <div className="flex-1 px-4 py-4">
             <textarea
               ref={contentInputRef}
-              value={editForm.content}
+              value={currentContent}
               onChange={(e) => handleContentChange(e.target.value)}
               className="w-full h-full text-base bg-transparent border-none focus:ring-0 focus:outline-none text-gray-700 dark:text-gray-300 placeholder-gray-400 resize-none leading-relaxed"
               placeholder="添加任务内容..."
@@ -540,7 +719,11 @@ const TaskDetailPage: React.FC = () => {
                 title="清单"
                 onClick={() => {
                   const checkbox = '\n- [ ] ';
-                  setEditForm(prev => ({ ...prev, content: prev.content + checkbox }));
+                  if (isCreateMode) {
+                    setCreateForm(prev => ({ ...prev, content: prev.content + checkbox }));
+                  } else {
+                    setEditForm(prev => ({ ...prev, content: prev.content + checkbox }));
+                  }
                   contentInputRef.current?.focus();
                 }}
               >
@@ -551,7 +734,11 @@ const TaskDetailPage: React.FC = () => {
                 title="无序列表"
                 onClick={() => {
                   const bullet = '\n• ';
-                  setEditForm(prev => ({ ...prev, content: prev.content + bullet }));
+                  if (isCreateMode) {
+                    setCreateForm(prev => ({ ...prev, content: prev.content + bullet }));
+                  } else {
+                    setEditForm(prev => ({ ...prev, content: prev.content + bullet }));
+                  }
                   contentInputRef.current?.focus();
                 }}
               >
@@ -562,7 +749,11 @@ const TaskDetailPage: React.FC = () => {
                 title="有序列表"
                 onClick={() => {
                   const number = '\n1. ';
-                  setEditForm(prev => ({ ...prev, content: prev.content + number }));
+                  if (isCreateMode) {
+                    setCreateForm(prev => ({ ...prev, content: prev.content + number }));
+                  } else {
+                    setEditForm(prev => ({ ...prev, content: prev.content + number }));
+                  }
                   contentInputRef.current?.focus();
                 }}
               >
@@ -592,7 +783,11 @@ const TaskDetailPage: React.FC = () => {
                 title="插入链接"
                 onClick={() => {
                   const link = '[链接文字](url)';
-                  setEditForm(prev => ({ ...prev, content: prev.content + link }));
+                  if (isCreateMode) {
+                    setCreateForm(prev => ({ ...prev, content: prev.content + link }));
+                  } else {
+                    setEditForm(prev => ({ ...prev, content: prev.content + link }));
+                  }
                   contentInputRef.current?.focus();
                 }}
               >
@@ -602,8 +797,8 @@ const TaskDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 子任务进度卡片 */}
-        {task.subtasks_count > 0 && (
+        {/* 子任务进度卡片 - 仅编辑模式 */}
+        {!isCreateMode && task && task.subtasks_count > 0 && (
           <div className="flex-shrink-0 bg-white dark:bg-surface-dark rounded-2xl shadow-sm p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -617,15 +812,6 @@ const TaskDetailPage: React.FC = () => {
             </div>
           </div>
         )}
-
-        {/* 底部信息 */}
-        <div className="flex-shrink-0 px-2 py-2">
-          <div className="flex justify-center gap-4 text-xs text-gray-400">
-            <span>创建于 {format(parseISO(task.created_at), 'M月d日 HH:mm', { locale: zhCN })}</span>
-            <span>·</span>
-            <span>更新于 {format(parseISO(task.updated_at), 'M月d日 HH:mm', { locale: zhCN })}</span>
-          </div>
-        </div>
       </main>
       
       {confirmState.isOpen && (
@@ -633,33 +819,43 @@ const TaskDetailPage: React.FC = () => {
       )}
 
       {/* 项目选择底部弹窗 */}
-      {task && (
-        <BottomSheet 
-          isOpen={showProjectSelector} 
-          onClose={() => setShowProjectSelector(false)}
-          title="选择清单"
-        >
-          <div className="py-2">
-            {projects.length === 0 && (
-              <div className="px-4 py-2 text-sm text-gray-500">
-                暂无清单，请先创建清单
-              </div>
+      <BottomSheet 
+        isOpen={showProjectSelector} 
+        onClose={() => setShowProjectSelector(false)}
+        title="选择清单"
+      >
+        <div className="py-2">
+          {/* 收集箱选项 */}
+          <button 
+            onClick={() => handleUpdateProject('')} 
+            className={`w-full px-4 py-3 text-left text-base flex items-center justify-between active:bg-gray-100 dark:active:bg-gray-800 transition-colors ${
+              (isCreateMode ? !createForm.project_uid : !task?.project) ? 'text-primary' : 'text-gray-900 dark:text-white'
+            }`}
+          >
+            <span>收集箱</span>
+            {(isCreateMode ? !createForm.project_uid : !task?.project) && (
+              <span className="material-symbols-outlined text-[20px] text-primary fill-1">check_circle</span>
             )}
-            {projects.map((project) => (
-              <button 
-                key={project.uid} 
-                onClick={() => handleUpdateProject(project.uid)} 
-                className={`w-full px-4 py-3 text-left text-base flex items-center justify-between active:bg-gray-100 dark:active:bg-gray-800 transition-colors ${task.project?.uid === project.uid ? 'text-primary' : 'text-gray-900 dark:text-white'}`}
-              >
-                <span>{project.name}</span>
-                {task.project?.uid === project.uid && (
-                  <span className="material-symbols-outlined text-[20px] text-primary fill-1">check_circle</span>
-                )}
-              </button>
-            ))}
-          </div>
-        </BottomSheet>
-      )}
+          </button>
+          {projects.length > 0 && (
+            <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+          )}
+          {projects.map((project) => (
+            <button 
+              key={project.uid} 
+              onClick={() => handleUpdateProject(project.uid)} 
+              className={`w-full px-4 py-3 text-left text-base flex items-center justify-between active:bg-gray-100 dark:active:bg-gray-800 transition-colors ${
+                (isCreateMode ? createForm.project_uid === project.uid : task?.project?.uid === project.uid) ? 'text-primary' : 'text-gray-900 dark:text-white'
+              }`}
+            >
+              <span>{project.name}</span>
+              {(isCreateMode ? createForm.project_uid === project.uid : task?.project?.uid === project.uid) && (
+                <span className="material-symbols-outlined text-[20px] text-primary fill-1">check_circle</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </BottomSheet>
 
       {/* 时间设置底部弹窗 */}
       <BottomSheet 
@@ -675,7 +871,7 @@ const TaskDetailPage: React.FC = () => {
                 <span className="material-symbols-outlined text-[18px] text-primary">play_arrow</span>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">开始时间</span>
               </div>
-              {task?.start_date && (
+              {currentStartDate && (
                 <button 
                   onClick={() => handleClearDate('start')}
                   className="text-xs text-red-500 hover:text-red-600"
@@ -700,7 +896,7 @@ const TaskDetailPage: React.FC = () => {
             {/* 自定义时间 */}
             <input 
               type="datetime-local" 
-              value={formatDateForInput(task?.start_date)} 
+              value={formatDateForInput(currentStartDate)} 
               onChange={(e) => handleUpdateDate('start', e.target.value)} 
               className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
             />
@@ -713,7 +909,7 @@ const TaskDetailPage: React.FC = () => {
                 <span className="material-symbols-outlined text-[18px] text-primary">event</span>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">截止时间</span>
               </div>
-              {task?.due_date && (
+              {currentDueDate && (
                 <button 
                   onClick={() => handleClearDate('due')}
                   className="text-xs text-red-500 hover:text-red-600"
@@ -738,10 +934,10 @@ const TaskDetailPage: React.FC = () => {
             {/* 自定义时间 */}
             <input 
               type="datetime-local" 
-              value={formatDateForInput(task?.due_date)} 
+              value={formatDateForInput(currentDueDate)} 
               onChange={(e) => handleUpdateDate('due', e.target.value)} 
               className={`w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none ${
-                task?.is_overdue && !task?.is_completed 
+                !isCreateMode && task?.is_overdue && !task?.is_completed 
                   ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-600' 
                   : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white'
               }`}
@@ -797,7 +993,9 @@ const TaskDetailPage: React.FC = () => {
             ) : (
               <div className="flex flex-wrap gap-2">
                 {allTags.map((tag) => {
-                  const isSelected = task?.tags.some(t => t.uid === tag.uid);
+                  const isSelected = isCreateMode 
+                    ? createForm.tag_uids.includes(tag.uid)
+                    : task?.tags.some(t => t.uid === tag.uid);
                   return (
                     <button 
                       key={tag.uid} 

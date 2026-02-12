@@ -5,7 +5,6 @@ import { useIsAuthenticated } from './hooks/useAuth';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import TaskDetailPage from './pages/TaskDetailPage';
-import CreateTaskPage from './pages/CreateTaskPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ViewsPage from './pages/ViewsPage';
 import ViewPreviewPage from './pages/ViewPreviewPage';
@@ -76,7 +75,7 @@ const AppContent: React.FC = () => {
             path="/create" 
             element={
               <ProtectedRoute>
-                <CreateTaskPage />
+                <TaskDetailPage />
               </ProtectedRoute>
             } 
           />

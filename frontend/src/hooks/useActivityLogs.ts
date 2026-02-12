@@ -6,7 +6,7 @@ export const useActivityLogs = (params?: {
   task?: string;
   project?: string;
   page?: number;
-}) => {
+}, options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: ['activity-logs', params],
     queryFn: () => activityApi.getActivityLogs(params),
@@ -19,6 +19,6 @@ export const useActivityLogs = (params?: {
       // 其他错误最多重试2次
       return failureCount < 2;
     },
-    enabled: !!localStorage.getItem('access_token'),
+    enabled: (options?.enabled ?? true) && !!localStorage.getItem('access_token'),
   });
 };

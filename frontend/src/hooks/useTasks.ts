@@ -38,18 +38,18 @@ export const useSearchTasks = (search: string) => {
 };
 
 // 获取任务详情
-export const useTask = (uid: string) => {
+export const useTask = (uid: string, options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: ['task', uid],
-    queryFn: () => taskApi.getTask(uid),
-    select: (data) => data.data.data,
-    enabled: !!uid && !!localStorage.getItem('access_token'),
+    queryFn: async () => {
+      const response = await taskApi.getTask(uid);
+      return response.data.data; // 直接返回 task 对象，避免 select 与 setQueryData 冲突
+    },
+    enabled: (options?.enabled ?? true) && !!uid && !!localStorage.getItem('access_token'),
     retry: (failureCount, error: any) => {
-      // 如果是401错误，不要重试
       if (error?.response?.status === 401) {
         return false;
       }
-      // 其他错误最多重试2次
       return failureCount < 2;
     },
   });
@@ -90,15 +90,20 @@ export const useUpdateTask = () => {
           if (!old) return old;
           // 处理 project_uid 的特殊情况
           const updatedData = { ...data };
-          if (data.project_uid) {
+          if (data.project_uid !== undefined) {
             // 需要从 projects 中找到对应的项目信息
             const projectsData = queryClient.getQueryData(['projects']) as any;
             const projects = projectsData?.results || [];
-            const project = projects.find((p: any) => p.uid === data.project_uid);
-            if (project) {
-              updatedData.project = project;
-            }
+            const project = data.project_uid ? projects.find((p: any) => p.uid === data.project_uid) : null;
+            updatedData.project = project;
             delete updatedData.project_uid;
+          }
+          // 处理 tag_uids
+          if (data.tag_uids !== undefined) {
+            const tagsData = queryClient.getQueryData(['tags']) as any;
+            const allTags = tagsData?.results || [];
+            updatedData.tags = data.tag_uids.map((uid: string) => allTags.find((t: any) => t.uid === uid)).filter(Boolean);
+            delete updatedData.tag_uids;
           }
           return { ...old, ...updatedData };
         });
@@ -116,12 +121,15 @@ export const useUpdateTask = () => {
       }
       console.error('更新任务失败:', err);
     },
-    onSettled: (_, __, { uid }) => {
-      // 无论成功还是失败，都重新获取最新数据
+    onSuccess: (response, { uid }) => {
+      // 成功后用服务器返回的数据更新缓存（确保数据一致性）
+      const serverData = response.data?.data;
+      if (serverData) {
+        queryClient.setQueryData(['task', uid], serverData);
+      }
+      // 只 invalidate 列表类查询（它们可能需要重新排序等）
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['task', uid] });
-      queryClient.invalidateQueries({ queryKey: ['view-tasks'] }); // 刷新所有视图任务
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['view-tasks'] });
     },
   });
 };
