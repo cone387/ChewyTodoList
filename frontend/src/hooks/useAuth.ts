@@ -33,6 +33,31 @@ export const useRegister = () => {
   });
 };
 
+// 检查用户是否已初始化
+export const useCheckInitialized = () => {
+  return useQuery({
+    queryKey: ['user-initialized'],
+    queryFn: authApi.checkInitialized,
+    select: (data) => data.data.data.initialized,
+    enabled: !!localStorage.getItem('access_token'),
+    retry: false,
+  });
+};
+
+// 初始化用户
+export const useInitializeUser = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: authApi.initializeUser,
+    onSuccess: () => {
+      // 初始化成功后刷新视图列表和初始化状态
+      queryClient.invalidateQueries({ queryKey: ['views'] });
+      queryClient.invalidateQueries({ queryKey: ['user-initialized'] });
+    },
+  });
+};
+
 // 登出
 export const useLogout = () => {
   const navigate = useNavigate();

@@ -149,6 +149,7 @@ export interface TaskView {
   view_type_display: string;
   is_default: boolean;
   is_public: boolean;
+  is_system?: boolean; // 是否系统视图
   is_visible_in_nav: boolean; // 是否在导航栏显示
   sort_order: number;
   filters: ViewFilter[];

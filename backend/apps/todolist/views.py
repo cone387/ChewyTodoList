@@ -199,6 +199,103 @@ def logout_view(request):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def initialize_user_view(request):
+    """初始化用户 - 将系统视图复制到用户导航栏"""
+    user = request.user
+    
+    try:
+        # 检查用户是否已初始化（是否有任何导航栏视图）
+        existing_views = TaskView.objects.filter(
+            user=user,
+            is_visible_in_nav=True
+        ).exists()
+        
+        if existing_views:
+            return Response({
+                'success': True,
+                'data': {'initialized': True, 'message': '用户已初始化'},
+                'message': '用户已完成初始化'
+            })
+        
+        # 获取所有系统视图
+        system_views = TaskView.objects.filter(
+            is_system=True,
+            is_visible_in_nav=True
+        ).order_by('sort_order')
+        
+        if not system_views.exists():
+            # 如果没有系统视图，创建默认视图
+            created_views = TaskView.create_default_views_for_user(user)
+            # 将创建的默认视图标记为系统视图
+            TaskView.objects.filter(
+                uid__in=[view.uid for view in created_views]
+            ).update(is_system=True)
+        else:
+            # 复制系统视图到用户
+            created_views = []
+            for system_view in system_views:
+                user_view = TaskView.objects.create(
+                    user=user,
+                    name=system_view.name,
+                    project=None,  # 系统视图都是全局视图
+                    view_type=system_view.view_type,
+                    is_default=system_view.is_default,
+                    is_public=False,
+                    is_system=False,  # 用户的视图不再是系统视图
+                    is_visible_in_nav=True,
+                    sort_order=system_view.sort_order,
+                    filters=system_view.filters,
+                    sorts=system_view.sorts,
+                    group_by=system_view.group_by,
+                    display_settings=system_view.display_settings
+                )
+                created_views.append(user_view)
+        
+        return Response({
+            'success': True,
+            'data': {
+                'initialized': True,
+                'views_count': len(created_views),
+                'message': f'成功初始化 {len(created_views)} 个视图'
+            },
+            'message': '用户初始化成功'
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': {
+                'code': 'INIT_001',
+                'message': '初始化失败',
+                'details': str(e)
+            }
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def check_user_initialized(request):
+    """检查用户是否已初始化"""
+    user = request.user
+    
+    # 检查用户是否有导航栏视图
+    has_nav_views = TaskView.objects.filter(
+        user=user,
+        is_visible_in_nav=True
+    ).exists()
+    
+    return Response({
+        'success': True,
+        'data': {
+            'initialized': has_nav_views
+        },
+        'message': '获取初始化状态成功'
+    })
+
+
+
 class UserProfileView(generics.RetrieveUpdateAPIView):
     """用户资料视图"""
     

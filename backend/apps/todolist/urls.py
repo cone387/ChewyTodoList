@@ -6,6 +6,8 @@ from .views import (
     CustomTokenObtainPairView,
     CustomTokenRefreshView,
     logout_view,
+    initialize_user_view,
+    check_user_initialized,
     UserProfileView,
     ChangePasswordView,
     # 业务视图
@@ -34,6 +36,8 @@ urlpatterns = [
     path('auth/logout/', logout_view, name='user_logout'),
     path('auth/me/', UserProfileView.as_view(), name='user_profile'),
     path('auth/change-password/', ChangePasswordView.as_view(), name='change_password'),
+    path('auth/initialize/', initialize_user_view, name='user_initialize'),
+    path('auth/check-initialized/', check_user_initialized, name='check_user_initialized'),
     
     # 业务相关URL
     path('', include(router.urls)),

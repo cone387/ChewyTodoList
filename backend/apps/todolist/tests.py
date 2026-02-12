@@ -592,3 +592,106 @@ class SecurityTestCase(APITestCase):
         
         response = self.client.get(reverse('task-detail', kwargs={'uid': task.uid}))
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class UserInitializationAPITestCase(BaseAPITestCase):
+    """用户初始化API测试"""
+
+    def setUp(self):
+        super().setUp()
+        self.check_url = reverse('check_user_initialized')
+        self.init_url = reverse('user_initialize')
+
+    def test_check_uninitialized_user(self):
+        """测试检查未初始化用户"""
+        # 新用户没有任何视图
+        response = self.client.get(self.check_url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['success'])
+        self.assertFalse(response.data['data']['initialized'])
+
+    def test_check_initialized_user(self):
+        """测试检查已初始化用户"""
+        # 创建一个导航栏视图
+        from .models import TaskView
+        TaskView.objects.create(
+            user=self.user,
+            name="测试视图",
+            is_visible_in_nav=True
+        )
+        
+        response = self.client.get(self.check_url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['success'])
+        self.assertTrue(response.data['data']['initialized'])
+
+    def test_initialize_new_user(self):
+        """测试初始化新用户"""
+        from .models import TaskView
+        
+        # 确保用户没有视图
+        TaskView.objects.filter(user=self.user).delete()
+        
+        response = self.client.post(self.init_url)
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(response.data['success'])
+        self.assertTrue(response.data['data']['initialized'])
+        self.assertGreater(response.data['data']['views_count'], 0)
+        
+        # 验证视图已创建
+        views = TaskView.objects.filter(user=self.user, is_visible_in_nav=True)
+        self.assertGreater(views.count(), 0)
+
+    def test_initialize_already_initialized_user(self):
+        """测试重复初始化已初始化用户"""
+        from .models import TaskView
+        
+        # 先初始化一次
+        self.client.post(self.init_url)
+        initial_count = TaskView.objects.filter(user=self.user).count()
+        
+        # 再次初始化
+        response = self.client.post(self.init_url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['success'])
+        self.assertEqual(response.data['data']['initialized'], True)
+        
+        # 验证视图数量没有增加（不会重复创建）
+        final_count = TaskView.objects.filter(user=self.user).count()
+        self.assertEqual(initial_count, final_count)
+
+    def test_initialize_with_system_views(self):
+        """测试使用系统视图初始化"""
+        from .models import TaskView
+        
+        # 创建系统视图
+        admin_user = create_user(username="admin", email="admin@example.com")
+        system_view = TaskView.objects.create(
+            user=admin_user,
+            name="系统看板",
+            view_type=TaskView.ViewType.BOARD,
+            is_system=True,
+            is_visible_in_nav=True,
+            filters=[],
+            sorts=[],
+            group_by='status'
+        )
+        
+        # 初始化新用户
+        response = self.client.post(self.init_url)
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(response.data['success'])
+        
+        # 验证用户获得了系统视图的副本
+        user_views = TaskView.objects.filter(user=self.user, name="系统看板")
+        self.assertEqual(user_views.count(), 1)
+        
+        user_view = user_views.first()
+        self.assertEqual(user_view.view_type, TaskView.ViewType.BOARD)
+        self.assertEqual(user_view.group_by, 'status')
+        self.assertFalse(user_view.is_system)  # 用户的副本不是系统视图

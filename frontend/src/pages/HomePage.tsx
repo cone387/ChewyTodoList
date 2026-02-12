@@ -5,6 +5,7 @@ import ViewRenderer from '../components/ViewRenderer';
 import BottomNav from '../components/BottomNav';
 import FloatingAddButton from '../components/FloatingAddButton';
 import { useViewTasks, useNavViews, useView } from '../hooks/useViews';
+import { useCheckInitialized, useInitializeUser } from '../hooks/useAuth';
 import { TASK_CARD_TEMPLATES } from '../types/taskCard';
 import type { Task, TaskView } from '../types/index';
 
@@ -40,10 +41,24 @@ const HomePage: React.FC = () => {
   const { data: navViews, isLoading: isNavViewsLoading, error: navViewsError } = useNavViews();
   const { data: viewTasks, isLoading: isViewTasksLoading } = useViewTasks(currentView);
   const { data: viewData, isLoading: isViewDataLoading } = useView(currentView);
+  const { data: isInitialized, isLoading: isCheckingInit } = useCheckInitialized();
+  const initializeUser = useInitializeUser();
+
+  // 用户初始化检查
+  useEffect(() => {
+    // 只在登录且检查完初始化状态后执行
+    if (isCheckingInit) return;
+    
+    // 如果用户未初始化，自动触发初始化
+    if (isInitialized === false && !initializeUser.isPending) {
+      console.log('检测到新用户，开始初始化...');
+      initializeUser.mutate();
+    }
+  }, [isInitialized, isCheckingInit, initializeUser]);
 
   // 计算加载状态
-  const isLoading = isNavViewsLoading || (currentView && (isViewDataLoading || isViewTasksLoading));
-  const hasNoViews = !isNavViewsLoading && (!navViews?.results || navViews.results.length === 0);
+  const isLoading = isNavViewsLoading || isCheckingInit || (currentView && (isViewDataLoading || isViewTasksLoading));
+  const hasNoViews = !isNavViewsLoading && !isCheckingInit && (!navViews?.results || navViews.results.length === 0);
 
   useEffect(() => {
     // 设置默认视图

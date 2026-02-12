@@ -570,10 +570,10 @@ class TaskViewSerializer(serializers.ModelSerializer):
         model = TaskView
         fields = [
             'uid', 'name', 'project', 'project_uid', 'view_type', 'view_type_display',
-            'is_default', 'is_public', 'is_visible_in_nav', 'sort_order', 'filters', 'sorts', 'group_by',
+            'is_default', 'is_public', 'is_system', 'is_visible_in_nav', 'sort_order', 'filters', 'sorts', 'group_by',
             'display_settings', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['uid', 'created_at', 'updated_at']
+        read_only_fields = ['uid', 'is_system', 'created_at', 'updated_at']
 
     def validate_project_uid(self, value):
         """验证项目UID"""
@@ -730,7 +730,7 @@ class TaskViewListSerializer(serializers.ModelSerializer):
         model = TaskView
         fields = [
             'uid', 'name', 'project', 'view_type', 'view_type_display',
-            'is_default', 'is_public', 'is_visible_in_nav', 'sort_order', 'tasks_count',
+            'is_default', 'is_public', 'is_system', 'is_visible_in_nav', 'sort_order', 'tasks_count',
             'created_at', 'updated_at'
         ]
 

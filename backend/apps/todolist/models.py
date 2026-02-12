@@ -498,6 +498,7 @@ class TaskView(BaseModel):
     )
     is_default = models.BooleanField(default=False, verbose_name="是否默认视图")
     is_public = models.BooleanField(default=False, verbose_name="是否公开")
+    is_system = models.BooleanField(default=False, verbose_name="是否系统视图", help_text="系统视图用于初始化新用户")
     is_visible_in_nav = models.BooleanField(default=True, verbose_name="是否在导航栏显示")
     sort_order = models.FloatField(default=get_timestamp_sortorder, verbose_name="排序")
     

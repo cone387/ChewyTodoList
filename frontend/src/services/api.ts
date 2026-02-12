@@ -181,6 +181,12 @@ export const authApi = {
     new_password: string;
     new_password_confirm: string;
   }) => api.post('/auth/change-password/', data),
+  
+  // 检查用户是否已初始化
+  checkInitialized: () => api.get('/auth/check-initialized/'),
+  
+  // 初始化用户
+  initializeUser: () => api.post('/auth/initialize/'),
 };
 
 // 任务API
