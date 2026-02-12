@@ -33,7 +33,7 @@ THIRD_PARTY_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'django_filters',
-    'chewy_attachment',
+    'chewy_attachment.django_app',
 ]
 
 LOCAL_APPS = [

@@ -10,6 +10,7 @@ import { zhCN } from 'date-fns/locale';
 import { useConfirm } from '../hooks/useConfirm';
 import ConfirmDialog from '../components/ConfirmDialog';
 import BottomSheet from '../components/BottomSheet';
+import { attachmentApi } from '../services/api';
 
 const TaskDetailPage: React.FC = () => {
   const { uid } = useParams<{ uid: string }>();
@@ -20,11 +21,14 @@ const TaskDetailPage: React.FC = () => {
   const [showActivitySheet, setShowActivitySheet] = useState(false);
   const [showDateSheet, setShowDateSheet] = useState(false);
   const [newTagName, setNewTagName] = useState('');
+  const [uploadingFile, setUploadingFile] = useState(false);
   
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLTextAreaElement>(null);
   const contentInputRef = useRef<HTMLTextAreaElement>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: task, isLoading } = useTask(uid!);
   const { data: activityLogs, isLoading: isActivityLoading } = useActivityLogs({ task: uid });
@@ -221,6 +225,51 @@ const TaskDetailPage: React.FC = () => {
     updateTask.mutate({ uid: task.uid, data });
   };
 
+  // 处理文件上传
+  const handleFileUpload = async (file: File, isImage: boolean) => {
+    if (!file) return;
+    
+    setUploadingFile(true);
+    try {
+      const response = await attachmentApi.upload(file, true);
+      const attachment = response.data;
+      
+      // 根据文件类型插入不同的Markdown格式
+      let insertText = '';
+      if (isImage) {
+        insertText = `\n![${attachment.original_name}](${attachment.preview_url})\n`;
+      } else {
+        insertText = `\n[${attachment.original_name}](${attachment.preview_url})\n`;
+      }
+      
+      setEditForm(prev => ({ ...prev, content: prev.content + insertText }));
+      autoSave(editForm.title, editForm.content + insertText);
+      contentInputRef.current?.focus();
+    } catch (error) {
+      console.error('上传失败:', error);
+      alert('上传失败，请重试');
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileUpload(file, true);
+    }
+    // 清空input以便再次选择相同文件
+    e.target.value = '';
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileUpload(file, false);
+    }
+    e.target.value = '';
+  };
+
   // 格式化时间显示
   const getTimeDisplayText = () => {
     if (!task) return '未设置';
@@ -295,7 +344,7 @@ const TaskDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="relative flex h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden">
+    <div className="relative flex h-screen w-full flex-col max-w-md mx-auto bg-gray-50 dark:bg-background-dark shadow-xl overflow-hidden">
       {/* Header */}
       <header className="flex-shrink-0 bg-white dark:bg-surface-dark pt-safe border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center p-2 justify-between">
@@ -307,9 +356,10 @@ const TaskDetailPage: React.FC = () => {
           <div className="flex-1 flex justify-center mx-2">
             <button 
               onClick={() => setShowProjectSelector(true)} 
-              className="px-3 py-1.5 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-1"
+              className="px-3 py-1.5 rounded-full text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-1"
             >
-              <span className="truncate max-w-[140px]">{task.project?.name || '收集箱'}</span>
+              <span className="material-symbols-outlined text-[16px]">folder</span>
+              <span className="truncate max-w-[120px]">{task.project?.name || '收集箱'}</span>
               <span className="material-symbols-outlined text-[14px]">expand_more</span>
             </button>
           </div>
@@ -362,47 +412,51 @@ const TaskDetailPage: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-white dark:bg-background-dark no-scrollbar flex flex-col">
-        {/* 标题区域 - 放在最前面 */}
-        <div className="flex-shrink-0 px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-          <div className="flex items-start gap-3">
-            <button onClick={handleToggleStatus} className={`flex-shrink-0 transition-colors h-6 flex items-center ${task.is_completed ? 'text-green-500' : 'text-gray-400 hover:text-primary'}`}>
-              <span className={`material-symbols-outlined text-[22px] ${task.is_completed ? 'fill-1' : ''}`}>
-                {task.is_completed ? 'check_circle' : 'radio_button_unchecked'}
-              </span>
-            </button>
-            <textarea
-              ref={titleInputRef}
-              value={editForm.title}
-              onChange={(e) => handleTitleChange(e.target.value)}
-              className={`flex-1 text-base font-semibold bg-transparent border-none focus:ring-0 focus:outline-none resize-none placeholder-gray-400 leading-6 ${task.is_completed ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-[#111418] dark:text-white'}`}
-              placeholder="任务标题"
-              rows={1}
-              style={{ minHeight: '24px' }}
-              onInput={(e) => {
-                const target = e.target as HTMLTextAreaElement;
-                target.style.height = 'auto';
-                target.style.height = target.scrollHeight + 'px';
-              }}
-            />
+      <main className="flex-1 overflow-y-auto no-scrollbar flex flex-col p-3 gap-3">
+        {/* 标题卡片 */}
+        <div className="flex-shrink-0 bg-white dark:bg-surface-dark rounded-2xl shadow-sm">
+          <div className="px-4 py-4">
+            <div className="flex items-start gap-3">
+              <button onClick={handleToggleStatus} className={`flex-shrink-0 transition-all h-7 flex items-center ${task.is_completed ? 'text-green-500' : 'text-gray-300 hover:text-primary'}`}>
+                <span className={`material-symbols-outlined text-[26px] ${task.is_completed ? 'fill-1' : ''}`}>
+                  {task.is_completed ? 'check_circle' : 'radio_button_unchecked'}
+                </span>
+              </button>
+              <textarea
+                ref={titleInputRef}
+                value={editForm.title}
+                onChange={(e) => handleTitleChange(e.target.value)}
+                className={`flex-1 text-lg font-semibold bg-transparent border-none focus:ring-0 focus:outline-none resize-none placeholder-gray-300 leading-7 ${task.is_completed ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-900 dark:text-white'}`}
+                placeholder="任务标题"
+                rows={1}
+                style={{ minHeight: '28px' }}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = 'auto';
+                  target.style.height = target.scrollHeight + 'px';
+                }}
+              />
+            </div>
           </div>
         </div>
 
-        {/* 属性区域 */}
-        <div className="flex-shrink-0 border-b border-gray-100 dark:border-gray-800">
-          {/* 优先级 - 平铺展示 */}
-          <div className="flex items-center px-4 py-2.5 border-b border-gray-50 dark:border-gray-800/50">
-            <span className="material-symbols-outlined text-[18px] text-gray-400 mr-3">flag</span>
-            <span className="text-sm text-gray-500 dark:text-gray-400 w-16 flex-shrink-0">优先级</span>
-            <div className="flex items-center gap-1.5">
+        {/* 属性卡片 */}
+        <div className="flex-shrink-0 bg-white dark:bg-surface-dark rounded-2xl shadow-sm overflow-hidden">
+          {/* 优先级 */}
+          <div className="flex items-center px-4 py-3">
+            <div className="flex items-center gap-2 w-20 flex-shrink-0">
+              <span className="material-symbols-outlined text-[18px] text-gray-400">flag</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">优先级</span>
+            </div>
+            <div className="flex items-center gap-2 flex-1 justify-end">
               {[TaskPriority.URGENT, TaskPriority.HIGH, TaskPriority.MEDIUM, TaskPriority.LOW].map((priority) => (
                 <button 
                   key={priority} 
                   onClick={() => handleUpdatePriority(priority)} 
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                  className={`w-10 h-8 rounded-lg text-xs font-bold transition-all ${
                     task.priority === priority 
-                      ? getPriorityColor(priority) + ' ring-2 ring-offset-1 ring-current'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                      ? getPriorityColor(priority) + ' shadow-sm scale-105'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
                   {getPriorityLabel(priority)}
@@ -411,40 +465,42 @@ const TaskDetailPage: React.FC = () => {
             </div>
           </div>
 
+          <div className="h-px bg-gray-100 dark:bg-gray-800 mx-4" />
+
           {/* 时间 */}
-          <div className="flex items-center px-4 py-2.5 border-b border-gray-50 dark:border-gray-800/50">
-            <span className="material-symbols-outlined text-[18px] text-gray-400 mr-3">schedule</span>
-            <span className="text-sm text-gray-500 dark:text-gray-400 w-16 flex-shrink-0">时间</span>
-            <button 
-              onClick={() => setShowDateSheet(true)}
-              className={`flex-1 text-sm text-left truncate hover:opacity-80 transition-opacity ${
-                task.is_overdue && !task.is_completed 
-                  ? 'text-red-600' 
-                  : (task.start_date || task.due_date) ? 'text-gray-900 dark:text-white' : 'text-gray-400'
-              }`}
-            >
+          <button 
+            onClick={() => setShowDateSheet(true)}
+            className="flex items-center px-4 py-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+          >
+            <div className="flex items-center gap-2 w-20 flex-shrink-0">
+              <span className="material-symbols-outlined text-[18px] text-gray-400">schedule</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">时间</span>
+            </div>
+            <div className={`flex-1 text-sm text-right ${
+              task.is_overdue && !task.is_completed 
+                ? 'text-red-500 font-medium' 
+                : (task.start_date || task.due_date) ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400'
+            }`}>
               {getTimeDisplayText()}
-              {task.is_overdue && !task.is_completed && <span className="ml-1 text-xs">(已逾期)</span>}
-            </button>
-            <button 
-              onClick={() => setShowDateSheet(true)}
-              className="ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-            >
-              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-            </button>
-          </div>
+              {task.is_overdue && !task.is_completed && <span className="ml-1 text-xs bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded">(已逾期)</span>}
+            </div>
+            <span className="material-symbols-outlined text-[18px] text-gray-300 ml-2">chevron_right</span>
+          </button>
+
+          <div className="h-px bg-gray-100 dark:bg-gray-800 mx-4" />
 
           {/* 标签 */}
-          <div className="flex items-center px-4 py-2.5">
-            <span className="material-symbols-outlined text-[18px] text-gray-400 mr-3">label</span>
-            <span className="text-sm text-gray-500 dark:text-gray-400 w-16 flex-shrink-0">标签</span>
-            <div className="flex-1 flex flex-wrap items-center gap-1.5">
-              {/* 已选标签（可删除） */}
+          <div className="flex items-start px-4 py-3">
+            <div className="flex items-center gap-2 w-20 flex-shrink-0 pt-0.5">
+              <span className="material-symbols-outlined text-[18px] text-gray-400">label</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">标签</span>
+            </div>
+            <div className="flex-1 flex flex-wrap items-center gap-2 justify-end">
               {task.tags.map((tag) => (
                 <span 
                   key={tag.uid} 
-                  className="inline-flex items-center gap-0.5 pl-2 pr-1 py-0.5 rounded text-xs font-medium" 
-                  style={{ backgroundColor: `${tag.color}20`, color: tag.color }}
+                  className="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium shadow-sm" 
+                  style={{ backgroundColor: `${tag.color}15`, color: tag.color, border: `1px solid ${tag.color}30` }}
                 >
                   {tag.name}
                   <button 
@@ -455,51 +511,118 @@ const TaskDetailPage: React.FC = () => {
                   </button>
                 </span>
               ))}
-              {/* 添加标签按钮 */}
               <button 
                 onClick={() => setShowTagSelector(true)}
-                className="size-6 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                className="size-7 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-600 transition-colors"
               >
-                <span className="material-symbols-outlined text-[16px]">add</span>
+                <span className="material-symbols-outlined text-[18px]">add</span>
               </button>
-              {task.tags.length === 0 && (
-                <span className="text-sm text-gray-400">未设置</span>
-              )}
             </div>
           </div>
         </div>
 
-        {/* 内容区域 - 撑满剩余高度 */}
-        <div className="flex-1 px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex flex-col min-h-0">
-          <textarea
-            ref={contentInputRef}
-            value={editForm.content}
-            onChange={(e) => handleContentChange(e.target.value)}
-            className="flex-1 w-full text-sm bg-transparent border-none focus:ring-0 focus:outline-none text-gray-700 dark:text-gray-300 placeholder-gray-400 resize-none"
-            placeholder="添加任务描述..."
-          />
+        {/* 描述卡片 */}
+        <div className="flex-1 bg-white dark:bg-surface-dark rounded-2xl shadow-sm flex flex-col min-h-[120px]">
+          <div className="flex-1 px-4 py-4">
+            <textarea
+              ref={contentInputRef}
+              value={editForm.content}
+              onChange={(e) => handleContentChange(e.target.value)}
+              className="w-full h-full text-base bg-transparent border-none focus:ring-0 focus:outline-none text-gray-700 dark:text-gray-300 placeholder-gray-400 resize-none leading-relaxed"
+              placeholder="添加任务内容..."
+            />
+          </div>
+          {/* 内容编辑工具栏 */}
+          <div className="flex-shrink-0 px-3 py-2 border-t border-gray-100 dark:border-gray-800">
+            <div className="flex items-center gap-1">
+              <button 
+                className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                title="清单"
+                onClick={() => {
+                  const checkbox = '\n- [ ] ';
+                  setEditForm(prev => ({ ...prev, content: prev.content + checkbox }));
+                  contentInputRef.current?.focus();
+                }}
+              >
+                <span className="material-symbols-outlined text-[20px]">checklist</span>
+              </button>
+              <button 
+                className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                title="无序列表"
+                onClick={() => {
+                  const bullet = '\n• ';
+                  setEditForm(prev => ({ ...prev, content: prev.content + bullet }));
+                  contentInputRef.current?.focus();
+                }}
+              >
+                <span className="material-symbols-outlined text-[20px]">format_list_bulleted</span>
+              </button>
+              <button 
+                className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                title="有序列表"
+                onClick={() => {
+                  const number = '\n1. ';
+                  setEditForm(prev => ({ ...prev, content: prev.content + number }));
+                  contentInputRef.current?.focus();
+                }}
+              >
+                <span className="material-symbols-outlined text-[20px]">format_list_numbered</span>
+              </button>
+              <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
+              <button 
+                className={`p-2 rounded-lg transition-colors ${uploadingFile ? 'text-primary' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                title="插入图片"
+                onClick={() => imageInputRef.current?.click()}
+                disabled={uploadingFile}
+              >
+                <span className="material-symbols-outlined text-[20px]">{uploadingFile ? 'hourglass_empty' : 'image'}</span>
+              </button>
+              <button 
+                className={`p-2 rounded-lg transition-colors ${uploadingFile ? 'text-primary' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                title="上传附件"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingFile}
+              >
+                <span className="material-symbols-outlined text-[20px]">{uploadingFile ? 'hourglass_empty' : 'attach_file'}</span>
+              </button>
+              <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+              <input ref={fileInputRef} type="file" onChange={handleFileSelect} className="hidden" />
+              <button 
+                className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                title="插入链接"
+                onClick={() => {
+                  const link = '[链接文字](url)';
+                  setEditForm(prev => ({ ...prev, content: prev.content + link }));
+                  contentInputRef.current?.focus();
+                }}
+              >
+                <span className="material-symbols-outlined text-[20px]">link</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* 子任务进度 */}
+        {/* 子任务进度卡片 */}
         {task.subtasks_count > 0 && (
-          <div className="flex-shrink-0 px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-            <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[16px] text-gray-400">checklist</span>
-                <span className="text-xs font-medium text-gray-500">子任务</span>
+          <div className="flex-shrink-0 bg-white dark:bg-surface-dark rounded-2xl shadow-sm p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-gray-400">checklist</span>
+                <span className="text-sm font-medium text-gray-500">子任务</span>
               </div>
-              <span className="text-xs text-gray-500">{task.completed_subtasks_count}/{task.subtasks_count}</span>
+              <span className="text-sm font-medium text-primary">{task.completed_subtasks_count}/{task.subtasks_count}</span>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1">
-              <div className="bg-primary h-1 rounded-full transition-all" style={{ width: `${(task.completed_subtasks_count / task.subtasks_count) * 100}%` }} />
+            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2">
+              <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${(task.completed_subtasks_count / task.subtasks_count) * 100}%` }} />
             </div>
           </div>
         )}
 
-        {/* 更多信息 */}
-        <div className="flex-shrink-0 px-4 py-3">
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
+        {/* 底部信息 */}
+        <div className="flex-shrink-0 px-2 py-2">
+          <div className="flex justify-center gap-4 text-xs text-gray-400">
             <span>创建于 {format(parseISO(task.created_at), 'M月d日 HH:mm', { locale: zhCN })}</span>
+            <span>·</span>
             <span>更新于 {format(parseISO(task.updated_at), 'M月d日 HH:mm', { locale: zhCN })}</span>
           </div>
         </div>

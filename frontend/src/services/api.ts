@@ -357,4 +357,50 @@ export const viewApi = {
   }) => api.get<ApiResponse<TaskView[]>>('/views/default_views/', { params }),
 };
 
+// 附件类型
+export interface Attachment {
+  id: string;
+  original_name: string;
+  mime_type: string;
+  size: number;
+  owner_id: string;
+  is_public: boolean;
+  created_at: string;
+  preview_url: string;
+}
+
+// 附件API (使用 ChewyAttachment)
+export const attachmentApi = {
+  // 上传附件
+  upload: (file: File, isPublic: boolean = false, onProgress?: (progress: number) => void) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('is_public', String(isPublic));
+    
+    return api.post<Attachment>('/attachments/files/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress: (progressEvent) => {
+        if (onProgress && progressEvent.total) {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress(progress);
+        }
+      },
+    });
+  },
+
+  // 获取附件列表
+  getAttachments: (params?: {
+    page?: number;
+    page_size?: number;
+  }) => api.get<{ count: number; results: Attachment[] }>('/attachments/files/', { params }),
+
+  // 获取附件详情
+  getAttachment: (id: string) => api.get<Attachment>(`/attachments/files/${id}/`),
+
+  // 删除附件
+  deleteAttachment: (id: string) => api.delete(`/attachments/files/${id}/`),
+};
+
 export default api;
