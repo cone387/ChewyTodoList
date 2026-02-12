@@ -574,31 +574,68 @@ class TaskView(BaseModel):
         """为新用户创建默认视图"""
         default_views = [
             {
-                'name': '全部任务',
+                'name': '今日',
                 'view_type': cls.ViewType.LIST,
                 'is_default': True,
                 'is_visible_in_nav': True,
-                'filters': [],
-                'sorts': [{'field': 'updated_at', 'direction': 'desc'}],
-            },
-            {
-                'name': '今日任务',
-                'view_type': cls.ViewType.LIST,
-                'is_default': False,
-                'is_visible_in_nav': True,
+                'sort_order': 1,
                 'filters': [
                     {'field': 'due_date', 'operator': 'is_today', 'value': None, 'logic': 'and'}
                 ],
                 'sorts': [{'field': 'priority', 'direction': 'desc'}],
             },
             {
-                'name': '看板',
-                'view_type': cls.ViewType.BOARD,
+                'name': '紧急',
+                'view_type': cls.ViewType.LIST,
                 'is_default': False,
                 'is_visible_in_nav': True,
+                'sort_order': 2,
+                'filters': [
+                    {'field': 'priority', 'operator': 'equals', 'value': 4, 'logic': 'and'}  # URGENT = 4
+                ],
+                'sorts': [{'field': 'due_date', 'direction': 'asc'}],
+            },
+            {
+                'name': '明日',
+                'view_type': cls.ViewType.LIST,
+                'is_default': False,
+                'is_visible_in_nav': True,
+                'sort_order': 3,
+                'filters': [
+                    {'field': 'due_date', 'operator': 'is_tomorrow', 'value': None, 'logic': 'and'}
+                ],
+                'sorts': [{'field': 'priority', 'direction': 'desc'}],
+            },
+            {
+                'name': '本周',
+                'view_type': cls.ViewType.LIST,
+                'is_default': False,
+                'is_visible_in_nav': True,
+                'sort_order': 4,
+                'filters': [
+                    {'field': 'due_date', 'operator': 'is_this_week', 'value': None, 'logic': 'and'}
+                ],
+                'sorts': [{'field': 'due_date', 'direction': 'asc'}, {'field': 'priority', 'direction': 'desc'}],
+            },
+            {
+                'name': '待规划',
+                'view_type': cls.ViewType.LIST,
+                'is_default': False,
+                'is_visible_in_nav': True,
+                'sort_order': 5,
+                'filters': [
+                    {'field': 'due_date', 'operator': 'is_empty', 'value': None, 'logic': 'and'}
+                ],
+                'sorts': [{'field': 'created_at', 'direction': 'desc'}],
+            },
+            {
+                'name': '全部',
+                'view_type': cls.ViewType.LIST,
+                'is_default': False,
+                'is_visible_in_nav': True,
+                'sort_order': 6,
                 'filters': [],
-                'sorts': [{'field': 'sort_order', 'direction': 'asc'}],
-                'group_by': 'status',
+                'sorts': [{'field': 'updated_at', 'direction': 'desc'}],
             },
         ]
         

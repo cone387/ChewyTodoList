@@ -22,22 +22,25 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
 }) => {
   const [isCompletedExpanded, setIsCompletedExpanded] = React.useState(false);
   
-  // 使用卡片样式配置，如果没有提供则使用视图的显示设置
-  const displaySettings = cardStyle ? {
+  // 优先使用视图的显示设置（用户在过滤栏控制），其次使用卡片样式默认值
+  const viewSettings = view?.display_settings || {};
+  const cardDefaults = cardStyle ? {
     show_project: cardStyle.style.showProject,
     show_tags: cardStyle.style.showTags,
     show_due_date: cardStyle.style.showDueDate,
     show_priority: cardStyle.style.showPriority,
     show_status: cardStyle.style.showStatus,
     compact_mode: cardStyle.style.layout === 'compact',
-  } : (view?.display_settings || {
-    show_project: true,
-    show_tags: true,
-    show_due_date: true,
-    show_priority: true,
-    show_status: true,
-    compact_mode: false,
-  });
+  } : {};
+  
+  const displaySettings = {
+    show_project: viewSettings.show_project ?? cardDefaults.show_project ?? true,
+    show_tags: viewSettings.show_tags ?? cardDefaults.show_tags ?? true,
+    show_due_date: viewSettings.show_due_date ?? cardDefaults.show_due_date ?? true,
+    show_priority: viewSettings.show_priority ?? cardDefaults.show_priority ?? true,
+    show_status: viewSettings.show_status ?? cardDefaults.show_status ?? true,
+    compact_mode: viewSettings.compact_mode ?? cardDefaults.compact_mode ?? false,
+  };
 
   const getStatusColor = (status: number) => {
     switch (status) {

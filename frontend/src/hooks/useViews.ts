@@ -26,15 +26,15 @@ export const useViews = (params?: {
 export const useView = (uid: string) => {
   return useQuery({
     queryKey: ['view', uid],
-    queryFn: () => viewApi.getView(uid),
-    select: (data) => data.data.data,
+    queryFn: async () => {
+      const response = await viewApi.getView(uid);
+      return response.data.data; // 直接返回视图对象，避免 select 与 setQueryData 冲突
+    },
     enabled: !!uid && !!localStorage.getItem('access_token'),
     retry: (failureCount, error: any) => {
-      // 如果是401错误，不要重试
       if (error?.response?.status === 401) {
         return false;
       }
-      // 其他错误最多重试2次
       return failureCount < 2;
     },
   });
@@ -93,17 +93,45 @@ export const useCreateView = () => {
   });
 };
 
-// 更新视图
+// 更新视图（支持乐观更新）
 export const useUpdateView = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: any }) =>
       viewApi.updateView(uid, data),
-    onSuccess: (_, { uid }) => {
+    onMutate: async ({ uid, data }) => {
+      // 取消正在进行的查询
+      await queryClient.cancelQueries({ queryKey: ['view', uid] });
+      
+      // 保存之前的数据用于回滚
+      const previousView = queryClient.getQueryData(['view', uid]);
+      
+      // 乐观更新视图数据
+      if (previousView) {
+        queryClient.setQueryData(['view', uid], (old: any) => {
+          if (!old) return old;
+          return { ...old, ...data };
+        });
+      }
+      
+      return { previousView };
+    },
+    onError: (err, { uid }, context) => {
+      // 发生错误时回滚
+      if (context?.previousView) {
+        queryClient.setQueryData(['view', uid], context.previousView);
+      }
+      console.error('更新视图失败:', err);
+    },
+    onSuccess: (response, { uid }) => {
+      // 成功后用服务器返回的数据更新缓存
+      const serverData = response.data?.data;
+      if (serverData) {
+        queryClient.setQueryData(['view', uid], serverData);
+      }
+      // 更新视图列表
       queryClient.invalidateQueries({ queryKey: ['views'] });
-      queryClient.invalidateQueries({ queryKey: ['view', uid] });
-      queryClient.invalidateQueries({ queryKey: ['view-tasks', uid] });
       queryClient.invalidateQueries({ queryKey: ['default-views'] });
     },
   });
