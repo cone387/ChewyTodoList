@@ -153,7 +153,7 @@ VITE_APP_VERSION=1.0.0
 ```bash
 cd backend
 source .venv/bin/activate
-uv run python manage.py runserver 8000
+uv run python manage.py runserver 8030
 ```
 
 #### 启动前端

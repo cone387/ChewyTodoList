@@ -801,7 +801,7 @@ COPY . .
 RUN uv run python manage.py collectstatic --noinput
 
 # 暴露端口
-EXPOSE 8000
+EXPOSE 4030
 
 # 启动命令
 CMD ["uv", "run", "gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8030"]
