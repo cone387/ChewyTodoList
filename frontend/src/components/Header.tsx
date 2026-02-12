@@ -221,13 +221,18 @@ const Header: React.FC<HeaderProps> = ({
               value={searchQuery}
               onChange={handleSearchChange}
             />
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  onSearch?.('');
+                }}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            )}
           </div>
-          <button 
-            className="size-9 rounded-lg bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center text-purple-600"
-            onClick={onFilter}
-          >
-            <span className="material-symbols-outlined text-[20px]">filter_list</span>
-          </button>
         </div>
       </div>
 

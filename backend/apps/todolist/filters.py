@@ -45,6 +45,9 @@ class ProjectFilter(django_filters.FilterSet):
 class TaskFilter(django_filters.FilterSet):
     """任务过滤器"""
     
+    # 统一搜索字段（搜索标题、内容、项目名称、标签）
+    search = django_filters.CharFilter(method='filter_search')
+    
     title = django_filters.CharFilter(lookup_expr='icontains')
     content = django_filters.CharFilter(lookup_expr='icontains')
     project = django_filters.CharFilter(field_name='project__uid')
@@ -72,11 +75,24 @@ class TaskFilter(django_filters.FilterSet):
     class Meta:
         model = Task
         fields = [
-            'title', 'content', 'project', 'parent', 'status', 'priority',
+            'search', 'title', 'content', 'project', 'parent', 'status', 'priority',
             'tags', 'is_all_day', 'start_date_from', 'start_date_to',
             'due_date_from', 'due_date_to', 'created_after', 'created_before',
             'is_overdue', 'has_subtasks', 'is_root_task'
         ]
+
+    def filter_search(self, queryset, name, value):
+        """统一搜索：搜索标题、内容、项目名称、标签名称"""
+        if not value:
+            return queryset
+        
+        from django.db.models import Q
+        return queryset.filter(
+            Q(title__icontains=value) |
+            Q(content__icontains=value) |
+            Q(project__name__icontains=value) |
+            Q(tags__name__icontains=value)
+        ).distinct()
 
     def filter_tags(self, queryset, name, value):
         """按标签过滤"""

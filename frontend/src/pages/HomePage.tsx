@@ -6,7 +6,7 @@ import BottomNav from '../components/BottomNav';
 import FloatingAddButton from '../components/FloatingAddButton';
 import { useViewTasks, useNavViews, useView } from '../hooks/useViews';
 import { useCheckInitialized, useInitializeUser } from '../hooks/useAuth';
-import { useUpdateTask } from '../hooks/useTasks';
+import { useUpdateTask, useSearchTasks } from '../hooks/useTasks';
 import { TASK_CARD_TEMPLATES } from '../types/taskCard';
 import type { Task, TaskView } from '../types/index';
 
@@ -15,6 +15,8 @@ const HomePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [currentView, setCurrentView] = useState<string>('');
   const [showFilterBar, setShowFilterBar] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [debouncedSearch, setDebouncedSearch] = useState<string>('');
   // 本地过滤状态（临时覆盖视图设置）
   const [localSortField, setLocalSortField] = useState<string>('');
   const [localSortDirection, setLocalSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -45,6 +47,17 @@ const HomePage: React.FC = () => {
   const { data: isInitialized, isLoading: isCheckingInit } = useCheckInitialized();
   const initializeUser = useInitializeUser();
   const updateTask = useUpdateTask();
+  
+  // 搜索任务（在线搜索）
+  const { data: searchResults, isLoading: isSearching } = useSearchTasks(debouncedSearch);
+
+  // 搜索防抖
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // 用户初始化检查
   useEffect(() => {
@@ -59,7 +72,7 @@ const HomePage: React.FC = () => {
   }, [isInitialized, isCheckingInit, initializeUser]);
 
   // 计算加载状态
-  const isLoading = isNavViewsLoading || isCheckingInit || (currentView && (isViewDataLoading || isViewTasksLoading));
+  const isLoading = isNavViewsLoading || isCheckingInit || (currentView && (isViewDataLoading || isViewTasksLoading)) || (debouncedSearch && isSearching);
   const hasNoViews = !isNavViewsLoading && !isCheckingInit && (!navViews?.results || navViews.results.length === 0);
 
   useEffect(() => {
@@ -78,13 +91,12 @@ const HomePage: React.FC = () => {
   }, [projectFilter]);
 
   const handleSearch = (query: string) => {
-    // TODO: 实现搜索功能
-    console.log('Search query:', query);
+    setSearchQuery(query);
   };
 
   const handleFilter = () => {
-    // TODO: 实现筛选功能
-    console.log('Filter clicked');
+    // 点击过滤按钮时切换过滤栏显示
+    setShowFilterBar(!showFilterBar);
   };
 
   const handleViewChange = (viewUid: string) => {
@@ -196,7 +208,10 @@ const HomePage: React.FC = () => {
 
   // 实时排序和过滤任务
   const processedTasks = useMemo(() => {
-    let tasks = viewTasks?.results || [];
+    // 如果有搜索词，使用搜索结果；否则使用视图任务
+    let tasks = debouncedSearch 
+      ? (searchResults?.results || [])
+      : (viewTasks?.results || []);
     
     // 过滤已完成任务
     if (!effectiveDisplaySettings.show_completed) {
@@ -237,7 +252,7 @@ const HomePage: React.FC = () => {
     }
     
     return tasks;
-  }, [viewTasks?.results, effectiveDisplaySettings.show_completed, effectiveSortField, effectiveSortDirection]);
+  }, [viewTasks?.results, searchResults?.results, debouncedSearch, effectiveDisplaySettings.show_completed, effectiveSortField, effectiveSortDirection]);
 
   // 创建一个带有本地过滤设置的视图对象
   const effectiveView = useMemo((): TaskView | undefined => {

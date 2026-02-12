@@ -213,7 +213,7 @@ const ViewsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedViews, setSelectedViews] = React.useState<string[]>([]);
   const [isSelectionMode, setIsSelectionMode] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState<'my' | 'system' | 'nav'>('my');
+  const [activeTab, setActiveTab] = React.useState<'nav' | 'my' | 'system'>('nav');
   const [draggedItem, setDraggedItem] = React.useState<string | null>(null);
   const [dragOverItem, setDragOverItem] = React.useState<string | null>(null);
 
@@ -534,24 +534,11 @@ const ViewsPage: React.FC = () => {
             <span className="material-symbols-outlined text-[24px]">arrow_back</span>
           </button>
           
-          <div className="flex items-center gap-1">
-            <span className="text-base font-semibold">
-              {isSelectionMode ? `已选择 ${selectedViews.length} 个` : '视图管理'}
-            </span>
+          <div className="flex-1 text-center">
+            <span className="text-base font-semibold">视图管理</span>
           </div>
           
           <div className="flex items-center gap-2">
-            {views.length > 1 && (
-              <button 
-                onClick={toggleSelectionMode}
-                className="text-gray-500 dark:text-gray-400 flex items-center justify-center size-10 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-              >
-                <span className="material-symbols-outlined text-[20px]">
-                  {isSelectionMode ? 'close' : 'checklist'}
-                </span>
-              </button>
-            )}
-            
             <button 
               onClick={() => navigate('/views/templates')}
               className="text-purple-500 flex items-center justify-center size-10 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-full transition-colors"
@@ -561,56 +548,33 @@ const ViewsPage: React.FC = () => {
             </button>
             
             <button 
-              onClick={() => navigate('/task-cards')}
-              className="text-blue-500 flex items-center justify-center size-10 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-colors"
-              title="卡片样式"
+              onClick={handleCreateView}
+              className="text-primary flex items-center justify-center size-10 hover:bg-primary/10 rounded-full transition-colors"
             >
-              <span className="material-symbols-outlined text-[20px]">style</span>
+              <span className="material-symbols-outlined text-[24px]">add</span>
             </button>
-            
-            {isSelectionMode && selectedViews.length > 0 ? (
-              <div className="flex items-center gap-1">
-                {activeTab === 'my' && (
-                  <>
-                    <button 
-                      onClick={() => handleBatchToggleVisibility(true)}
-                      disabled={toggleViewVisibility.isPending}
-                      className="text-green-500 flex items-center justify-center size-10 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-full transition-colors disabled:opacity-50"
-                      title="显示在导航栏"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">visibility</span>
-                    </button>
-                    <button 
-                      onClick={() => handleBatchToggleVisibility(false)}
-                      disabled={toggleViewVisibility.isPending}
-                      className="text-orange-500 flex items-center justify-center size-10 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-full transition-colors disabled:opacity-50"
-                      title="从导航栏隐藏"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">visibility_off</span>
-                    </button>
-                  </>
-                )}
-                <button 
-                  onClick={handleBatchDelete}
-                  disabled={deleteView.isPending}
-                  className="text-red-500 flex items-center justify-center size-10 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors disabled:opacity-50"
-                >
-                  <span className="material-symbols-outlined text-[18px]">delete</span>
-                </button>
-              </div>
-            ) : !isSelectionMode ? (
-              <button 
-                onClick={handleCreateView}
-                className="text-primary flex items-center justify-center size-10 hover:bg-primary/10 rounded-full transition-colors"
-              >
-                <span className="material-symbols-outlined text-[24px]">add</span>
-              </button>
-            ) : null}
           </div>
         </div>
 
         {/* Tab Navigation */}
         <div className="flex border-b border-gray-100 dark:border-gray-800">
+          <button
+            onClick={() => setActiveTab('nav')}
+            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+              activeTab === 'nav'
+                ? 'text-primary border-b-2 border-primary bg-primary/5'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">tab</span>
+              <span>导航栏</span>
+              <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-xs rounded">
+                {navViews.length}
+              </span>
+            </div>
+          </button>
+          
           <button
             onClick={() => setActiveTab('my')}
             className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
@@ -641,23 +605,6 @@ const ViewsPage: React.FC = () => {
               <span>系统</span>
               <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-xs rounded">
                 {systemViews.length}
-              </span>
-            </div>
-          </button>
-          
-          <button
-            onClick={() => setActiveTab('nav')}
-            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
-              activeTab === 'nav'
-                ? 'text-primary border-b-2 border-primary bg-primary/5'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-            }`}
-          >
-            <div className="flex items-center justify-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">tab</span>
-              <span>导航栏</span>
-              <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-xs rounded">
-                {navViews.length}
               </span>
             </div>
           </button>

@@ -25,6 +25,18 @@ export const useTasks = (params?: {
   });
 };
 
+// 搜索任务（带防抖）
+export const useSearchTasks = (search: string) => {
+  return useQuery({
+    queryKey: ['tasks', 'search', search],
+    queryFn: () => taskApi.getTasks({ search }),
+    select: (data) => data.data.data,
+    retry: false,
+    enabled: !!search && search.trim().length > 0 && !!localStorage.getItem('access_token'),
+    staleTime: 30000, // 30秒内不重新请求相同搜索词
+  });
+};
+
 // 获取任务详情
 export const useTask = (uid: string) => {
   return useQuery({
