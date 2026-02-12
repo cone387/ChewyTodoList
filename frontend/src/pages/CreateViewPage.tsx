@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useCreateView, useUpdateView, useDeleteView, useView } from '../hooks/useViews';
+import { useProjects } from '../hooks/useProjects';
 import FilterBuilder from '../components/FilterBuilder';
 import MobileSelect from '../components/MobileSelect';
 import TaskCardSelector from '../components/TaskCardSelector';
 import ViewTypeSelector from '../components/ViewTypeSelector';
+import BottomSheet from '../components/BottomSheet';
 import { VIEW_TEMPLATES } from '../data/viewTemplates';
 import { TASK_CARD_TEMPLATES } from '../types/taskCard';
 import type { TaskCardTemplate } from '../types/taskCard';
@@ -43,6 +45,7 @@ const CreateViewPage: React.FC = () => {
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [showCardSelector, setShowCardSelector] = useState(false);
   const [showViewTypeSelector, setShowViewTypeSelector] = useState(false);
+  const [showProjectFilterSelector, setShowProjectFilterSelector] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -51,6 +54,8 @@ const CreateViewPage: React.FC = () => {
     sorts: [] as ViewSort[],
     group_by: '',
     is_visible_in_nav: true, // 默认显示在导航栏
+    follow_selected_project: true, // 默认跟随所选清单
+    project_uid: null as string | null, // 固定清单的uid（当 follow_selected_project = false 时使用）
     card_template_id: 'default', // 默认卡片模板（会在视图类型改变时更新）
     display_settings: {
       show_project: true,
@@ -68,6 +73,8 @@ const CreateViewPage: React.FC = () => {
   const deleteView = useDeleteView();
   const { data: view, isLoading: viewLoading } = useView(uid!);
   const { confirmState, confirm, handleCancel } = useConfirm();
+  const { data: projectsData } = useProjects();
+  const projects = projectsData?.results || [];
 
   useEffect(() => {
     if (view) {
@@ -78,6 +85,8 @@ const CreateViewPage: React.FC = () => {
         sorts: view.sorts || [],
         group_by: view.group_by || '',
         is_visible_in_nav: view.is_visible_in_nav ?? true,
+        follow_selected_project: view.follow_selected_project ?? true,
+        project_uid: view.project?.uid || null,
         card_template_id: (view.display_settings as any)?.card_template_id || 'default',
         display_settings: {
           show_project: view.display_settings?.show_project ?? true,
@@ -162,7 +171,7 @@ const CreateViewPage: React.FC = () => {
       // Prepare data for backend - convert empty strings to undefined for optional fields
       const dataToSend = {
         ...formData,
-        project_uid: undefined, // 不再发送项目关联
+        project_uid: formData.project_uid || undefined, // 固定清单的uid
         group_by: formData.group_by || undefined, // Convert empty string to undefined
         filters: sanitizeFilters(formData.filters), // Sanitize filter values
         display_settings: {
@@ -521,6 +530,31 @@ const CreateViewPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  清单过滤
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowProjectFilterSelector(true)}
+                  className="w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:border-primary transition-colors flex items-center justify-between"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-primary">
+                      {formData.follow_selected_project ? 'sync' : (formData.project_uid ? 'folder' : 'inbox')}
+                    </span>
+                    <span>
+                      {formData.follow_selected_project 
+                        ? '跟随所选清单' 
+                        : (formData.project_uid 
+                            ? (projects.find(p => p.uid === formData.project_uid)?.name || '固定清单')
+                            : '全部任务')}
+                    </span>
+                  </span>
+                  <span className="material-symbols-outlined text-[18px] text-gray-400">chevron_right</span>
+                </button>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   分组方式
                 </label>
                 <MobileSelect
@@ -778,6 +812,90 @@ const CreateViewPage: React.FC = () => {
           title="选择卡片样式"
         />
       )}
+      
+      {/* 清单过滤选择弹窗 */}
+      <BottomSheet
+        isOpen={showProjectFilterSelector}
+        onClose={() => setShowProjectFilterSelector(false)}
+        title="选择清单过滤"
+      >
+        <div className="space-y-1">
+          {/* 跟随所选清单选项 */}
+          <button
+            onClick={() => {
+              setFormData({ ...formData, follow_selected_project: true, project_uid: null });
+              setShowProjectFilterSelector(false);
+            }}
+            className={`w-full px-4 py-3 text-left flex items-center gap-3 rounded-lg transition-colors ${
+              formData.follow_selected_project
+                ? 'bg-primary/10 text-primary'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[20px]">sync</span>
+            <div>
+              <div className="text-sm font-medium">跟随所选清单</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">根据主界面选择的清单动态过滤</div>
+            </div>
+            {formData.follow_selected_project && (
+              <span className="material-symbols-outlined text-[20px] ml-auto">check</span>
+            )}
+          </button>
+          
+          {/* 全部任务选项 */}
+          <button
+            onClick={() => {
+              setFormData({ ...formData, follow_selected_project: false, project_uid: null });
+              setShowProjectFilterSelector(false);
+            }}
+            className={`w-full px-4 py-3 text-left flex items-center gap-3 rounded-lg transition-colors ${
+              !formData.follow_selected_project && !formData.project_uid
+                ? 'bg-primary/10 text-primary'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[20px]">inbox</span>
+            <div>
+              <div className="text-sm font-medium">全部任务</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">显示所有清单的任务</div>
+            </div>
+            {!formData.follow_selected_project && !formData.project_uid && (
+              <span className="material-symbols-outlined text-[20px] ml-auto">check</span>
+            )}
+          </button>
+          
+          {/* 分隔线 */}
+          {projects.length > 0 && (
+            <div className="border-t border-gray-100 dark:border-gray-700 my-2 pt-2">
+              <div className="px-4 py-1 text-xs text-gray-500 dark:text-gray-400">固定到清单</div>
+            </div>
+          )}
+          
+          {/* 清单列表 */}
+          {projects.map(project => (
+            <button
+              key={project.uid}
+              onClick={() => {
+                setFormData({ ...formData, follow_selected_project: false, project_uid: project.uid });
+                setShowProjectFilterSelector(false);
+              }}
+              className={`w-full px-4 py-3 text-left flex items-center gap-3 rounded-lg transition-colors ${
+                !formData.follow_selected_project && formData.project_uid === project.uid
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">folder</span>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium truncate">{project.name}</div>
+              </div>
+              {!formData.follow_selected_project && formData.project_uid === project.uid && (
+                <span className="material-symbols-outlined text-[20px]">check</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </BottomSheet>
       
       {confirmState.isOpen && (
         <ConfirmDialog

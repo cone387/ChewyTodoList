@@ -151,6 +151,7 @@ export interface TaskView {
   is_public: boolean;
   is_system?: boolean; // 是否系统视图
   is_visible_in_nav: boolean; // 是否在导航栏显示
+  follow_selected_project: boolean; // 是否跟随所选清单
   sort_order: number;
   filters: ViewFilter[];
   filter_groups?: ViewFilterGroup[]; // 高级筛选组

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNavViews } from '../hooks/useViews';
 import { useLogout, useProfile } from '../hooks/useAuth';
-import type { TaskView } from '../types/index';
+import BottomSheet from './BottomSheet';
+import type { TaskView, Project } from '../types/index';
 
 // 显示设置类型
 interface DisplaySettings {
@@ -21,6 +22,10 @@ interface HeaderProps {
   onViewChange?: (viewUid: string) => void;
   currentView?: string;
   onOpenViewSettings?: () => void;
+  // 清单选择相关
+  selectedProjectUid?: string | null;
+  onProjectChange?: (projectUid: string | null) => void;
+  projects?: Project[];
   // 过滤栏相关
   showFilterBar?: boolean;
   onToggleFilterBar?: () => void;
@@ -52,6 +57,9 @@ const Header: React.FC<HeaderProps> = ({
   onViewChange, 
   currentView,
   onOpenViewSettings,
+  selectedProjectUid,
+  onProjectChange,
+  projects = [],
   showFilterBar = false,
   onToggleFilterBar,
   sortField = '',
@@ -67,6 +75,7 @@ const Header: React.FC<HeaderProps> = ({
   const [isSearchVisible, setIsSearchVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showProjectMenu, setShowProjectMenu] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<'sort' | 'group' | 'display' | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const filterBarRef = useRef<HTMLDivElement>(null);
@@ -139,17 +148,32 @@ const Header: React.FC<HeaderProps> = ({
       {/* 固定顶部导航栏 */}
       <header className="fixed top-0 left-0 right-0 z-30 bg-white dark:bg-surface-dark pt-safe border-b border-gray-100 dark:border-gray-800 max-w-md mx-auto">
         <div className="flex items-center p-3 justify-between">
-          <div className="flex items-center gap-3">
+          {/* 左侧 - 固定宽度 */}
+          <div className="flex items-center gap-3 w-10">
             <button className="text-[#5f6368] dark:text-white flex items-center justify-center">
               <span className="material-symbols-outlined text-[20px]">menu</span>
             </button>
           </div>
           
-          <div className="flex items-center gap-1">
-            <span className="text-base font-semibold">任务管理</span>
-          </div>
+          {/* 中间 - 清单选择按钮居中 */}
+          <button 
+            onClick={() => setShowProjectMenu(!showProjectMenu)}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <span className="text-base font-semibold truncate max-w-[140px]">
+              {selectedProjectUid === null 
+                ? '全部任务' 
+                : selectedProjectUid === 'inbox'
+                  ? '收集箱'
+                  : projects.find(p => p.uid === selectedProjectUid)?.name || '收集箱'}
+            </span>
+            <span className="material-symbols-outlined text-[18px] text-gray-500">
+              expand_more
+            </span>
+          </button>
           
-          <div className="flex items-center justify-end gap-2">
+          {/* 右侧 - 固定宽度与左侧匹配 */}
+          <div className="flex items-center justify-end gap-2 w-10">
             {/* 当前视图设置按钮 */}
             {onOpenViewSettings && (
               <button 
@@ -511,6 +535,90 @@ const Header: React.FC<HeaderProps> = ({
 
       {/* 占位空间，防止内容被固定头部遮挡 */}
       <div className={showFilterBar ? 'h-[168px]' : 'h-36'}></div>
+      
+      {/* 清单选择 BottomSheet */}
+      <BottomSheet
+        isOpen={showProjectMenu}
+        onClose={() => setShowProjectMenu(false)}
+        title="选择清单"
+      >
+        <div className="space-y-1">
+          {/* 全部任务选项 */}
+          <button
+            onClick={() => {
+              onProjectChange?.(null);
+              setShowProjectMenu(false);
+            }}
+            className={`w-full px-4 py-3 text-left flex items-center gap-3 rounded-lg transition-colors ${
+              selectedProjectUid === null
+                ? 'bg-primary/10 text-primary'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[20px]">inbox</span>
+            <div className="flex-1">
+              <div className="text-sm font-medium">全部任务</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">显示所有清单的任务</div>
+            </div>
+            {selectedProjectUid === null && (
+              <span className="material-symbols-outlined text-[20px]">check</span>
+            )}
+          </button>
+          
+          {/* 分隔线 */}
+          {projects.length > 0 && (
+            <div className="border-t border-gray-100 dark:border-gray-700 my-2 pt-2">
+              <div className="px-4 py-1 text-xs text-gray-500 dark:text-gray-400">我的清单</div>
+            </div>
+          )}
+          
+          {/* 清单列表 */}
+          {projects.map(project => (
+            <button
+              key={project.uid}
+              onClick={() => {
+                onProjectChange?.(project.uid);
+                setShowProjectMenu(false);
+              }}
+              className={`w-full px-4 py-3 text-left flex items-center gap-3 rounded-lg transition-colors ${
+                selectedProjectUid === project.uid
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">folder</span>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium truncate">{project.name}</div>
+              </div>
+              {selectedProjectUid === project.uid && (
+                <span className="material-symbols-outlined text-[20px]">check</span>
+              )}
+            </button>
+          ))}
+          
+          {/* 收集箱选项 */}
+          <button
+            onClick={() => {
+              onProjectChange?.('inbox');
+              setShowProjectMenu(false);
+            }}
+            className={`w-full px-4 py-3 text-left flex items-center gap-3 rounded-lg transition-colors ${
+              selectedProjectUid === 'inbox'
+                ? 'bg-primary/10 text-primary'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[20px]">archive</span>
+            <div className="flex-1">
+              <div className="text-sm font-medium">收集箱</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">未分配清单的任务</div>
+            </div>
+            {selectedProjectUid === 'inbox' && (
+              <span className="material-symbols-outlined text-[20px]">check</span>
+            )}
+          </button>
+        </div>
+      </BottomSheet>
     </>
   );
 };

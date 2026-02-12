@@ -570,8 +570,9 @@ class TaskViewSerializer(serializers.ModelSerializer):
         model = TaskView
         fields = [
             'uid', 'name', 'project', 'project_uid', 'view_type', 'view_type_display',
-            'is_default', 'is_public', 'is_system', 'is_visible_in_nav', 'sort_order', 'filters', 'sorts', 'group_by',
-            'display_settings', 'created_at', 'updated_at'
+            'is_default', 'is_public', 'is_system', 'is_visible_in_nav', 'sort_order', 
+            'filters', 'sorts', 'group_by', 'display_settings', 'follow_selected_project',
+            'created_at', 'updated_at'
         ]
         read_only_fields = ['uid', 'is_system', 'created_at', 'updated_at']
 
@@ -730,8 +731,9 @@ class TaskViewListSerializer(serializers.ModelSerializer):
         model = TaskView
         fields = [
             'uid', 'name', 'project', 'view_type', 'view_type_display',
-            'is_default', 'is_public', 'is_system', 'is_visible_in_nav', 'sort_order', 'tasks_count',
-            'created_at', 'updated_at'
+            'is_default', 'is_public', 'is_system', 'is_visible_in_nav', 'sort_order', 
+            'filters', 'sorts', 'group_by', 'display_settings', 'follow_selected_project',
+            'tasks_count', 'created_at', 'updated_at'
         ]
 
     def get_tasks_count(self, obj):

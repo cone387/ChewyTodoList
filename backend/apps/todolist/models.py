@@ -534,6 +534,13 @@ class TaskView(BaseModel):
         verbose_name="显示设置",
         help_text="列显示、颜色、图标等设置"
     )
+    
+    # 清单跟随设置
+    follow_selected_project = models.BooleanField(
+        default=True,
+        verbose_name="跟随所选清单",
+        help_text="True: 跟随主界面所选清单过滤; False: 使用视图固定的所属清单"
+    )
 
     class Meta:
         db_table = "ct_task_views"

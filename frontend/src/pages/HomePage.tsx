@@ -7,6 +7,7 @@ import FloatingAddButton from '../components/FloatingAddButton';
 import { useViewTasks, useNavViews, useView } from '../hooks/useViews';
 import { useCheckInitialized, useInitializeUser } from '../hooks/useAuth';
 import { useUpdateTask, useSearchTasks } from '../hooks/useTasks';
+import { useProjects } from '../hooks/useProjects';
 import { TASK_CARD_TEMPLATES } from '../types/taskCard';
 import type { Task, TaskView } from '../types/index';
 
@@ -17,6 +18,8 @@ const HomePage: React.FC = () => {
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [debouncedSearch, setDebouncedSearch] = useState<string>('');
+  // 清单选择状态（null: 全部任务, 'inbox': 收集箱, 其他: 具体项目uid）
+  const [selectedProjectUid, setSelectedProjectUid] = useState<string | null>(null);
   // 本地过滤状态（临时覆盖视图设置）
   const [localSortField, setLocalSortField] = useState<string>('');
   const [localSortDirection, setLocalSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -50,6 +53,10 @@ const HomePage: React.FC = () => {
   
   // 搜索任务（在线搜索）
   const { data: searchResults, isLoading: isSearching } = useSearchTasks(debouncedSearch);
+  
+  // 获取项目列表
+  const { data: projectsData } = useProjects();
+  const projects = projectsData?.results || [];
 
   // 搜索防抖
   useEffect(() => {
@@ -213,6 +220,26 @@ const HomePage: React.FC = () => {
       ? (searchResults?.results || [])
       : (viewTasks?.results || []);
     
+    // 根据视图的 follow_selected_project 设置决定项目过滤逻辑
+    const shouldFollowSelected = viewData?.follow_selected_project !== false;
+    
+    if (shouldFollowSelected) {
+      // 跟随所选清单过滤
+      if (selectedProjectUid === 'inbox') {
+        // 收集箱：显示无项目的任务
+        tasks = tasks.filter(task => !task.project);
+      } else if (selectedProjectUid !== null) {
+        // 特定项目：按项目uid过滤
+        tasks = tasks.filter(task => task.project?.uid === selectedProjectUid);
+      }
+      // selectedProjectUid === null 时显示全部任务，不过滤
+    } else {
+      // 使用视图固定的所属清单过滤
+      if (viewData?.project) {
+        tasks = tasks.filter(task => task.project?.uid === viewData.project?.uid);
+      }
+    }
+    
     // 过滤已完成任务
     if (!effectiveDisplaySettings.show_completed) {
       tasks = tasks.filter(task => !task.is_completed);
@@ -252,7 +279,7 @@ const HomePage: React.FC = () => {
     }
     
     return tasks;
-  }, [viewTasks?.results, searchResults?.results, debouncedSearch, effectiveDisplaySettings.show_completed, effectiveSortField, effectiveSortDirection]);
+  }, [viewTasks?.results, searchResults?.results, debouncedSearch, effectiveDisplaySettings.show_completed, effectiveSortField, effectiveSortDirection, viewData?.follow_selected_project, viewData?.project, selectedProjectUid]);
 
   // 创建一个带有本地过滤设置的视图对象
   const effectiveView = useMemo((): TaskView | undefined => {
@@ -278,6 +305,9 @@ const HomePage: React.FC = () => {
         onViewChange={handleViewChange}
         currentView={currentView}
         onOpenViewSettings={handleOpenViewSettings}
+        selectedProjectUid={selectedProjectUid}
+        onProjectChange={setSelectedProjectUid}
+        projects={projects}
         showFilterBar={showFilterBar}
         onToggleFilterBar={handleToggleFilterBar}
         sortField={effectiveSortField}
