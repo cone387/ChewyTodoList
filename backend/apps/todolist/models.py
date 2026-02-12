@@ -439,6 +439,8 @@ class ActivityLog(BaseModel):
         to_field="uid",
         on_delete=models.CASCADE,
         related_name="activity_logs",
+        null=True,
+        blank=True,
         verbose_name="项目"
     )
     action = models.CharField(max_length=64, choices=ActionType.choices, verbose_name="操作类型")

@@ -440,17 +440,8 @@ class TaskSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         project = validated_data.pop('project_uid', None)
         
-        # 如果没有指定项目，使用默认项目
-        if project is None:
-            try:
-                # 获取用户的默认项目（名为"默认项目"或第一个项目）
-                project = Project.objects.filter(user=user, name="默认项目").first()
-                if not project:
-                    project = Project.objects.filter(user=user).first()
-                if not project:
-                    raise serializers.ValidationError("请先创建项目")
-            except Exception as e:
-                raise serializers.ValidationError(f"获取默认项目失败: {str(e)}")
+        # 项目是可选的，允许为 None（收集箱模式）
+        # 不再强制要求用户必须有项目才能创建任务
         
         parent = validated_data.pop('parent_uid', None)
         tag_uids = validated_data.pop('tag_uids', [])
@@ -544,8 +535,8 @@ class ActivityLogSerializer(serializers.ModelSerializer):
     
     task = serializers.CharField(source='task.title', read_only=True)
     task_uid = serializers.CharField(source='task.uid', read_only=True)
-    project = serializers.CharField(source='project.name', read_only=True)
-    project_uid = serializers.CharField(source='project.uid', read_only=True)
+    project = serializers.SerializerMethodField(read_only=True)
+    project_uid = serializers.SerializerMethodField(read_only=True)
     action_display = serializers.CharField(source='get_action_display', read_only=True)
 
     class Meta:
@@ -554,6 +545,14 @@ class ActivityLogSerializer(serializers.ModelSerializer):
             'id', 'task', 'task_uid', 'project', 'project_uid',
             'action', 'action_display', 'detail', 'created_at'
         ]
+    
+    def get_project(self, obj):
+        """获取项目名称，如果项目为空返回'收集箱'"""
+        return obj.project.name if obj.project else '收集箱'
+    
+    def get_project_uid(self, obj):
+        """获取项目UID，如果项目为空返回None"""
+        return obj.project.uid if obj.project else None
 
 
 # =========================

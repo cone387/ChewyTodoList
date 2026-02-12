@@ -261,7 +261,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
           groupKey = task.priority_display;
           break;
         case 'project':
-          groupKey = task.project.name;
+          groupKey = task.project?.name || '收集箱';
           break;
         case 'due_date':
           if (task.due_date) {
@@ -394,7 +394,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
                           <span className={`material-symbols-outlined text-[12px] ${
                             cardStyle?.style.iconStyle === 'filled' ? 'fill-1' : ''
                           }`}>folder</span>
-                          {task.project.name}
+                          {task.project?.name || '收集箱'}
                         </span>
                       )}
                       
@@ -532,7 +532,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
                         {displaySettings.show_project && (
                           <span className="flex items-center gap-1">
                             <span className="material-symbols-outlined text-[12px]">folder</span>
-                            {task.project.name}
+                            {task.project?.name || '收集箱'}
                           </span>
                         )}
                         

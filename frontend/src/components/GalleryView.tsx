@@ -257,7 +257,7 @@ const GalleryView: React.FC<GalleryViewProps> = ({
                     {displaySettings.show_project && (
                       <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-[12px]">folder</span>
-                        {task.project.name}
+                        {task.project?.name || '收集箱'}
                       </span>
                     )}
                     

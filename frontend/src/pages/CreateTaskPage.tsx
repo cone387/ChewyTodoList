@@ -32,7 +32,7 @@ const CreateTaskPage: React.FC = () => {
     navigate('/');
   };
 
-  const handleCreate = async () => {
+  const handleCreate = () => {
     setError('');
     
     if (!formData.title.trim()) {
@@ -40,90 +40,55 @@ const CreateTaskPage: React.FC = () => {
       return;
     }
 
-    // 项目现在是可选的，不需要强制选择
-    try {
-      const taskData: any = {
-        title: formData.title.trim(),
-        priority: formData.priority,
-        tag_uids: formData.tag_uids,
-        is_all_day: formData.is_all_day,
-      };
+    // 准备任务数据
+    const taskData: any = {
+      title: formData.title.trim(),
+      priority: formData.priority,
+      tag_uids: formData.tag_uids,
+      is_all_day: formData.is_all_day,
+    };
 
-      // 只有选择了项目才添加 project_uid
-      if (formData.project_uid) {
-        taskData.project_uid = formData.project_uid;
-      }
-
-      // 只有非空内容才添加
-      if (formData.content.trim()) {
-        taskData.content = formData.content.trim();
-      }
-
-      // 处理日期时间格式 - 确保符合Django的ISO 8601格式要求
-      if (formData.due_date) {
-        // HTML datetime-local 格式: YYYY-MM-DDTHH:mm
-        // Django 期望格式: YYYY-MM-DDTHH:mm:ss[.ffffff][+HH:MM|-HH:MM|Z]
-        const dueDate = new Date(formData.due_date);
-        if (!isNaN(dueDate.getTime())) {
-          // 转换为ISO字符串，Django会自动处理时区
-          taskData.due_date = dueDate.toISOString();
-        }
-      }
-
-      if (formData.start_date) {
-        const startDate = new Date(formData.start_date);
-        if (!isNaN(startDate.getTime())) {
-          taskData.start_date = startDate.toISOString();
-        }
-      }
-
-      console.log('发送的任务数据:', taskData); // 调试用
-
-      await createTask.mutateAsync(taskData);
-      
-      // 显示成功提示
-      const successDiv = document.createElement('div');
-      successDiv.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-      successDiv.textContent = '任务创建成功！';
-      document.body.appendChild(successDiv);
-      
-      setTimeout(() => {
-        if (document.body.contains(successDiv)) {
-          document.body.removeChild(successDiv);
-        }
-      }, 2000);
-      
-      navigate('/');
-    } catch (error: any) {
-      console.error('创建任务失败:', error);
-      
-      // 更详细的错误处理
-      let errorMessage = '创建任务失败，请重试';
-      
-      if (error?.response?.data) {
-        const errorData = error.response.data;
-        if (errorData.error?.message) {
-          errorMessage = errorData.error.message;
-        } else if (errorData.message) {
-          errorMessage = errorData.message;
-        } else if (typeof errorData === 'object') {
-          // 处理字段验证错误
-          const fieldErrors = [];
-          for (const [field, messages] of Object.entries(errorData)) {
-            if (Array.isArray(messages)) {
-              fieldErrors.push(`${field}: ${messages.join(', ')}`);
-            } else if (typeof messages === 'string') {
-              fieldErrors.push(`${field}: ${messages}`);
-            }
-          }
-          if (fieldErrors.length > 0) {
-            errorMessage = fieldErrors.join('; ');
-          }
-        }
-      }
-      
-      setError(errorMessage);
+    // 只有选择了项目才添加 project_uid
+    if (formData.project_uid) {
+      taskData.project_uid = formData.project_uid;
     }
+
+    // 只有非空内容才添加
+    if (formData.content.trim()) {
+      taskData.content = formData.content.trim();
+    }
+
+    // 处理日期时间格式 - 确保符合Django的ISO 8601格式要求
+    if (formData.due_date) {
+      // HTML datetime-local 格式: YYYY-MM-DDTHH:mm
+      // Django 期望格式: YYYY-MM-DDTHH:mm:ss[.ffffff][+HH:MM|-HH:MM|Z]
+      const dueDate = new Date(formData.due_date);
+      if (!isNaN(dueDate.getTime())) {
+        // 转换为ISO字符串，Django会自动处理时区
+        taskData.due_date = dueDate.toISOString();
+      }
+    }
+
+    if (formData.start_date) {
+      const startDate = new Date(formData.start_date);
+      if (!isNaN(startDate.getTime())) {
+        taskData.start_date = startDate.toISOString();
+      }
+    }
+
+    console.log('发送的任务数据:', taskData); // 调试用
+
+    // 乐观更新：立即跳转，后台异步提交
+    navigate('/');
+    
+    // 异步提交任务，如果失败也不阻塞用户操作
+    createTask.mutate(taskData, {
+      onError: (error: any) => {
+        console.error('创建任务失败:', error);
+        // 失败时可以考虑显示一个 toast 通知
+        // 但不影响用户已经跳转到首页的体验
+      }
+    });
   };
 
   const handlePriorityChange = (priority: TaskPriority) => {
@@ -251,7 +216,7 @@ const CreateTaskPage: React.FC = () => {
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-sm text-gray-500">
-                  {selectedProject ? selectedProject.name : '默认项目'}
+                  {selectedProject ? selectedProject.name : '收集箱'}
                 </span>
                 <span className="material-symbols-outlined text-gray-400 text-sm">chevron_right</span>
               </div>

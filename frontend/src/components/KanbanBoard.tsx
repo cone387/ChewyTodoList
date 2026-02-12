@@ -37,7 +37,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
           groupKey = task.priority_display;
           break;
         case 'project':
-          groupKey = task.project.name;
+          groupKey = task.project?.name || '收集箱';
           break;
         case 'assignee':
           groupKey = '未分配'; // 暂时使用固定值，后续可以扩展
@@ -223,7 +223,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                     {displaySettings.show_project && (
                       <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-[12px]">folder</span>
-                        {task.project.name}
+                        {task.project?.name || '收集箱'}
                       </span>
                     )}
                     

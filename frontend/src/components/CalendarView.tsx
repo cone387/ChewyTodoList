@@ -206,7 +206,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                     </div>
                     {displaySettings.show_project && (
                       <div className="text-xs opacity-75 truncate">
-                        {task.project.name}
+                        {task.project?.name || '收集箱'}
                       </div>
                     )}
                   </div>

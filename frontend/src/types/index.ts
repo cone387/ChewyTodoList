@@ -85,7 +85,7 @@ export interface Task {
   status_display: string;
   priority: TaskPriority;
   priority_display: string;
-  project: Project;
+  project?: Project | null;
   parent?: string;
   tags: Tag[];
   is_all_day: boolean;
@@ -134,10 +134,10 @@ export interface ActivityLog {
     uid: string;
     title: string;
   };
-  project: {
+  project?: {
     uid: string;
     name: string;
-  };
+  } | null;
 }
 
 // 视图类型

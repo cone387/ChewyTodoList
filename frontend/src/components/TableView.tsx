@@ -280,7 +280,7 @@ const TableView: React.FC<TableViewProps> = ({
               {displaySettings.show_project && (
                 <div className="w-32 px-3">
                   <div className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                    {task.project.name}
+                    {task.project?.name || '收集箱'}
                   </div>
                 </div>
               )}

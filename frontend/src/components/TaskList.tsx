@@ -97,7 +97,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onTaskClick }) => {
           {/* 项目标签 */}
           <div className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded text-[10px] font-medium">
             <span className="material-symbols-outlined text-[12px]">list_alt</span>
-            <span>{task.project.name}</span>
+            <span>{task.project?.name || '收集箱'}</span>
           </div>
           
           {/* 标签 */}
