@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import ViewRenderer from '../components/ViewRenderer';
 import BottomNav from '../components/BottomNav';
 import FloatingAddButton from '../components/FloatingAddButton';
+import DrawerMenu from '../components/DrawerMenu';
 import { useViewTasks, useNavViews, useView, useUpdateView } from '../hooks/useViews';
 import { useCheckInitialized, useInitializeUser } from '../hooks/useAuth';
 import { useUpdateTask, useSearchTasks } from '../hooks/useTasks';
@@ -20,6 +21,7 @@ const HomePage: React.FC = () => {
   const [debouncedSearch, setDebouncedSearch] = useState<string>('');
   // 清单选择状态（null: 全部任务, 'inbox': 收集箱, 其他: 具体项目uid）
   const [selectedProjectUid, setSelectedProjectUid] = useState<string | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const projectFilter = searchParams.get('project');
 
   const { data: navViews, isLoading: isNavViewsLoading, error: navViewsError } = useNavViews();
@@ -249,6 +251,7 @@ const HomePage: React.FC = () => {
         onViewChange={handleViewChange}
         currentView={currentView}
         onOpenViewSettings={handleOpenViewSettings}
+        onMenuClick={() => setIsDrawerOpen(true)}
         selectedProjectUid={selectedProjectUid}
         onProjectChange={setSelectedProjectUid}
         projects={projects}
@@ -263,6 +266,12 @@ const HomePage: React.FC = () => {
         onDisplaySettingsChange={handleDisplaySettingsChange}
       />
       
+      <DrawerMenu
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        selectedProjectUid={selectedProjectUid}
+        onProjectChange={setSelectedProjectUid}
+      />
       
       <main className={`pb-16 bg-white dark:bg-background-dark ${
         viewData?.view_type === 'board' ? '' : 'overflow-y-auto px-4 pt-4'

@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import TaskDetailPage from './pages/TaskDetailPage';
 import ProjectsPage from './pages/ProjectsPage';
+import ProjectDetailPage from './pages/ProjectDetailPage';
 import ViewsPage from './pages/ViewsPage';
 import ViewPreviewPage from './pages/ViewPreviewPage';
 import CreateViewPage from './pages/CreateViewPage';
@@ -76,6 +77,15 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 <TaskDetailPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/projects/:uid" 
+            element={
+              <ProtectedRoute>
+                <ProjectDetailPage />
               </ProtectedRoute>
             } 
           />

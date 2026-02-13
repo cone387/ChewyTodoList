@@ -269,8 +269,16 @@ export const groupApi = {
 // 项目API
 export const projectApi = {
   // 获取项目列表
-  getProjects: (params?: { group?: string }) =>
+  getProjects: (params?: { group?: string; search?: string }) =>
     api.get<ApiResponse<PaginatedResponse<Project>>>('/projects/', { params }),
+
+  // 获取单个项目
+  getProject: (uid: string) =>
+    api.get<ApiResponse<Project>>(`/projects/${uid}/`),
+
+  // 获取项目统计
+  getProjectStats: (uid: string) =>
+    api.get<ApiResponse<{ total_tasks: number; pending_tasks: number; completed_tasks: number; abandoned_tasks: number; overdue_tasks: number }>>(`/projects/${uid}/stats/`),
 
   // 创建项目
   createProject: (data: {
@@ -278,6 +286,7 @@ export const projectApi = {
     name: string;
     desc?: string;
     view_type?: 'list' | 'card';
+    style?: Record<string, any>;
   }) => api.post<ApiResponse<Project>>('/projects/', data),
 
   // 更新项目
@@ -285,6 +294,8 @@ export const projectApi = {
     name?: string;
     desc?: string;
     view_type?: 'list' | 'card';
+    style?: Record<string, any>;
+    group_uid?: string;
   }) => api.patch<ApiResponse<Project>>(`/projects/${uid}/`, data),
 
   // 删除项目

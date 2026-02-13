@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectApi } from '../services/api';
 
 // 获取项目列表
-export const useProjects = (params?: { group?: string }) => {
+export const useProjects = (params?: { group?: string; search?: string }) => {
   return useQuery({
     queryKey: ['projects', params],
     queryFn: () => projectApi.getProjects(params),
@@ -16,6 +16,34 @@ export const useProjects = (params?: { group?: string }) => {
       return failureCount < 2;
     },
     enabled: !!localStorage.getItem('access_token'),
+  });
+};
+
+// 获取单个项目
+export const useProject = (uid: string) => {
+  return useQuery({
+    queryKey: ['project', uid],
+    queryFn: () => projectApi.getProject(uid),
+    select: (data) => data.data.data,
+    retry: (failureCount, error: any) => {
+      if (error?.response?.status === 401) return false;
+      return failureCount < 2;
+    },
+    enabled: !!uid && !!localStorage.getItem('access_token'),
+  });
+};
+
+// 获取项目统计
+export const useProjectStats = (uid: string) => {
+  return useQuery({
+    queryKey: ['project-stats', uid],
+    queryFn: () => projectApi.getProjectStats(uid),
+    select: (data) => data.data.data,
+    retry: (failureCount, error: any) => {
+      if (error?.response?.status === 401) return false;
+      return failureCount < 2;
+    },
+    enabled: !!uid && !!localStorage.getItem('access_token'),
   });
 };
 
@@ -39,8 +67,9 @@ export const useUpdateProject = () => {
   return useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: any }) =>
       projectApi.updateProject(uid, data),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['project', variables.uid] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
     },
   });

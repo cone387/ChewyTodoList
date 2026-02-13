@@ -22,6 +22,7 @@ interface HeaderProps {
   onViewChange?: (viewUid: string) => void;
   currentView?: string;
   onOpenViewSettings?: () => void;
+  onMenuClick?: () => void;
   // 清单选择相关
   selectedProjectUid?: string | null;
   onProjectChange?: (projectUid: string | null) => void;
@@ -57,6 +58,7 @@ const Header: React.FC<HeaderProps> = ({
   onViewChange, 
   currentView,
   onOpenViewSettings,
+  onMenuClick,
   selectedProjectUid,
   onProjectChange,
   projects = [],
@@ -150,7 +152,7 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center p-3 justify-between">
           {/* 左侧 - 固定宽度 */}
           <div className="flex items-center gap-3 w-10">
-            <button className="text-[#5f6368] dark:text-white flex items-center justify-center">
+            <button onClick={onMenuClick} className="text-[#5f6368] dark:text-white flex items-center justify-center">
               <span className="material-symbols-outlined text-[20px]">menu</span>
             </button>
           </div>
