@@ -54,7 +54,7 @@ const defaultDisplaySettings: DisplaySettings = {
 
 const Header: React.FC<HeaderProps> = ({ 
   onSearch, 
-  onFilter, 
+  onFilter: _onFilter, 
   onViewChange, 
   currentView,
   onOpenViewSettings,

@@ -168,17 +168,17 @@ const ProjectDetailPage: React.FC = () => {
     return result;
   }, [tasks, searchResults, debouncedSearch, uid, showCompleted, sortField, sortDirection]);
 
-  // 统计
-  const completedCount = tasks.filter(t => t.is_completed).length;
-  const totalCount = tasks.length;
-
   // 构造视图对象
   const effectiveView: TaskView = useMemo(() => ({
     uid: `project-${uid}`,
     name: project?.name || '',
     view_type: viewType,
+    view_type_display: viewType,
+    is_public: false,
+    is_visible_in_nav: false,
+    sort_order: 0,
     sorts: sortField ? [{ field: sortField, direction: sortDirection }] : [],
-    group_by: groupBy || null,
+    group_by: groupBy || undefined,
     display_settings: {
       show_completed: showCompleted,
       show_project: false,
@@ -191,7 +191,7 @@ const ProjectDetailPage: React.FC = () => {
     filters: [],
     is_default: false,
     follow_selected_project: false,
-    project: project || null,
+    project: project || undefined,
     created_at: '',
     updated_at: '',
   }), [uid, project, viewType, sortField, sortDirection, groupBy, showCompleted]);

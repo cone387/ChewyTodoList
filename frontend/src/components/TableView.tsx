@@ -80,8 +80,8 @@ const TableView: React.FC<TableViewProps> = ({
           bValue = b.priority;
           break;
         case 'project':
-          aValue = a.project.name.toLowerCase();
-          bValue = b.project.name.toLowerCase();
+          aValue = a.project?.name.toLowerCase() || '';
+          bValue = b.project?.name.toLowerCase() || '';
           break;
         case 'due_date':
           aValue = a.due_date ? new Date(a.due_date).getTime() : 0;

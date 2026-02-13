@@ -204,7 +204,7 @@ const TaskList: React.FC<TaskListProps> = ({ viewTasks }) => {
   
   // 如果有项目筛选，只显示该项目的任务
   if (projectFilter && !viewTasks) {
-    tasks = tasks.filter(task => task.project.uid === projectFilter);
+    tasks = tasks.filter(task => task.project?.uid === projectFilter);
   }
   
   // 按日期分组任务
@@ -245,7 +245,7 @@ const TaskList: React.FC<TaskListProps> = ({ viewTasks }) => {
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-[20px]">list_alt</span>
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {tasks[0]?.project.name}
+              {tasks[0]?.project?.name}
             </span>
             <span className="text-xs text-gray-500 dark:text-gray-400">
               ({tasks.length} 个任务)

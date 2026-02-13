@@ -294,11 +294,6 @@ const TaskDetailPage: React.FC = () => {
     return format(parseISO(dateString), "yyyy-MM-dd'T'HH:mm");
   };
 
-  const formatDisplayDate = (dateString?: string) => {
-    if (!dateString) return '未设置';
-    return format(parseISO(dateString), 'M月d日 HH:mm', { locale: zhCN });
-  };
-
   // 快捷时间选项
   const getQuickDateOptions = (type: 'due' | 'start') => {
     const now = new Date();
@@ -373,21 +368,6 @@ const TaskDetailPage: React.FC = () => {
       handleFileUpload(file, false);
     }
     e.target.value = '';
-  };
-
-  // 格式化时间显示
-  const getTimeDisplayText = () => {
-    const startDate = isCreateMode ? createForm.start_date : task?.start_date;
-    const dueDate = isCreateMode ? createForm.due_date : task?.due_date;
-    if (!startDate && !dueDate) return '未设置';
-    const parts: string[] = [];
-    if (startDate) {
-      parts.push(`开始: ${formatDisplayDate(startDate)}`);
-    }
-    if (dueDate) {
-      parts.push(`截止: ${formatDisplayDate(dueDate)}`);
-    }
-    return parts.join(' → ');
   };
 
   const formatActivityTime = (dateString: string) => {

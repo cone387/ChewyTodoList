@@ -42,6 +42,7 @@ const ViewTemplatePreviewPage: React.FC = () => {
       is_default: false,
       is_public: false,
       is_visible_in_nav: true,
+      follow_selected_project: false,
       sort_order: 0,
       filters: template.filters,
       sorts: template.sorts,

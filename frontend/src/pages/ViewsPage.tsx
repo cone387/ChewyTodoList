@@ -212,7 +212,7 @@ const ViewsPage: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedViews, setSelectedViews] = React.useState<string[]>([]);
-  const [isSelectionMode, setIsSelectionMode] = React.useState(false);
+    const [isSelectionMode] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<'nav' | 'my' | 'system'>('nav');
   const [draggedItem, setDraggedItem] = React.useState<string | null>(null);
   const [dragOverItem, setDragOverItem] = React.useState<string | null>(null);
@@ -378,57 +378,12 @@ const ViewsPage: React.FC = () => {
     }
   };
 
-  const handleBatchDelete = async () => {
-    if (selectedViews.length === 0) return;
-    
-    const viewNames = selectedViews.map(uid => 
-      views.find(v => v.uid === uid)?.name
-    ).filter(Boolean).join('、');
-    
-    const confirmed = await confirm({
-      title: '批量删除视图',
-      message: `确定要删除选中的 ${selectedViews.length} 个视图吗？\n\n${viewNames}\n\n此操作无法撤销。`,
-      confirmText: '删除',
-      cancelText: '取消',
-      confirmColor: 'danger',
-    });
-    
-    if (confirmed) {
-      try {
-        await Promise.all(selectedViews.map(uid => deleteView.mutateAsync(uid)));
-        setSelectedViews([]);
-        setIsSelectionMode(false);
-      } catch (error) {
-        console.error('批量删除视图失败:', error);
-      }
-    }
-  };
-
-  const handleBatchToggleVisibility = async (isVisible: boolean) => {
-    if (selectedViews.length === 0) return;
-    
-    try {
-      await Promise.all(selectedViews.map(uid => 
-        toggleViewVisibility.mutateAsync({ uid, isVisible })
-      ));
-      setSelectedViews([]);
-      setIsSelectionMode(false);
-    } catch (error) {
-      console.error('批量切换视图显示状态失败:', error);
-    }
-  };
-
   const toggleViewSelection = (viewUid: string) => {
     setSelectedViews(prev => 
       prev.includes(viewUid) 
         ? prev.filter(uid => uid !== viewUid)
         : [...prev, viewUid]
     );
-  };
-
-  const toggleSelectionMode = () => {
-    setIsSelectionMode(!isSelectionMode);
-    setSelectedViews([]);
   };
 
   // 拖拽排序处理函数
