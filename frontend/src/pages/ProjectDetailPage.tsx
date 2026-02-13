@@ -196,6 +196,9 @@ const ProjectDetailPage: React.FC = () => {
     updated_at: '',
   }), [uid, project, viewType, sortField, sortDirection, groupBy, showCompleted]);
 
+  // 获取默认卡片样式
+  const currentCardStyle = TASK_CARD_TEMPLATES.find(template => template.id === 'default');
+
   const handleTaskClick = (task: Task) => navigate(`/task/${task.uid}`);
   const handleTaskUpdate = (task: Task, updates: Partial<Task>) => {
     updateTask.mutate({ uid: task.uid, data: updates });
@@ -318,24 +321,38 @@ const ProjectDetailPage: React.FC = () => {
         </div>
 
         {/* === 视图类型栏 === */}
-        <div className="flex items-center gap-1 px-4 pb-2 overflow-x-auto no-scrollbar">
-          {VIEW_TYPES.map(vt => (
-            <button
-              key={vt.type}
-              onClick={() => setViewType(vt.type)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
-                viewType === vt.type
-                  ? 'text-primary border-b-2 border-primary'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[16px]">{vt.icon}</span>
-              {vt.label}
-            </button>
-          ))}
+        <div className="flex items-center px-4 pb-2">
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar flex-1">
+            {VIEW_TYPES.map(vt => (
+              <button
+                key={vt.type}
+                onClick={() => setViewType(vt.type)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
+                  viewType === vt.type
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">{vt.icon}</span>
+                {vt.label}
+              </button>
+            ))}
+          </div>
+          {/* 过滤按钮 */}
+          <button
+            onClick={() => setShowFilterBar(!showFilterBar)}
+            className={`shrink-0 size-8 flex items-center justify-center rounded-lg transition-colors ${
+              showFilterBar || sortField || groupBy || showCompleted
+                ? 'text-primary bg-primary/10'
+                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">filter_alt</span>
+          </button>
         </div>
 
         {/* === 过滤栏 === */}
+        {showFilterBar && (
         <div className="border-t border-gray-100 dark:border-gray-700">
           {/* 过滤选项行 - 三栏平分 */}
           <div className="flex items-center text-xs">
@@ -492,6 +509,7 @@ const ProjectDetailPage: React.FC = () => {
             </div>
           )}
         </div>
+        )}
       </header>
 
       {/* === 待办事项 === */}
@@ -509,6 +527,7 @@ const ProjectDetailPage: React.FC = () => {
             onTaskClick={handleTaskClick}
             onTaskUpdate={handleTaskUpdate}
             showCompleted={showCompleted}
+            cardStyle={currentCardStyle}
           />
         ) : (
           <div className="flex flex-col items-center justify-center py-16">

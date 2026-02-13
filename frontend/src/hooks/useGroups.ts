@@ -38,6 +38,43 @@ export const useUpdateGroup = () => {
   return useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: any }) =>
       groupApi.updateGroup(uid, data),
+    onMutate: async ({ uid, data }) => {
+      // 取消正在进行的查询
+      await queryClient.cancelQueries({ queryKey: ['groups'] });
+      
+      // 保存当前状态用于回滚
+      const previousGroups = queryClient.getQueryData(['groups']);
+      
+      // 乐观更新分组列表
+      queryClient.setQueryData(['groups'], (old: any) => {
+        if (!old?.data?.data?.results) return old;
+        const updatedResults = old.data.data.results.map((g: any) =>
+          g.uid === uid ? { ...g, ...data } : g
+        );
+        // 如果更新了 sort_order，重新排序
+        if (data.sort_order !== undefined) {
+          updatedResults.sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
+        }
+        return {
+          ...old,
+          data: {
+            ...old.data,
+            data: {
+              ...old.data.data,
+              results: updatedResults
+            }
+          }
+        };
+      });
+      
+      return { previousGroups };
+    },
+    onError: (_err, _variables, context) => {
+      // 发生错误时回滚
+      if (context?.previousGroups) {
+        queryClient.setQueryData(['groups'], context.previousGroups);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
     },

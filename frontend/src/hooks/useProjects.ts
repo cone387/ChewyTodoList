@@ -105,15 +105,20 @@ export const useUpdateProject = () => {
       // 乐观更新项目列表缓存
       queryClient.setQueryData(['projects', undefined], (old: any) => {
         if (!old?.data?.data?.results) return old;
+        let updatedResults = old.data.data.results.map((p: any) =>
+          p.uid === uid ? deepMerge(p, data) : p
+        );
+        // 如果更新了 sort_order，重新排序
+        if (data.sort_order !== undefined) {
+          updatedResults = [...updatedResults].sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
+        }
         return {
           ...old,
           data: {
             ...old.data,
             data: {
               ...old.data.data,
-              results: old.data.data.results.map((p: any) =>
-                p.uid === uid ? deepMerge(p, data) : p
-              )
+              results: updatedResults
             }
           }
         };

@@ -475,11 +475,10 @@ const TaskDetailPage: React.FC = () => {
           <div className="flex-1 flex justify-center mx-2">
             <button 
               onClick={() => setShowProjectSelector(true)} 
-              className="px-3 py-1.5 rounded-full text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-1"
+              className="px-2 py-1 text-sm text-gray-700 dark:text-gray-200 hover:text-primary transition-colors flex items-center gap-0.5"
             >
-              <span className="material-symbols-outlined text-[16px]">folder</span>
-              <span className="truncate max-w-[120px]">{currentProject?.name || '收集箱'}</span>
-              <span className="material-symbols-outlined text-[14px]">expand_more</span>
+              <span className="truncate max-w-[140px] font-medium">{currentProject?.name || '收集箱'}</span>
+              <span className="material-symbols-outlined text-[16px] text-gray-400">expand_more</span>
             </button>
           </div>
 
