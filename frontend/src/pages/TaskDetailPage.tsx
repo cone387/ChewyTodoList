@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTask, useUpdateTask, useDeleteTask, useCreateTask } from '../hooks/useTasks';
 import { useProjects } from '../hooks/useProjects';
 import { useTags, useCreateTag } from '../hooks/useTags';
@@ -15,7 +15,9 @@ import { attachmentApi } from '../services/api';
 const TaskDetailPage: React.FC = () => {
   const { uid } = useParams<{ uid: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isCreateMode = !uid; // 新建模式
+  const defaultProjectUid = searchParams.get('project') || ''; // 从URL参数获取默认清单
   
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showProjectSelector, setShowProjectSelector] = useState(false);
@@ -49,7 +51,7 @@ const TaskDetailPage: React.FC = () => {
   const [createForm, setCreateForm] = useState({
     title: '',
     content: '',
-    project_uid: '',
+    project_uid: defaultProjectUid, // 使用默认清单UID
     priority: TaskPriority.MEDIUM as TaskPriority,
     tag_uids: [] as string[],
     due_date: '',

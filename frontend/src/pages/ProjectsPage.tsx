@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProjects, useCreateProject } from '../hooks/useProjects';
 import { useGroups, useCreateGroup, useUpdateGroup, useDeleteGroup } from '../hooks/useGroups';
-import ProjectsHeader from '../components/ProjectsHeader';
 import BottomNav from '../components/BottomNav';
 import BottomSheet from '../components/BottomSheet';
 import type { Project, Group } from '../types/index';
@@ -34,15 +33,15 @@ const PRESET_COLORS = [
 ];
 
 const getColorClasses = (color: string) => {
-  const colorMap: Record<string, { bg: string; iconBg: string; textColor: string; progressBg: string }> = {
-    purple: { bg: 'bg-purple-50 dark:bg-purple-900/20', iconBg: 'bg-purple-100 dark:bg-purple-800/50', textColor: 'text-purple-600 dark:text-purple-300', progressBg: 'bg-purple-500' },
-    blue: { bg: 'bg-blue-50 dark:bg-blue-900/20', iconBg: 'bg-blue-100 dark:bg-blue-800/50', textColor: 'text-blue-600 dark:text-blue-300', progressBg: 'bg-blue-500' },
-    orange: { bg: 'bg-orange-50 dark:bg-orange-900/20', iconBg: 'bg-orange-100 dark:bg-orange-800/50', textColor: 'text-orange-500', progressBg: 'bg-orange-500' },
-    green: { bg: 'bg-green-50 dark:bg-green-900/20', iconBg: 'bg-green-100 dark:bg-green-800/50', textColor: 'text-green-500', progressBg: 'bg-green-500' },
-    pink: { bg: 'bg-pink-50 dark:bg-pink-900/20', iconBg: 'bg-pink-100 dark:bg-pink-800/50', textColor: 'text-pink-500', progressBg: 'bg-pink-500' },
-    indigo: { bg: 'bg-indigo-50 dark:bg-indigo-900/20', iconBg: 'bg-indigo-100 dark:bg-indigo-800/50', textColor: 'text-indigo-500', progressBg: 'bg-indigo-500' },
-    teal: { bg: 'bg-teal-50 dark:bg-teal-900/20', iconBg: 'bg-teal-100 dark:bg-teal-800/50', textColor: 'text-teal-600', progressBg: 'bg-teal-500' },
-    red: { bg: 'bg-red-50 dark:bg-red-900/20', iconBg: 'bg-red-100 dark:bg-red-800/50', textColor: 'text-red-500', progressBg: 'bg-red-500' },
+  const colorMap: Record<string, { iconBg: string; textColor: string; progressBg: string }> = {
+    purple: { iconBg: 'bg-purple-100 dark:bg-purple-800/50', textColor: 'text-purple-600 dark:text-purple-300', progressBg: 'bg-purple-500' },
+    blue: { iconBg: 'bg-blue-100 dark:bg-blue-800/50', textColor: 'text-blue-600 dark:text-blue-300', progressBg: 'bg-blue-500' },
+    orange: { iconBg: 'bg-orange-100 dark:bg-orange-800/50', textColor: 'text-orange-500', progressBg: 'bg-orange-500' },
+    green: { iconBg: 'bg-green-100 dark:bg-green-800/50', textColor: 'text-green-500', progressBg: 'bg-green-500' },
+    pink: { iconBg: 'bg-pink-100 dark:bg-pink-800/50', textColor: 'text-pink-500', progressBg: 'bg-pink-500' },
+    indigo: { iconBg: 'bg-indigo-100 dark:bg-indigo-800/50', textColor: 'text-indigo-500', progressBg: 'bg-indigo-500' },
+    teal: { iconBg: 'bg-teal-100 dark:bg-teal-800/50', textColor: 'text-teal-600', progressBg: 'bg-teal-500' },
+    red: { iconBg: 'bg-red-100 dark:bg-red-800/50', textColor: 'text-red-500', progressBg: 'bg-red-500' },
   };
   return colorMap[color] || colorMap.blue;
 };
@@ -56,16 +55,17 @@ const getProjectStyle = (project: Project) => {
   };
 };
 
+// 默认分组名称
+const DEFAULT_GROUP_NAME = '我的清单';
+
 const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
 
-  // 搜索
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-
-  // 分组浏览
-  const [selectedGroupUid, setSelectedGroupUid] = useState<string | null>(null);
+  // 分组状态
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  // 新建菜单
+  const [showAddMenu, setShowAddMenu] = useState(false);
 
   // 创建清单
   const [showCreateSheet, setShowCreateSheet] = useState(false);
@@ -78,12 +78,10 @@ const ProjectsPage: React.FC = () => {
   const [groupFormDesc, setGroupFormDesc] = useState('');
   const [showDeleteGroupConfirm, setShowDeleteGroupConfirm] = useState<Group | null>(null);
   const [deleteGroupError, setDeleteGroupError] = useState('');
-  const [groupActionTarget, setGroupActionTarget] = useState<Group | null>(null);
+  const [activeGroupMenu, setActiveGroupMenu] = useState<string | null>(null);
 
   // 数据
-  const { data: projectsResponse } = useProjects(
-    debouncedSearch ? { search: debouncedSearch } : undefined
-  );
+  const { data: projectsResponse } = useProjects();
   const { data: groupsData } = useGroups();
   const createProject = useCreateProject();
   const createGroup = useCreateGroup();
@@ -93,11 +91,10 @@ const ProjectsPage: React.FC = () => {
   const projects = projectsResponse?.results || [];
   const groups = groupsData?.results || [];
 
-  // 搜索防抖
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+  // 获取默认分组（第一个分组或名为"我的清单"的分组）
+  const defaultGroup = useMemo(() => {
+    return groups.find(g => g.name === DEFAULT_GROUP_NAME) || groups[0];
+  }, [groups]);
 
   // 默认展开所有分组
   useEffect(() => {
@@ -106,44 +103,32 @@ const ProjectsPage: React.FC = () => {
     }
   }, [groups]);
 
-  // 当前选中分组
-  const selectedGroup = selectedGroupUid ? groups.find(g => g.uid === selectedGroupUid) : null;
+  // 点击外部关闭菜单
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setActiveGroupMenu(null);
+      setShowAddMenu(false);
+    };
+    if (activeGroupMenu || showAddMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [activeGroupMenu, showAddMenu]);
 
   // 按分组归类项目
   const groupedProjects = useMemo(() => {
-    const targetProjects = selectedGroupUid
-      ? projects.filter(p => p.group.uid === selectedGroupUid)
-      : projects;
-
-    if (selectedGroupUid) {
-      return [{ group: selectedGroup!, projects: targetProjects }].filter(g => g.group);
-    }
-
     const map = new Map<string, { group: Group; projects: Project[] }>();
     for (const group of groups) {
       map.set(group.uid, { group, projects: [] });
     }
-    for (const project of targetProjects) {
+    for (const project of projects) {
       const entry = map.get(project.group.uid);
       if (entry) {
         entry.projects.push(project);
       }
     }
     return Array.from(map.values());
-  }, [projects, groups, selectedGroupUid, selectedGroup]);
-
-  const totalFilteredProjects = groupedProjects.reduce((sum, g) => sum + g.projects.length, 0);
-
-  // Header 标题
-  const headerTitle = debouncedSearch
-    ? '搜索结果'
-    : selectedGroup
-      ? selectedGroup.name
-      : '清单';
-
-  const handleBack = selectedGroupUid
-    ? () => { setSelectedGroupUid(null); setSearchQuery(''); }
-    : undefined;
+  }, [projects, groups]);
 
   const toggleGroup = (groupUid: string) => {
     setExpandedGroups(prev => {
@@ -153,28 +138,24 @@ const ProjectsPage: React.FC = () => {
     });
   };
 
-  // 进入分组
-  const handleEnterGroup = (groupUid: string) => {
-    setSelectedGroupUid(groupUid);
-    setSearchQuery('');
-  };
-
-  // 创建清单
+  // 创建清单 - 默认使用默认分组
   const handleOpenCreateProject = useCallback(() => {
-    const groupUid = selectedGroupUid || groups[0]?.uid || '';
-    setNewProject({ name: '', desc: '', group_uid: groupUid, icon: 'folder', color: 'blue' });
+    const targetGroupUid = defaultGroup?.uid || '';
+    setNewProject({ name: '', desc: '', group_uid: targetGroupUid, icon: 'folder', color: 'blue' });
+    setShowAddMenu(false);
     setShowCreateSheet(true);
-  }, [selectedGroupUid, groups]);
+  }, [defaultGroup]);
 
   const handleSubmitCreate = () => {
     if (!newProject.name.trim() || !newProject.group_uid) return;
+    // 乐观更新：立即关闭弹窗
+    setShowCreateSheet(false);
     const data = {
       name: newProject.name.trim(),
       desc: newProject.desc.trim() || undefined,
       group_uid: newProject.group_uid,
       style: { icon: newProject.icon, color: newProject.color },
     };
-    setShowCreateSheet(false);
     setNewProject({ name: '', desc: '', group_uid: '', icon: 'folder', color: 'blue' });
     createProject.mutate(data as any);
   };
@@ -184,6 +165,7 @@ const ProjectsPage: React.FC = () => {
     setEditingGroup(null);
     setGroupFormName('');
     setGroupFormDesc('');
+    setShowAddMenu(false);
     setShowGroupSheet(true);
   };
 
@@ -191,7 +173,7 @@ const ProjectsPage: React.FC = () => {
     setEditingGroup(group);
     setGroupFormName(group.name);
     setGroupFormDesc(group.desc || '');
-    setGroupActionTarget(null);
+    setActiveGroupMenu(null);
     setShowGroupSheet(true);
   };
 
@@ -213,7 +195,6 @@ const ProjectsPage: React.FC = () => {
     deleteGroup.mutate(group.uid, {
       onSuccess: () => {
         setShowDeleteGroupConfirm(null);
-        if (selectedGroupUid === group.uid) setSelectedGroupUid(null);
       },
       onError: (error: any) => {
         setDeleteGroupError(error?.response?.data?.error?.message || '删除失败');
@@ -221,8 +202,13 @@ const ProjectsPage: React.FC = () => {
     });
   };
 
+  const handleGroupMenuClick = (e: React.MouseEvent, groupUid: string) => {
+    e.stopPropagation();
+    setActiveGroupMenu(activeGroupMenu === groupUid ? null : groupUid);
+  };
+
   // 项目卡片渲染
-  const renderProjectCard = (project: Project) => {
+  const renderProjectCard = (project: Project, isLast: boolean) => {
     const { icon, color } = getProjectStyle(project);
     const cc = getColorClasses(color);
     const progress = project.tasks_count > 0
@@ -233,23 +219,25 @@ const ProjectsPage: React.FC = () => {
       <button
         key={project.uid}
         onClick={() => navigate(`/projects/${project.uid}`)}
-        className="w-full flex items-center p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group/item"
+        className={`w-full flex items-center px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group/item ${
+          !isLast ? 'border-b border-gray-100 dark:border-gray-800' : ''
+        }`}
       >
-        <div className={`size-10 rounded-lg ${cc.iconBg} flex items-center justify-center ${cc.textColor} mr-3 shrink-0`}>
+        <div className={`size-10 rounded-xl ${cc.iconBg} flex items-center justify-center ${cc.textColor} mr-3 shrink-0`}>
           <span className="material-symbols-outlined text-[20px]">{icon}</span>
         </div>
         <div className="flex-1 min-w-0 text-left">
           <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">{project.name}</h4>
           <div className="flex items-center gap-2 mt-1">
-            <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+            <div className="flex-1 h-1 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
               <div className={`h-full rounded-full ${cc.progressBg} transition-all duration-300`} style={{ width: `${progress}%` }} />
             </div>
-            <span className="text-[10px] text-gray-400 dark:text-gray-500 tabular-nums shrink-0">
+            <span className="text-[11px] text-gray-400 dark:text-gray-500 tabular-nums shrink-0">
               {project.completed_tasks_count}/{project.tasks_count}
             </span>
           </div>
         </div>
-        <span className="material-symbols-outlined text-gray-300 dark:text-gray-600 text-[20px] group-hover/item:text-gray-500 ml-2 shrink-0">
+        <span className="material-symbols-outlined text-gray-300 dark:text-gray-600 text-[18px] opacity-0 group-hover/item:opacity-100 ml-2 shrink-0 transition-opacity">
           chevron_right
         </span>
       </button>
@@ -257,162 +245,132 @@ const ProjectsPage: React.FC = () => {
   };
 
   return (
-    <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-surface-dark shadow-xl overflow-hidden">
-      <ProjectsHeader
-        title={headerTitle}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onBack={handleBack}
-      />
-
-      <main className="flex-1 overflow-y-auto pb-24 bg-white dark:bg-background-dark px-3 relative">
-        {/* 搜索结果：扁平展示 */}
-        {debouncedSearch ? (
-          <div className="mt-2">
-            {projects.length > 0 ? (
-              <div className="space-y-1.5">
-                {projects.map(renderProjectCard)}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-                <span className="material-symbols-outlined text-[48px] mb-4">search_off</span>
-                <p className="text-sm">未找到匹配的清单</p>
-              </div>
-            )}
-          </div>
-        ) : selectedGroupUid ? (
-          /* 分组内浏览 */
-          <div className="mt-2">
-            {groupedProjects[0]?.projects.length > 0 ? (
-              <div className="space-y-1.5">
-                {groupedProjects[0].projects.map(renderProjectCard)}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-                <span className="material-symbols-outlined text-[48px] mb-4">folder_open</span>
-                <p className="text-sm">该分组下暂无清单</p>
+    <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-gray-50 dark:bg-background-dark overflow-hidden">
+      {/* 顶部Header */}
+      <header className="sticky top-0 z-30 bg-white dark:bg-surface-dark pt-safe border-b border-gray-100 dark:border-gray-800">
+        <div className="flex items-center justify-between px-4 py-3">
+          <h1 className="text-lg font-bold text-gray-900 dark:text-white">清单</h1>
+          
+          {/* + 新建按钮 */}
+          <div className="relative">
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowAddMenu(!showAddMenu); }}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+            >
+              <span className="material-symbols-outlined text-[20px]">add</span>
+              <span>新建</span>
+            </button>
+            
+            {/* 新建菜单 */}
+            {showAddMenu && (
+              <div className="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-surface-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50 animate-fade-in">
                 <button
                   onClick={handleOpenCreateProject}
-                  className="mt-4 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
+                  className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2.5"
                 >
-                  创建清单
+                  <span className="material-symbols-outlined text-[18px] text-primary">list_alt</span>
+                  新建清单
+                </button>
+                <button
+                  onClick={handleOpenCreateGroup}
+                  className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2.5"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-orange-500">create_new_folder</span>
+                  新建分组
                 </button>
               </div>
             )}
           </div>
-        ) : (
-          /* 顶层视图：分组列表 */
-          <>
-            {groupedProjects.map(({ group, projects: groupProjects }) => (
-              <div key={group.uid} className="mt-3">
-                {/* 分组标题行 */}
-                <div className="flex items-center gap-1 px-1 py-2">
-                  {/* 展开/折叠 */}
-                  <button
-                    onClick={() => toggleGroup(group.uid)}
-                    className="flex items-center gap-1.5 flex-1 min-w-0"
-                  >
-                    <span
-                      className={`material-symbols-outlined text-[16px] text-gray-400 dark:text-gray-500 transition-transform duration-200 ${
-                        expandedGroups.has(group.uid) ? 'rotate-90' : ''
-                      }`}
-                    >
-                      chevron_right
-                    </span>
-                    <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">
-                      {group.name}
-                    </h3>
-                    <span className="text-[10px] text-gray-400 dark:text-gray-500 shrink-0">
-                      {groupProjects.length}
-                    </span>
-                  </button>
+        </div>
+      </header>
 
-                  {/* 进入分组 */}
-                  <button
-                    onClick={() => handleEnterGroup(group.uid)}
-                    className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                    title="进入分组"
+      <main className="flex-1 overflow-y-auto pb-20 px-4">
+        {/* 分组列表 */}
+        <div className="mt-3 space-y-3">
+          {groupedProjects.map(({ group, projects: groupProjects }) => (
+            <div key={group.uid} className="bg-white dark:bg-surface-dark rounded-2xl overflow-hidden shadow-sm">
+              {/* 分组标题 */}
+              <button
+                onClick={() => toggleGroup(group.uid)}
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span
+                    className={`material-symbols-outlined text-[18px] text-gray-400 transition-transform duration-200 ${
+                      expandedGroups.has(group.uid) ? 'rotate-90' : ''
+                    }`}
                   >
-                    <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-                  </button>
+                    chevron_right
+                  </span>
+                  <span className="material-symbols-outlined text-[18px] text-primary">folder</span>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                    {group.name}
+                  </h3>
+                  <span className="text-xs text-gray-400 shrink-0">
+                    {groupProjects.length}
+                  </span>
+                </div>
+                <button
+                  onClick={(e) => handleGroupMenuClick(e, group.uid)}
+                  className="p-1.5 -mr-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[18px]">more_horiz</span>
+                </button>
+              </button>
 
-                  {/* 分组操作 */}
+              {/* 分组操作菜单 */}
+              {activeGroupMenu === group.uid && (
+                <div className="mx-4 mb-2 p-1 bg-gray-50 dark:bg-gray-800 rounded-lg flex gap-1 animate-fade-in">
                   <button
-                    onClick={() => setGroupActionTarget(groupActionTarget?.uid === group.uid ? null : group)}
-                    className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    onClick={() => handleOpenEditGroup(group)}
+                    className="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 rounded-md transition-colors"
                   >
-                    <span className="material-symbols-outlined text-[16px]">more_horiz</span>
+                    <span className="material-symbols-outlined text-[14px]">edit</span>
+                    编辑
+                  </button>
+                  <button
+                    onClick={() => { setActiveGroupMenu(null); setShowDeleteGroupConfirm(group); }}
+                    className="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-medium text-red-500 hover:bg-white dark:hover:bg-gray-700 rounded-md transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">delete</span>
+                    删除
                   </button>
                 </div>
+              )}
 
-                {/* 分组操作菜单 */}
-                {groupActionTarget?.uid === group.uid && (
-                  <div className="mx-1 mb-2 p-1 bg-gray-50 dark:bg-gray-800 rounded-lg flex gap-1">
-                    <button
-                      onClick={() => handleOpenEditGroup(group)}
-                      className="flex-1 flex items-center justify-center gap-1 py-2 text-xs text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 rounded-md transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[14px]">edit</span>
-                      编辑
-                    </button>
-                    <button
-                      onClick={() => { setGroupActionTarget(null); setShowDeleteGroupConfirm(group); }}
-                      className="flex-1 flex items-center justify-center gap-1 py-2 text-xs text-red-500 hover:bg-white dark:hover:bg-gray-700 rounded-md transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[14px]">delete</span>
-                      删除
-                    </button>
-                  </div>
-                )}
+              {/* 清单列表 */}
+              {expandedGroups.has(group.uid) && (
+                <div className="border-t border-gray-100 dark:border-gray-800">
+                  {groupProjects.length > 0 ? (
+                    groupProjects.map((project, idx) => renderProjectCard(project, idx === groupProjects.length - 1))
+                  ) : (
+                    <div className="py-6 text-center text-gray-400">
+                      <p className="text-xs">暂无清单</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
 
-                {/* 项目列表 */}
-                {expandedGroups.has(group.uid) && (
-                  <div className="space-y-1.5">
-                    {groupProjects.map(renderProjectCard)}
-                  </div>
-                )}
+          {/* 全空状态 */}
+          {groups.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+              <div className="size-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                <span className="material-symbols-outlined text-[32px] text-gray-300">folder_off</span>
               </div>
-            ))}
-
-            {/* 新建分组按钮 */}
-            <button
-              onClick={handleOpenCreateGroup}
-              className="w-full mt-4 flex items-center justify-center gap-2 py-3 text-sm text-gray-500 dark:text-gray-400 hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-colors border border-dashed border-gray-200 dark:border-gray-700"
-            >
-              <span className="material-symbols-outlined text-[18px]">create_new_folder</span>
-              新建分组
-            </button>
-
-            {/* 全空状态 */}
-            {groups.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-                <span className="material-symbols-outlined text-[48px] mb-4">list_alt</span>
-                <p className="text-sm">暂无清单</p>
-                <button
-                  onClick={handleOpenCreateGroup}
-                  className="mt-4 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
-                >
-                  创建第一个分组
-                </button>
-              </div>
-            )}
-          </>
-        )}
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">还没有任何分组</p>
+              <p className="text-xs text-gray-400 mt-1">点击右上角"新建"创建分组</p>
+            </div>
+          )}
+        </div>
       </main>
-
-      {/* FAB */}
-      <button
-        onClick={handleOpenCreateProject}
-        className="fixed bottom-24 right-6 size-14 rounded-full bg-primary text-white shadow-lg flex items-center justify-center active:scale-95 transition-transform z-30"
-      >
-        <span className="material-symbols-outlined text-[32px]">add</span>
-      </button>
 
       <BottomNav />
 
       {/* 创建清单 BottomSheet */}
       <BottomSheet isOpen={showCreateSheet} onClose={() => setShowCreateSheet(false)} title="新建清单">
-        <div className="px-5 py-4 space-y-5">
+        <div className="px-5 py-4 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               名称 <span className="text-red-500">*</span>
@@ -428,20 +386,7 @@ const ProjectsPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">描述</label>
-            <textarea
-              value={newProject.desc}
-              onChange={(e) => setNewProject(prev => ({ ...prev, desc: e.target.value }))}
-              placeholder="简要描述这个清单..."
-              rows={2}
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              分组 <span className="text-red-500">*</span>
-            </label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">分组</label>
             <select
               value={newProject.group_uid}
               onChange={(e) => setNewProject(prev => ({ ...prev, group_uid: e.target.value }))}
@@ -466,8 +411,8 @@ const ProjectsPage: React.FC = () => {
                       : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[20px]">{icon}</span>
-                  <span className="text-[9px]">{label}</span>
+                  <span className="material-symbols-outlined text-[18px]">{icon}</span>
+                  <span className="text-[8px]">{label}</span>
                 </button>
               ))}
             </div>
@@ -475,29 +420,18 @@ const ProjectsPage: React.FC = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">颜色</label>
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex gap-2.5 flex-wrap">
               {PRESET_COLORS.map(({ key, bg }) => (
                 <button
                   key={key}
                   onClick={() => setNewProject(prev => ({ ...prev, color: key }))}
-                  className={`size-8 rounded-full ${bg} transition-all ${
+                  className={`size-7 rounded-full ${bg} transition-all ${
                     newProject.color === key
                       ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-surface-dark ring-gray-900 dark:ring-white scale-110'
                       : 'hover:scale-110'
                   }`}
                 />
               ))}
-            </div>
-          </div>
-
-          {/* 预览 */}
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
-            <div className={`size-10 rounded-lg flex items-center justify-center ${getColorClasses(newProject.color).iconBg} ${getColorClasses(newProject.color).textColor}`}>
-              <span className="material-symbols-outlined text-[20px]">{newProject.icon}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{newProject.name || '清单名称'}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{newProject.desc || '暂无描述'}</p>
             </div>
           </div>
 
