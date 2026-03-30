@@ -23,7 +23,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({
   const [isCompletedExpanded, setIsCompletedExpanded] = React.useState(false);
   
   // 优先使用视图的显示设置（用户在过滤栏控制），其次使用卡片样式默认值
-  const viewSettings = view?.display_settings || {};
+  const viewSettings = view?.view_settings || {};
   const cardDefaults = cardStyle ? {
     show_project: cardStyle.style.showProject,
     show_tags: cardStyle.style.showTags,

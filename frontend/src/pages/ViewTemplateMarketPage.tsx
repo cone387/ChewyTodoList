@@ -74,7 +74,7 @@ const ViewTemplateMarketPage: React.FC = () => {
         filters: template.filters,
         sorts: template.sorts,
         group_by: template.group_by || undefined,
-        display_settings: template.display_settings,
+        view_settings: template.view_settings,
         is_visible_in_nav: true,
         project_uid: undefined,
       };

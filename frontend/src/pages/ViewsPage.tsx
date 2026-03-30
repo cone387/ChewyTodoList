@@ -19,7 +19,7 @@ interface ViewTemplate {
   filters: ViewFilter[];
   sorts: ViewSort[];
   group_by?: string;
-  display_settings: Record<string, any>;
+  view_settings: Record<string, any>;
 }
 
 const PRESET_TEMPLATES: ViewTemplate[] = [
@@ -43,7 +43,7 @@ const PRESET_TEMPLATES: ViewTemplate[] = [
       { field: 'priority', direction: 'desc' },
       { field: 'due_date', direction: 'asc' },
     ],
-    display_settings: {
+    view_settings: {
       show_project: true,
       show_tags: true,
       show_due_date: true,
@@ -72,7 +72,7 @@ const PRESET_TEMPLATES: ViewTemplate[] = [
       { field: 'due_date', direction: 'asc' },
       { field: 'priority', direction: 'desc' },
     ],
-    display_settings: {
+    view_settings: {
       show_project: true,
       show_tags: true,
       show_due_date: true,
@@ -109,7 +109,7 @@ const PRESET_TEMPLATES: ViewTemplate[] = [
       { field: 'due_date', direction: 'asc' },
     ],
     group_by: 'priority',
-    display_settings: {
+    view_settings: {
       show_project: true,
       show_tags: true,
       show_due_date: true,
@@ -138,7 +138,7 @@ const PRESET_TEMPLATES: ViewTemplate[] = [
       { field: 'due_date', direction: 'asc' },
       { field: 'priority', direction: 'desc' },
     ],
-    display_settings: {
+    view_settings: {
       show_project: true,
       show_tags: true,
       show_due_date: true,
@@ -166,7 +166,7 @@ const PRESET_TEMPLATES: ViewTemplate[] = [
     sorts: [
       { field: 'updated_at', direction: 'desc' },
     ],
-    display_settings: {
+    view_settings: {
       show_project: true,
       show_tags: true,
       show_due_date: true,
@@ -188,7 +188,7 @@ const PRESET_TEMPLATES: ViewTemplate[] = [
       { field: 'sort_order', direction: 'asc' },
     ],
     group_by: 'status',
-    display_settings: {
+    view_settings: {
       show_project: true,
       show_tags: true,
       show_due_date: true,
@@ -326,7 +326,7 @@ const ViewsPage: React.FC = () => {
         filters: template.filters,
         sorts: template.sorts,
         group_by: template.group_by || undefined,
-        display_settings: template.display_settings,
+        view_settings: template.view_settings,
         is_visible_in_nav: true, // 从模板创建的视图默认显示在导航栏
         project_uid: undefined, // 使用undefined而不是null
       };
@@ -770,7 +770,7 @@ const ViewsPage: React.FC = () => {
                             filters: viewTemplate.filters,
                             sorts: viewTemplate.sorts,
                             group_by: viewTemplate.group_by || undefined,
-                            display_settings: viewTemplate.display_settings,
+                            view_settings: viewTemplate.view_settings,
                             is_visible_in_nav: true, // 直接添加到导航栏
                             project_uid: undefined, // 使用undefined而不是null
                           };
@@ -1078,31 +1078,31 @@ const ViewsPage: React.FC = () => {
                     )}
 
                     {/* 显示设置摘要 */}
-                    {taskView.display_settings && (
+                    {taskView.view_settings && (
                       <div className="flex items-center gap-2 text-sm">
                         <span className="material-symbols-outlined text-[16px] text-gray-400">visibility</span>
                         <div className="flex flex-wrap gap-1">
-                          {taskView.display_settings.show_project && (
+                          {taskView.view_settings.show_project && (
                             <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded">
                               项目
                             </span>
                           )}
-                          {taskView.display_settings.show_tags && (
+                          {taskView.view_settings.show_tags && (
                             <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded">
                               标签
                             </span>
                           )}
-                          {taskView.display_settings.show_due_date && (
+                          {taskView.view_settings.show_due_date && (
                             <span className="px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs rounded">
                               日期
                             </span>
                           )}
-                          {taskView.display_settings.show_priority && (
+                          {taskView.view_settings.show_priority && (
                             <span className="px-1.5 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs rounded">
                               优先级
                             </span>
                           )}
-                          {taskView.display_settings.compact_mode && (
+                          {taskView.view_settings.compact_mode && (
                             <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs rounded">
                               紧凑
                             </span>

@@ -145,8 +145,8 @@ const HomePage: React.FC = () => {
     updateView.mutate({
       uid: currentView,
       data: { 
-        display_settings: { 
-          ...viewData.display_settings, 
+        view_settings: { 
+          ...viewData.view_settings, 
           ...settings 
         } 
       }
@@ -154,7 +154,7 @@ const HomePage: React.FC = () => {
   };
 
   // 获取当前视图的显示设置
-  const viewDisplaySettings = viewData?.display_settings as any;
+  const viewDisplaySettings = viewData?.view_settings as any;
   const selectedCardId = viewDisplaySettings?.card_template_id || 'default';
   const currentCardStyle = TASK_CARD_TEMPLATES.find(template => template.id === selectedCardId);
   

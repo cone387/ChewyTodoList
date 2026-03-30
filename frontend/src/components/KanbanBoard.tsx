@@ -13,7 +13,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   view,
   onTaskClick,
 }) => {
-  const displaySettings = view.display_settings || {
+  const displaySettings = view.view_settings || {
     show_project: true,
     show_tags: true,
     show_due_date: true,

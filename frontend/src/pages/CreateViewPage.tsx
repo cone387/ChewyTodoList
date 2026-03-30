@@ -57,7 +57,7 @@ const CreateViewPage: React.FC = () => {
     follow_selected_project: true, // 默认跟随所选清单
     project_uid: null as string | null, // 固定清单的uid（当 follow_selected_project = false 时使用）
     card_template_id: 'default', // 默认卡片模板（会在视图类型改变时更新）
-    display_settings: {
+    view_settings: {
       show_project: true,
       show_tags: true,
       show_due_date: true,
@@ -87,15 +87,15 @@ const CreateViewPage: React.FC = () => {
         is_visible_in_nav: view.is_visible_in_nav ?? true,
         follow_selected_project: view.follow_selected_project ?? true,
         project_uid: view.project?.uid || null,
-        card_template_id: (view.display_settings as any)?.card_template_id || 'default',
-        display_settings: {
-          show_project: view.display_settings?.show_project ?? true,
-          show_tags: view.display_settings?.show_tags ?? true,
-          show_due_date: view.display_settings?.show_due_date ?? true,
-          show_priority: view.display_settings?.show_priority ?? true,
-          show_status: view.display_settings?.show_status ?? true,
-          compact_mode: view.display_settings?.compact_mode ?? false,
-          show_completed: view.display_settings?.show_completed ?? false,
+        card_template_id: (view.view_settings as any)?.card_template_id || 'default',
+        view_settings: {
+          show_project: view.view_settings?.show_project ?? true,
+          show_tags: view.view_settings?.show_tags ?? true,
+          show_due_date: view.view_settings?.show_due_date ?? true,
+          show_priority: view.view_settings?.show_priority ?? true,
+          show_status: view.view_settings?.show_status ?? true,
+          compact_mode: view.view_settings?.compact_mode ?? false,
+          show_completed: view.view_settings?.show_completed ?? false,
         },
       });
     }
@@ -120,9 +120,9 @@ const CreateViewPage: React.FC = () => {
           filters: templateData.filters || [],
           sorts: templateData.sorts || [],
           group_by: templateData.group_by || '',
-          display_settings: {
-            ...prevData.display_settings,
-            ...templateData.display_settings,
+          view_settings: {
+            ...prevData.view_settings,
+            ...templateData.view_settings,
           },
         }));
       } catch (error) {
@@ -174,8 +174,8 @@ const CreateViewPage: React.FC = () => {
         project_uid: formData.project_uid || undefined, // 固定清单的uid
         group_by: formData.group_by || undefined, // Convert empty string to undefined
         filters: sanitizeFilters(formData.filters), // Sanitize filter values
-        display_settings: {
-          ...formData.display_settings,
+        view_settings: {
+          ...formData.view_settings,
           card_template_id: formData.card_template_id, // 保存卡片模板ID
         },
       };
@@ -258,9 +258,9 @@ const CreateViewPage: React.FC = () => {
       filters: template.filters,
       sorts: template.sorts,
       group_by: template.group_by || '',
-      display_settings: {
-        ...formData.display_settings,
-        ...template.display_settings,
+      view_settings: {
+        ...formData.view_settings,
+        ...template.view_settings,
       },
     });
     setShowTemplateSelector(false);
@@ -659,11 +659,11 @@ const CreateViewPage: React.FC = () => {
               <label className="flex items-center text-xs">
                 <input
                   type="checkbox"
-                  checked={formData.display_settings.show_project}
+                  checked={formData.view_settings.show_project}
                   onChange={(e) => setFormData({
                     ...formData,
-                    display_settings: {
-                      ...formData.display_settings,
+                    view_settings: {
+                      ...formData.view_settings,
                       show_project: e.target.checked,
                     },
                   })}
@@ -675,11 +675,11 @@ const CreateViewPage: React.FC = () => {
               <label className="flex items-center text-xs">
                 <input
                   type="checkbox"
-                  checked={formData.display_settings.show_tags}
+                  checked={formData.view_settings.show_tags}
                   onChange={(e) => setFormData({
                     ...formData,
-                    display_settings: {
-                      ...formData.display_settings,
+                    view_settings: {
+                      ...formData.view_settings,
                       show_tags: e.target.checked,
                     },
                   })}
@@ -691,11 +691,11 @@ const CreateViewPage: React.FC = () => {
               <label className="flex items-center text-xs">
                 <input
                   type="checkbox"
-                  checked={formData.display_settings.show_due_date}
+                  checked={formData.view_settings.show_due_date}
                   onChange={(e) => setFormData({
                     ...formData,
-                    display_settings: {
-                      ...formData.display_settings,
+                    view_settings: {
+                      ...formData.view_settings,
                       show_due_date: e.target.checked,
                     },
                   })}
@@ -707,11 +707,11 @@ const CreateViewPage: React.FC = () => {
               <label className="flex items-center text-xs">
                 <input
                   type="checkbox"
-                  checked={formData.display_settings.show_priority}
+                  checked={formData.view_settings.show_priority}
                   onChange={(e) => setFormData({
                     ...formData,
-                    display_settings: {
-                      ...formData.display_settings,
+                    view_settings: {
+                      ...formData.view_settings,
                       show_priority: e.target.checked,
                     },
                   })}
@@ -723,11 +723,11 @@ const CreateViewPage: React.FC = () => {
               <label className="flex items-center text-xs">
                 <input
                   type="checkbox"
-                  checked={formData.display_settings.show_status}
+                  checked={formData.view_settings.show_status}
                   onChange={(e) => setFormData({
                     ...formData,
-                    display_settings: {
-                      ...formData.display_settings,
+                    view_settings: {
+                      ...formData.view_settings,
                       show_status: e.target.checked,
                     },
                   })}
@@ -739,11 +739,11 @@ const CreateViewPage: React.FC = () => {
               <label className="flex items-center text-xs">
                 <input
                   type="checkbox"
-                  checked={formData.display_settings.compact_mode}
+                  checked={formData.view_settings.compact_mode}
                   onChange={(e) => setFormData({
                     ...formData,
-                    display_settings: {
-                      ...formData.display_settings,
+                    view_settings: {
+                      ...formData.view_settings,
                       compact_mode: e.target.checked,
                     },
                   })}
@@ -755,11 +755,11 @@ const CreateViewPage: React.FC = () => {
               <label className="flex items-center text-xs">
                 <input
                   type="checkbox"
-                  checked={formData.display_settings.show_completed ?? false}
+                  checked={formData.view_settings.show_completed ?? false}
                   onChange={(e) => setFormData({
                     ...formData,
-                    display_settings: {
-                      ...formData.display_settings,
+                    view_settings: {
+                      ...formData.view_settings,
                       show_completed: e.target.checked,
                     },
                   })}

@@ -12,7 +12,7 @@ export interface ViewTemplate {
   filters: ViewFilter[];
   sorts: ViewSort[];
   group_by?: string;
-  display_settings: ViewDisplaySettings;
+  view_settings: ViewDisplaySettings;
   layout_settings?: ViewLayoutSettings;
   is_premium?: boolean;
   tags: string[];

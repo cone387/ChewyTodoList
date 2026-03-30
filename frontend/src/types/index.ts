@@ -140,6 +140,38 @@ export interface ActivityLog {
   } | null;
 }
 
+// 卡片配置类型
+export interface TaskCardConfig {
+  uid: string;
+  name: string;
+  desc?: string;
+  is_preset: boolean;
+  layout: 'compact' | 'comfortable' | 'spacious';
+  style: Record<string, any>;
+  field_configs: CardFieldConfig[];
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// 卡片字段配置
+export interface CardFieldConfig {
+  field: string;
+  visible: boolean;
+  position: 'header' | 'header_left' | 'header_right' | 'body' | 'footer';
+  style: Record<string, any>;
+}
+
+// 可用字段定义（由后端 available_fields 接口返回）
+export interface AvailableField {
+  field: string;
+  label: string;
+  type: string;
+  required: boolean;
+  positions: string[];
+  style_options: Record<string, any>;
+}
+
 // 视图类型
 export interface TaskView {
   uid: string;
@@ -149,15 +181,16 @@ export interface TaskView {
   view_type_display: string;
   is_default: boolean;
   is_public: boolean;
-  is_system?: boolean; // 是否系统视图
-  is_visible_in_nav: boolean; // 是否在导航栏显示
-  follow_selected_project: boolean; // 是否跟随所选清单
+  is_system?: boolean;
+  is_visible_in_nav: boolean;
+  follow_selected_project: boolean;
   sort_order: number;
+  card_config?: TaskCardConfig | null;
   filters: ViewFilter[];
-  filter_groups?: ViewFilterGroup[]; // 高级筛选组
+  filter_groups?: ViewFilterGroup[];
   sorts: ViewSort[];
   group_by?: string;
-  display_settings: Record<string, any>;
+  view_settings: Record<string, any>;
   created_at: string;
   updated_at: string;
   tasks_count?: number;

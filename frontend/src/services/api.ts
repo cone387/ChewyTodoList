@@ -9,6 +9,8 @@ import type {
   Project,
   ActivityLog,
   TaskView,
+  TaskCardConfig,
+  AvailableField,
   ViewFilter,
   ViewSort
 } from '../types/index';
@@ -332,7 +334,8 @@ export const viewApi = {
     filters?: ViewFilter[];
     sorts?: ViewSort[];
     group_by?: string;
-    display_settings?: Record<string, any>;
+    view_settings?: Record<string, any>;
+    card_config_uid?: string;
     is_visible_in_nav?: boolean;
   }) => api.post<ApiResponse<TaskView>>('/views/', data),
 
@@ -343,7 +346,8 @@ export const viewApi = {
     filters: ViewFilter[];
     sorts: ViewSort[];
     group_by: string;
-    display_settings: Record<string, any>;
+    view_settings: Record<string, any>;
+    card_config_uid: string;
     is_visible_in_nav: boolean;
     sort_order: number;
   }>) => api.patch<ApiResponse<TaskView>>(`/views/${uid}/`, data),
@@ -366,6 +370,45 @@ export const viewApi = {
   getDefaultViews: (params?: {
     project?: string;
   }) => api.get<ApiResponse<TaskView[]>>('/views/default_views/', { params }),
+};
+
+// 卡片配置API
+export const cardConfigApi = {
+  // 获取卡片配置列表（用户自己的 + 系统预设）
+  getConfigs: (params?: {
+    is_preset?: boolean;
+    layout?: string;
+  }) => api.get<ApiResponse<PaginatedResponse<TaskCardConfig>>>('/card-configs/', { params }),
+
+  // 获取卡片配置详情
+  getConfig: (uid: string) => api.get<ApiResponse<TaskCardConfig>>(`/card-configs/${uid}/`),
+
+  // 创建卡片配置
+  createConfig: (data: {
+    name: string;
+    desc?: string;
+    layout?: string;
+    style?: Record<string, any>;
+    field_configs?: any[];
+  }) => api.post<ApiResponse<TaskCardConfig>>('/card-configs/', data),
+
+  // 更新卡片配置
+  updateConfig: (uid: string, data: Partial<{
+    name: string;
+    desc: string;
+    layout: string;
+    style: Record<string, any>;
+    field_configs: any[];
+  }>) => api.patch<ApiResponse<TaskCardConfig>>(`/card-configs/${uid}/`, data),
+
+  // 删除卡片配置
+  deleteConfig: (uid: string) => api.delete(`/card-configs/${uid}/`),
+
+  // 复制卡片配置（从预设创建自定义版本）
+  duplicateConfig: (uid: string) => api.post<ApiResponse<TaskCardConfig>>(`/card-configs/${uid}/duplicate/`),
+
+  // 获取可用字段注册表
+  getAvailableFields: () => api.get<ApiResponse<AvailableField[]>>('/card-configs/available_fields/'),
 };
 
 // 附件类型

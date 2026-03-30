@@ -179,7 +179,7 @@ const ProjectDetailPage: React.FC = () => {
     sort_order: 0,
     sorts: sortField ? [{ field: sortField, direction: sortDirection }] : [],
     group_by: groupBy || undefined,
-    display_settings: {
+    view_settings: {
       show_completed: showCompleted,
       show_project: false,
       show_tags: true,

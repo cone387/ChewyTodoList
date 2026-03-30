@@ -32,7 +32,7 @@ export const VIEW_TEMPLATES: ViewTemplate[] = [
       { field: 'priority', direction: 'desc' },
       { field: 'created_at', direction: 'asc' },
     ],
-    display_settings: {
+    view_settings: {
       show_project: true,
       show_tags: true,
       show_due_date: true,
@@ -69,7 +69,7 @@ export const VIEW_TEMPLATES: ViewTemplate[] = [
       { field: 'due_date', direction: 'asc' },
     ],
     group_by: 'status',
-    display_settings: {
+    view_settings: {
       show_project: true,
       show_tags: true,
       show_due_date: true,
@@ -109,7 +109,7 @@ export const VIEW_TEMPLATES: ViewTemplate[] = [
       { field: 'due_date', direction: 'asc' },
     ],
     group_by: 'priority',
-    display_settings: {
+    view_settings: {
       show_project: true,
       show_tags: false,
       show_due_date: true,
@@ -149,7 +149,7 @@ export const VIEW_TEMPLATES: ViewTemplate[] = [
       { field: 'priority', direction: 'desc' },
     ],
     group_by: 'project',
-    display_settings: {
+    view_settings: {
       show_project: true,
       show_tags: true,
       show_due_date: true,
@@ -190,7 +190,7 @@ export const VIEW_TEMPLATES: ViewTemplate[] = [
       { field: 'sort_order', direction: 'asc' },
     ],
     group_by: 'status',
-    display_settings: {
+    view_settings: {
       show_project: false,
       show_tags: true,
       show_due_date: true,
@@ -238,7 +238,7 @@ export const VIEW_TEMPLATES: ViewTemplate[] = [
       { field: 'due_date', direction: 'asc' },
       { field: 'completed_time', direction: 'desc' },
     ],
-    display_settings: {
+    view_settings: {
       show_project: true,
       show_tags: true,
       show_due_date: true,
@@ -276,7 +276,7 @@ export const VIEW_TEMPLATES: ViewTemplate[] = [
     sorts: [
       { field: 'created_at', direction: 'desc' },
     ],
-    display_settings: {
+    view_settings: {
       show_project: false,
       show_tags: true,
       show_due_date: true,
@@ -317,7 +317,7 @@ export const VIEW_TEMPLATES: ViewTemplate[] = [
       { field: 'due_date', direction: 'asc' },
     ],
     group_by: 'assignee',
-    display_settings: {
+    view_settings: {
       show_project: true,
       show_tags: true,
       show_due_date: true,
@@ -354,7 +354,7 @@ export const VIEW_TEMPLATES: ViewTemplate[] = [
       { field: 'due_date', direction: 'asc' },
     ],
     group_by: 'project',
-    display_settings: {
+    view_settings: {
       show_project: true,
       show_tags: true,
       show_due_date: true,
@@ -392,7 +392,7 @@ export const VIEW_TEMPLATES: ViewTemplate[] = [
     sorts: [
       { field: 'updated_at', direction: 'desc' },
     ],
-    display_settings: {
+    view_settings: {
       show_project: true,
       show_tags: true,
       show_due_date: false,

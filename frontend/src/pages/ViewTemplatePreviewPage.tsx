@@ -47,7 +47,7 @@ const ViewTemplatePreviewPage: React.FC = () => {
       filters: template.filters,
       sorts: template.sorts,
       group_by: template.group_by,
-      display_settings: template.display_settings,
+      view_settings: template.view_settings,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       tasks_count: mockTasks.length,
@@ -90,7 +90,7 @@ const ViewTemplatePreviewPage: React.FC = () => {
         filters: template.filters,
         sorts: template.sorts,
         group_by: template.group_by || undefined,
-        display_settings: template.display_settings,
+        view_settings: template.view_settings,
         is_visible_in_nav: true,
         project_uid: undefined,
       };
@@ -374,7 +374,7 @@ const ViewTemplatePreviewPage: React.FC = () => {
                       <span className="font-medium text-gray-900 dark:text-white">显示字段</span>
                     </div>
                     <span className="text-sm text-gray-700 dark:text-gray-300">
-                      {Object.values(template.display_settings).filter(Boolean).length} 个字段
+                      {Object.values(template.view_settings).filter(Boolean).length} 个字段
                     </span>
                   </div>
                 </div>
@@ -501,7 +501,7 @@ const ViewTemplatePreviewPage: React.FC = () => {
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">显示设置</h2>
                 <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    {Object.entries(template.display_settings).map(([key, value]) => (
+                    {Object.entries(template.view_settings).map(([key, value]) => (
                       <div key={key} className="flex items-center justify-between">
                         <span className="text-gray-600 dark:text-gray-400">
                           {key === 'show_project' ? '显示项目' :
