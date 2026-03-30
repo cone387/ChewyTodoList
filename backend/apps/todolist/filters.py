@@ -1,6 +1,6 @@
 import django_filters
 from django.utils import timezone
-from .models import Tag, Group, Project, Task, ActivityLog, TaskView
+from .models import Tag, Group, Project, Task, ActivityLog, TaskView, TaskCardConfig
 
 
 class TagFilter(django_filters.FilterSet):
@@ -169,3 +169,17 @@ class TaskViewFilter(django_filters.FilterSet):
             'name', 'project', 'view_type', 'is_default', 'is_public', 
             'is_visible_in_nav', 'created_after', 'created_before'
         ]
+
+
+class TaskCardConfigFilter(django_filters.FilterSet):
+    """卡片配置过滤器"""
+
+    name = django_filters.CharFilter(lookup_expr='icontains')
+    is_preset = django_filters.BooleanFilter()
+    layout = django_filters.CharFilter()
+    created_after = django_filters.DateTimeFilter(field_name='created_at', lookup_expr='gte')
+    created_before = django_filters.DateTimeFilter(field_name='created_at', lookup_expr='lte')
+
+    class Meta:
+        model = TaskCardConfig
+        fields = ['name', 'is_preset', 'layout', 'created_after', 'created_before']

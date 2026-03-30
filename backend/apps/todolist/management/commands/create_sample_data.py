@@ -214,7 +214,7 @@ class Command(BaseCommand):
                     {'field': 'updated_at', 'direction': 'desc'}
                 ],
                 'group_by': None,
-                'display_settings': {
+                'view_settings': {
                     'show_project': True,
                     'show_tags': True,
                     'show_due_date': True
@@ -233,7 +233,7 @@ class Command(BaseCommand):
                     {'field': 'due_date', 'direction': 'asc'}
                 ],
                 'group_by': 'priority',
-                'display_settings': {
+                'view_settings': {
                     'show_project': True,
                     'show_tags': True,
                     'show_due_date': True
@@ -249,7 +249,7 @@ class Command(BaseCommand):
                     {'field': 'sort_order', 'direction': 'asc'}
                 ],
                 'group_by': 'project',
-                'display_settings': {
+                'view_settings': {
                     'show_project': False,
                     'show_tags': True,
                     'show_due_date': True
@@ -265,7 +265,7 @@ class Command(BaseCommand):
                     {'field': 'sort_order', 'direction': 'asc'}
                 ],
                 'group_by': 'status',
-                'display_settings': {
+                'view_settings': {
                     'show_project': True,
                     'show_tags': True,
                     'show_due_date': True
@@ -284,7 +284,7 @@ class Command(BaseCommand):
                     {'field': 'due_date', 'direction': 'asc'}
                 ],
                 'group_by': None,
-                'display_settings': {
+                'view_settings': {
                     'show_project': True,
                     'show_tags': True,
                     'show_due_date': False
@@ -303,7 +303,7 @@ class Command(BaseCommand):
                     'filters': view_data['filters'],
                     'sorts': view_data['sorts'],
                     'group_by': view_data['group_by'],
-                    'display_settings': view_data['display_settings']
+                    'view_settings': view_data['view_settings']
                 }
             )
 

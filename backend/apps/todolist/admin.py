@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Tag, Group, Project, Task, ActivityLog
+from .models import Tag, Group, Project, Task, ActivityLog, TaskView, TaskCardConfig
 
 
 @admin.register(Tag)
@@ -43,9 +43,6 @@ class GroupAdmin(admin.ModelAdmin):
         ('设置', {
             'fields': ('sort_order', 'settings')
         }),
-        ('附件', {
-            'fields': ('attachments',)
-        }),
         ('时间信息', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)
@@ -72,9 +69,6 @@ class ProjectAdmin(admin.ModelAdmin):
         }),
         ('其他设置', {
             'fields': ('settings',)
-        }),
-        ('附件', {
-            'fields': ('attachments',)
         }),
         ('时间信息', {
             'fields': ('created_at', 'updated_at'),
@@ -148,6 +142,66 @@ class ActivityLogAdmin(admin.ModelAdmin):
         }),
         ('详细信息', {
             'fields': ('detail',)
+        }),
+        ('时间信息', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(TaskView)
+class TaskViewAdmin(admin.ModelAdmin):
+    """任务视图管理"""
+
+    list_display = ['name', 'view_type', 'user', 'project', 'is_default', 'is_system', 'sort_order']
+    list_filter = ['view_type', 'is_default', 'is_system', 'is_visible_in_nav']
+    search_fields = ['name', 'user__username']
+    readonly_fields = ['uid', 'created_at', 'updated_at']
+    ordering = ['user', 'sort_order']
+
+    fieldsets = (
+        ('基本信息', {
+            'fields': ('uid', 'name', 'user', 'project', 'view_type')
+        }),
+        ('卡片配置', {
+            'fields': ('card_config',)
+        }),
+        ('数据配置', {
+            'fields': ('filters', 'sorts', 'group_by', 'view_settings')
+        }),
+        ('标志', {
+            'fields': ('is_default', 'is_public', 'is_system', 'is_visible_in_nav', 'follow_selected_project')
+        }),
+        ('排序', {
+            'fields': ('sort_order',)
+        }),
+        ('时间信息', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(TaskCardConfig)
+class TaskCardConfigAdmin(admin.ModelAdmin):
+    """卡片配置管理"""
+
+    list_display = ['name', 'user', 'is_preset', 'layout', 'sort_order', 'created_at']
+    list_filter = ['is_preset', 'layout']
+    search_fields = ['name', 'desc', 'user__username']
+    readonly_fields = ['uid', 'created_at', 'updated_at']
+    ordering = ['is_preset', 'sort_order']
+
+    fieldsets = (
+        ('基本信息', {
+            'fields': ('uid', 'name', 'desc', 'user', 'is_preset')
+        }),
+        ('样式配置', {
+            'fields': ('layout', 'style', 'field_configs')
+        }),
+        ('排序', {
+            'fields': ('sort_order',)
         }),
         ('时间信息', {
             'fields': ('created_at', 'updated_at'),

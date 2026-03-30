@@ -17,6 +17,7 @@ from .views import (
     TaskViewSet,
     ActivityLogViewSet,
     TaskViewViewSet,
+    TaskCardConfigViewSet,
 )
 
 # 创建路由器
@@ -27,6 +28,7 @@ router.register(r'projects', ProjectViewSet, basename='project')
 router.register(r'tasks', TaskViewSet, basename='task')
 router.register(r'activity-logs', ActivityLogViewSet, basename='activity-log')
 router.register(r'views', TaskViewViewSet, basename='task-view')
+router.register(r'card-configs', TaskCardConfigViewSet, basename='card-config')
 
 urlpatterns = [
     # 认证相关URL

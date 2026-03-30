@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils import timezone
-from .models import Tag, Group, Project, Task, ActivityLog, TaskView
+from .models import Tag, Group, Project, Task, ActivityLog, TaskView, TaskCardConfig
 
 User = get_user_model()
 
@@ -556,6 +556,74 @@ class ActivityLogSerializer(serializers.ModelSerializer):
 
 
 # =========================
+# 卡片配置序列化器
+# =========================
+
+class TaskCardConfigSerializer(serializers.ModelSerializer):
+    """卡片配置序列化器"""
+
+    class Meta:
+        model = TaskCardConfig
+        fields = [
+            'uid', 'name', 'desc', 'is_preset', 'layout',
+            'style', 'field_configs', 'sort_order',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = ['uid', 'is_preset', 'created_at', 'updated_at']
+
+    def validate_name(self, value):
+        """验证名称唯一性"""
+        user = self.context['request'].user
+        queryset = TaskCardConfig.objects.filter(user=user, name=value)
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise serializers.ValidationError("该卡片配置名称已存在")
+        return value.strip()
+
+    def validate_layout(self, value):
+        allowed = ['compact', 'comfortable', 'spacious']
+        if value not in allowed:
+            raise serializers.ValidationError(f"布局必须是 {', '.join(allowed)} 之一")
+        return value
+
+    def validate_field_configs(self, value):
+        """验证字段配置"""
+        if not isinstance(value, list):
+            raise serializers.ValidationError("字段配置必须是数组格式")
+
+        known_fields = {f['field'] for f in TaskCardConfig.AVAILABLE_FIELDS}
+        allowed_positions = {'header', 'header_left', 'header_right', 'body', 'footer'}
+
+        for i, fc in enumerate(value):
+            if not isinstance(fc, dict):
+                raise serializers.ValidationError(f"field_configs[{i}] 必须是对象")
+            field = fc.get('field')
+            if field not in known_fields:
+                raise serializers.ValidationError(f"不支持的字段: {field}")
+            if 'position' in fc and fc['position'] not in allowed_positions:
+                raise serializers.ValidationError(
+                    f"field_configs[{i}].position 必须是 {', '.join(allowed_positions)} 之一"
+                )
+        return value
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class TaskCardConfigListSerializer(serializers.ModelSerializer):
+    """卡片配置列表序列化器"""
+
+    class Meta:
+        model = TaskCardConfig
+        fields = [
+            'uid', 'name', 'desc', 'is_preset', 'layout',
+            'sort_order', 'created_at', 'updated_at',
+        ]
+
+
+# =========================
 # 视图序列化器
 # =========================
 
@@ -564,6 +632,8 @@ class TaskViewSerializer(serializers.ModelSerializer):
     
     project = ProjectListSerializer(read_only=True)
     project_uid = serializers.CharField(write_only=True, required=False, allow_null=True)
+    card_config = TaskCardConfigSerializer(read_only=True)
+    card_config_uid = serializers.CharField(write_only=True, required=False, allow_null=True)
     view_type_display = serializers.CharField(source='get_view_type_display', read_only=True)
 
     class Meta:
@@ -571,7 +641,8 @@ class TaskViewSerializer(serializers.ModelSerializer):
         fields = [
             'uid', 'name', 'project', 'project_uid', 'view_type', 'view_type_display',
             'is_default', 'is_public', 'is_system', 'is_visible_in_nav', 'sort_order', 
-            'filters', 'sorts', 'group_by', 'display_settings', 'follow_selected_project',
+            'card_config', 'card_config_uid',
+            'filters', 'sorts', 'group_by', 'view_settings', 'follow_selected_project',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['uid', 'is_system', 'created_at', 'updated_at']
@@ -587,6 +658,21 @@ class TaskViewSerializer(serializers.ModelSerializer):
             return project
         except Project.DoesNotExist:
             raise serializers.ValidationError("指定的项目不存在")
+
+    def validate_card_config_uid(self, value):
+        """验证卡片配置UID"""
+        if not value or value == 'null' or value == '':
+            return None
+
+        from django.db.models import Q
+        user = self.context['request'].user
+        try:
+            return TaskCardConfig.objects.get(
+                Q(uid=value),
+                Q(user=user) | Q(is_preset=True),
+            )
+        except TaskCardConfig.DoesNotExist:
+            raise serializers.ValidationError("卡片配置不存在")
 
     def validate_name(self, value):
         """验证视图名称唯一性"""
@@ -708,7 +794,9 @@ class TaskViewSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """创建视图"""
         project = validated_data.pop('project_uid', None)
+        card_config = validated_data.pop('card_config_uid', None)
         validated_data['project'] = project
+        validated_data['card_config'] = card_config
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
 
@@ -717,6 +805,9 @@ class TaskViewSerializer(serializers.ModelSerializer):
         if 'project_uid' in validated_data:
             project = validated_data.pop('project_uid')
             validated_data['project'] = project
+        if 'card_config_uid' in validated_data:
+            card_config = validated_data.pop('card_config_uid')
+            validated_data['card_config'] = card_config
         return super().update(instance, validated_data)
 
 
@@ -724,6 +815,7 @@ class TaskViewListSerializer(serializers.ModelSerializer):
     """任务视图列表序列化器"""
     
     project = ProjectListSerializer(read_only=True)
+    card_config = TaskCardConfigListSerializer(read_only=True)
     view_type_display = serializers.CharField(source='get_view_type_display', read_only=True)
     tasks_count = serializers.SerializerMethodField()
 
@@ -732,7 +824,8 @@ class TaskViewListSerializer(serializers.ModelSerializer):
         fields = [
             'uid', 'name', 'project', 'view_type', 'view_type_display',
             'is_default', 'is_public', 'is_system', 'is_visible_in_nav', 'sort_order', 
-            'filters', 'sorts', 'group_by', 'display_settings', 'follow_selected_project',
+            'card_config',
+            'filters', 'sorts', 'group_by', 'view_settings', 'follow_selected_project',
             'tasks_count', 'created_at', 'updated_at'
         ]
 

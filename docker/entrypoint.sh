@@ -16,6 +16,10 @@ python manage.py migrate --noinput
 echo "Collecting static files..."
 python manage.py collectstatic --noinput --clear
 
+# 创建预设卡片配置
+echo "Creating preset card configs..."
+python manage.py create_preset_cards
+
 # 创建默认用户（从环境变量读取）
 echo "Creating default user if not exists..."
 python manage.py shell << EOF

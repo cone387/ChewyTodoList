@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.db import transaction
 from django.http import JsonResponse
 
-from .models import Tag, Group, Project, Task, ActivityLog, TaskView
+from .models import Tag, Group, Project, Task, ActivityLog, TaskView, TaskCardConfig
 from .serializers import (
     UserRegistrationSerializer,
     UserSerializer,
@@ -27,8 +27,10 @@ from .serializers import (
     ActivityLogSerializer,
     TaskViewSerializer,
     TaskViewListSerializer,
+    TaskCardConfigSerializer,
+    TaskCardConfigListSerializer,
 )
-from .filters import TagFilter, GroupFilter, ProjectFilter, TaskFilter, ActivityLogFilter, TaskViewFilter
+from .filters import TagFilter, GroupFilter, ProjectFilter, TaskFilter, ActivityLogFilter, TaskViewFilter, TaskCardConfigFilter
 
 User = get_user_model()
 
@@ -249,7 +251,8 @@ def initialize_user_view(request):
                     filters=system_view.filters,
                     sorts=system_view.sorts,
                     group_by=system_view.group_by,
-                    display_settings=system_view.display_settings
+                    view_settings=system_view.view_settings,
+                    card_config=system_view.card_config,
                 )
                 created_views.append(user_view)
         
@@ -1152,7 +1155,8 @@ class TaskViewViewSet(viewsets.ModelViewSet):
             filters=view.filters.copy(),
             sorts=view.sorts.copy(),
             group_by=view.group_by,
-            display_settings=view.display_settings.copy()
+            view_settings=view.view_settings.copy(),
+            card_config=view.card_config,
         )
         
         serializer = self.get_serializer(new_view)
@@ -1179,4 +1183,133 @@ class TaskViewViewSet(viewsets.ModelViewSet):
             'success': True,
             'data': serializer.data,
             'message': '获取默认视图成功'
+        })
+
+
+# =========================
+# 卡片配置视图
+# =========================
+
+class TaskCardConfigViewSet(viewsets.ModelViewSet):
+    """卡片配置视图集"""
+
+    lookup_field = 'uid'
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = TaskCardConfigFilter
+    search_fields = ['name', 'desc']
+    ordering_fields = ['name', 'sort_order', 'created_at', 'updated_at']
+    ordering = ['is_preset', 'sort_order', '-updated_at']
+
+    def get_queryset(self):
+        """返回用户自己的 + 系统预设"""
+        from django.db.models import Q
+        return TaskCardConfig.objects.filter(
+            Q(user=self.request.user) | Q(is_preset=True)
+        ).order_by('is_preset', 'sort_order')
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return TaskCardConfigListSerializer
+        return TaskCardConfigSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response({
+            'success': True,
+            'data': serializer.data,
+            'message': '卡片配置创建成功',
+        }, status=status.HTTP_201_CREATED)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response({
+            'success': True,
+            'data': serializer.data,
+            'message': '获取卡片配置成功',
+        })
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+
+        if instance.is_preset:
+            return Response({
+                'success': False,
+                'error': {
+                    'code': 'BUSINESS_005',
+                    'message': '系统预设不可编辑，请先复制',
+                    'details': {},
+                },
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response({
+            'success': True,
+            'data': serializer.data,
+            'message': '卡片配置更新成功',
+        })
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        if instance.is_preset:
+            return Response({
+                'success': False,
+                'error': {
+                    'code': 'BUSINESS_005',
+                    'message': '系统预设不可删除',
+                    'details': {},
+                },
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # 检查是否有视图在使用
+        if instance.views.exists():
+            return Response({
+                'success': False,
+                'error': {
+                    'code': 'BUSINESS_006',
+                    'message': '该卡片配置正在被视图使用，无法删除',
+                    'details': {'views_count': instance.views.count()},
+                },
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        self.perform_destroy(instance)
+        return Response({
+            'success': True,
+            'data': {},
+            'message': '卡片配置删除成功',
+        }, status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post'])
+    def duplicate(self, request, uid=None):
+        """复制配置（通常用于从预设创建自定义版本）"""
+        source = self.get_object()
+        new_config = TaskCardConfig.objects.create(
+            user=request.user,
+            name=f"{source.name} 副本",
+            desc=source.desc,
+            is_preset=False,
+            layout=source.layout,
+            style=source.style.copy() if source.style else {},
+            field_configs=[fc.copy() for fc in source.field_configs] if source.field_configs else [],
+        )
+        serializer = self.get_serializer(new_config)
+        return Response({
+            'success': True,
+            'data': serializer.data,
+            'message': '卡片配置复制成功',
+        }, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['get'])
+    def available_fields(self, request):
+        """返回可用字段注册表，前端配置编辑器由此驱动"""
+        return Response({
+            'success': True,
+            'data': TaskCardConfig.AVAILABLE_FIELDS,
+            'message': '获取可用字段成功',
         })

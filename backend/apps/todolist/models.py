@@ -60,10 +60,7 @@ class BaseModel(models.Model):
         abstract = True
 
     def save(self, *args, **kwargs):
-        """重写保存方法，确保更新时间正确设置"""
-        if not self.pk:
-            self.created_at = timezone.now()
-        self.updated_at = timezone.now()
+        """重写保存方法"""
         super().save(*args, **kwargs)
 
 
@@ -461,6 +458,200 @@ class ActivityLog(BaseModel):
 
 
 # =========================
+# 卡片配置模型
+# =========================
+
+class TaskCardConfig(BaseModel):
+    """任务卡片配置 — 控制单个任务卡片的外观和字段显示"""
+
+    # 覆盖 BaseModel 的 user 字段，允许为空（系统预设时 user=None）
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="用户",
+    )
+
+    uid = models.CharField(
+        max_length=22, unique=True, default=generate_uid, editable=False, verbose_name="UID"
+    )
+    name = models.CharField(max_length=100, verbose_name="配置名称")
+    desc = models.TextField(blank=True, null=True, verbose_name="描述")
+
+    is_preset = models.BooleanField(default=False, verbose_name="系统预设")
+
+    layout = models.CharField(
+        max_length=20,
+        choices=[
+            ("compact", "紧凑"),
+            ("comfortable", "舒适"),
+            ("spacious", "宽松"),
+        ],
+        default="comfortable",
+        verbose_name="布局密度",
+    )
+    style = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name="卡片样式",
+        help_text="borderRadius, shadow, padding, hoverEffect, checkboxStyle 等",
+    )
+    field_configs = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name="字段配置",
+        help_text="有序列表: [{field, visible, position, style}]",
+    )
+    sort_order = models.FloatField(default=get_timestamp_sortorder, verbose_name="排序")
+
+    class Meta:
+        db_table = "ct_card_configs"
+        ordering = ["is_preset", "sort_order", "-updated_at"]
+        verbose_name = verbose_name_plural = "卡片配置"
+        indexes = [
+            models.Index(fields=["user", "-updated_at"], name="cardcfg_user_updated_idx"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "name"],
+                condition=models.Q(user__isnull=False),
+                name="unique_card_config_name_per_user",
+            ),
+            models.UniqueConstraint(
+                fields=["name"],
+                condition=models.Q(is_preset=True),
+                name="unique_preset_card_config_name",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({'预设' if self.is_preset else '自定义'})"
+
+    # 可用字段注册表 — 前端配置编辑器由此驱动
+    AVAILABLE_FIELDS = [
+        {
+            "field": "title",
+            "label": "标题",
+            "type": "text",
+            "required": True,
+            "positions": ["header"],
+            "style_options": {
+                "fontSize": ["small", "medium", "large"],
+                "fontWeight": ["normal", "medium", "semibold", "bold"],
+                "showStrikethrough": "boolean",
+            },
+        },
+        {
+            "field": "status",
+            "label": "状态",
+            "type": "enum",
+            "required": False,
+            "positions": ["header_left", "header_right", "body", "footer"],
+            "style_options": {
+                "variant": ["badge", "icon", "dot", "border"],
+            },
+        },
+        {
+            "field": "priority",
+            "label": "优先级",
+            "type": "enum",
+            "required": False,
+            "positions": ["header_left", "header_right", "body", "footer"],
+            "style_options": {
+                "variant": ["flag", "dot", "border", "background"],
+            },
+        },
+        {
+            "field": "tags",
+            "label": "标签",
+            "type": "relation",
+            "required": False,
+            "positions": ["body", "footer"],
+            "style_options": {
+                "variant": ["pill", "badge", "minimal"],
+                "maxCount": "number",
+            },
+        },
+        {
+            "field": "due_date",
+            "label": "截止日期",
+            "type": "datetime",
+            "required": False,
+            "positions": ["header_right", "body", "footer"],
+            "style_options": {
+                "showRelative": "boolean",
+                "showIcon": "boolean",
+            },
+        },
+        {
+            "field": "start_date",
+            "label": "开始日期",
+            "type": "datetime",
+            "required": False,
+            "positions": ["body", "footer"],
+            "style_options": {
+                "showRelative": "boolean",
+                "showIcon": "boolean",
+            },
+        },
+        {
+            "field": "content",
+            "label": "内容",
+            "type": "text",
+            "required": False,
+            "positions": ["body"],
+            "style_options": {
+                "maxLines": "number",
+            },
+        },
+        {
+            "field": "project",
+            "label": "项目",
+            "type": "relation",
+            "required": False,
+            "positions": ["body", "footer"],
+            "style_options": {},
+        },
+        {
+            "field": "subtasks_count",
+            "label": "子任务",
+            "type": "computed",
+            "required": False,
+            "positions": ["body", "footer"],
+            "style_options": {
+                "showProgress": "boolean",
+            },
+        },
+        {
+            "field": "custom_group",
+            "label": "自定义分组",
+            "type": "text",
+            "required": False,
+            "positions": ["body", "footer"],
+            "style_options": {},
+        },
+    ]
+
+    @classmethod
+    def get_default_field_configs(cls):
+        """返回默认的字段配置"""
+        return [
+            {"field": "priority", "visible": True, "position": "header_left", "style": {"variant": "flag"}},
+            {"field": "title", "visible": True, "position": "header", "style": {"fontSize": "medium", "fontWeight": "medium", "showStrikethrough": True}},
+            {"field": "status", "visible": True, "position": "header_right", "style": {"variant": "badge"}},
+            {"field": "tags", "visible": True, "position": "body", "style": {"variant": "pill", "maxCount": 3}},
+            {"field": "project", "visible": True, "position": "footer", "style": {}},
+            {"field": "due_date", "visible": True, "position": "footer", "style": {"showRelative": True}},
+            {"field": "subtasks_count", "visible": True, "position": "footer", "style": {"showProgress": True}},
+            {"field": "content", "visible": False, "position": "body", "style": {"maxLines": 2}},
+            {"field": "start_date", "visible": False, "position": "footer", "style": {"showRelative": True}},
+            {"field": "custom_group", "visible": False, "position": "footer", "style": {}},
+        ]
+
+
+# =========================
 # 视图模型
 # =========================
 
@@ -472,6 +663,8 @@ class TaskView(BaseModel):
         BOARD = "board", "看板视图"
         CALENDAR = "calendar", "日历视图"
         TABLE = "table", "表格视图"
+        TIMELINE = "timeline", "时间线视图"
+        GALLERY = "gallery", "画廊视图"
 
     uid = models.CharField(
         max_length=22,
@@ -501,6 +694,17 @@ class TaskView(BaseModel):
     is_system = models.BooleanField(default=False, verbose_name="是否系统视图", help_text="系统视图用于初始化新用户")
     is_visible_in_nav = models.BooleanField(default=True, verbose_name="是否在导航栏显示")
     sort_order = models.FloatField(default=get_timestamp_sortorder, verbose_name="排序")
+
+    # 关联卡片配置
+    card_config = models.ForeignKey(
+        TaskCardConfig,
+        to_field="uid",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="views",
+        verbose_name="卡片配置",
+    )
     
     # 筛选条件
     filters = models.JSONField(
@@ -527,12 +731,12 @@ class TaskView(BaseModel):
         help_text="按哪个字段分组显示"
     )
     
-    # 显示设置
-    display_settings = models.JSONField(
+    # 显示设置（视图级别：看板列设置、日历起始日、表格列宽等）
+    view_settings = models.JSONField(
         default=dict,
         blank=True,
-        verbose_name="显示设置",
-        help_text="列显示、颜色、图标等设置"
+        verbose_name="视图设置",
+        help_text="视图级别配置，非卡片级别",
     )
     
     # 清单跟随设置
