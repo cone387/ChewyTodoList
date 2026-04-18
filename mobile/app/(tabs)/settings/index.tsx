@@ -6,10 +6,12 @@ import {
   ScrollView,
   TextInput,
   ActivityIndicator,
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuth } from '../../../hooks/useAuth';
+import { useTheme } from '../../../hooks/useTheme';
 import { authApi } from '../../../shared/services/api';
 import { useToast } from '../../../hooks/useToast';
 import { Colors } from '../../../constants/theme';
@@ -17,6 +19,7 @@ import { Colors } from '../../../constants/theme';
 export default function SettingsPage() {
   const { logout } = useAuth();
   const { showToast } = useToast();
+  const { isDark, toggleTheme, colors } = useTheme();
 
   const [profile, setProfile] = useState<{ username: string; email: string } | null>(null);
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -106,6 +109,17 @@ export default function SettingsPage() {
             <Text style={{ fontSize: 15, color: '#374151', flex: 1 }}>卡片配置</Text>
             <Text style={{ color: '#d1d5db' }}>›</Text>
           </TouchableOpacity>
+
+          {/* Dark mode toggle */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+            <Text style={{ fontSize: 15, color: '#374151', flex: 1 }}>深色模式</Text>
+            <Switch
+              value={isDark}
+              onValueChange={toggleTheme}
+              trackColor={{ false: '#e5e7eb', true: Colors.primary + '60' }}
+              thumbColor={isDark ? Colors.primary : '#f4f3f4'}
+            />
+          </View>
 
           {/* Change password */}
           <TouchableOpacity

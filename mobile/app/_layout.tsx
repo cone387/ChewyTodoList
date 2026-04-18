@@ -13,6 +13,7 @@ import { useAuth } from '../hooks/useAuth';
 import { authApi } from '../shared/services/api';
 import { ToastContainer } from '../components/ui/Toast';
 import { ToastContext, useToastProvider } from '../hooks/useToast';
+import { ThemeContext, useThemeProvider } from '../hooks/useTheme';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -66,6 +67,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   const toastCtx = useToastProvider();
+  const themeCtx = useThemeProvider();
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -74,15 +76,17 @@ export default function RootLayout() {
           client={queryClient}
           persistOptions={{ persister: asyncStoragePersister, maxAge: 1000 * 60 * 60 * 24 }}
         >
-          <ToastContext.Provider value={toastCtx}>
-            <StatusBar style="auto" />
-            <View style={{ flex: 1 }}>
-              <AuthGuard>
-                <Stack screenOptions={{ headerShown: false }} />
-              </AuthGuard>
-              <ToastContainer toasts={toastCtx.toasts} onDismiss={toastCtx.dismissToast} />
-            </View>
-          </ToastContext.Provider>
+          <ThemeContext.Provider value={themeCtx}>
+            <ToastContext.Provider value={toastCtx}>
+              <StatusBar style={themeCtx.isDark ? 'light' : 'dark'} />
+              <View style={{ flex: 1, backgroundColor: themeCtx.colors.background.primary }}>
+                <AuthGuard>
+                  <Stack screenOptions={{ headerShown: false }} />
+                </AuthGuard>
+                <ToastContainer toasts={toastCtx.toasts} onDismiss={toastCtx.dismissToast} />
+              </View>
+            </ToastContext.Provider>
+          </ThemeContext.Provider>
         </PersistQueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

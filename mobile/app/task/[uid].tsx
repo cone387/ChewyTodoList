@@ -21,6 +21,7 @@ import { TagPicker } from '../../components/task/detail/TagPicker';
 import { SubtaskList } from '../../components/task/detail/SubtaskList';
 import { ActivityLog } from '../../components/task/detail/ActivityLog';
 import { AttachmentList } from '../../components/task/detail/AttachmentList';
+import { DatePicker } from '../../components/task/detail/DatePicker';
 import { useToast } from '../../hooks/useToast';
 import { TaskStatus, TaskPriority } from '../../shared/types/index';
 import type { Task, Project, Tag } from '../../shared/types/index';
@@ -373,46 +374,28 @@ export default function TaskDetailPage() {
               </View>
             </TouchableOpacity>
 
-            {/* Due date with quick options */}
-            {!isCreate && (
-              <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: task?.due_date ? 8 : 0 }}>
-                  <Text style={{ color: '#9ca3af', fontSize: 14, width: 70 }}>截止</Text>
-                  {task?.due_date ? (
-                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
-                      <Text style={{ fontSize: 14, color: task.is_overdue ? '#ef4444' : '#374151' }}>
-                        {new Date(task.due_date).toLocaleDateString('zh-CN')}
-                      </Text>
-                      <Text style={{ fontSize: 12, color: task.is_overdue ? '#ef4444' : '#9ca3af' }}>
-                        {getRelativeDate(task.due_date)}
-                      </Text>
-                      {task.is_overdue && (
-                        <View style={{ backgroundColor: '#fef2f2', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
-                          <Text style={{ color: '#ef4444', fontSize: 11, fontWeight: '600' }}>逾期</Text>
-                        </View>
-                      )}
-                      <TouchableOpacity onPress={() => handleClearDate('due_date')}>
-                        <Text style={{ color: '#d1d5db', fontSize: 16 }}>×</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ) : (
-                    <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end', gap: 6 }}>
-                      {getQuickDates().map((qd) => (
-                        <TouchableOpacity
-                          key={qd.label}
-                          style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: '#f3f4f6', borderRadius: 6 }}
-                          onPress={() => handleQuickDate(qd.value)}
-                        >
-                          <Text style={{ fontSize: 12, color: '#6b7280' }}>{qd.icon} {qd.label}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  )}
-                </View>
-              </View>
+            {/* Due date - DatePicker component */}
+            {!isCreate && task && (
+              <DatePicker
+                label="截止"
+                value={task.due_date}
+                onChange={(val) => {
+                  updateTask.mutateAsync({ uid: task.uid, data: { due_date: val || undefined } }).catch(() => showToast('error', '日期更新失败'));
+                }}
+                isOverdue={task.is_overdue}
+              />
             )}
 
-            {/* Tags - tappable to open picker */}
+            {/* Start date - DatePicker component */}
+            {!isCreate && task && (
+              <DatePicker
+                label="开始"
+                value={task.start_date}
+                onChange={(val) => {
+                  updateTask.mutateAsync({ uid: task.uid, data: { start_date: val || undefined } }).catch(() => showToast('error', '日期更新失败'));
+                }}
+              />
+            )}
             {!isCreate && task && (
               <TouchableOpacity
                 style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}
@@ -434,21 +417,6 @@ export default function TaskDetailPage() {
                   </View>
                 </View>
               </TouchableOpacity>
-            )}
-
-            {/* Start date */}
-            {!isCreate && task?.start_date && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
-                <Text style={{ color: '#9ca3af', fontSize: 14, width: 70 }}>开始</Text>
-                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
-                  <Text style={{ fontSize: 14, color: '#374151' }}>
-                    {new Date(task.start_date).toLocaleDateString('zh-CN')}
-                  </Text>
-                  <TouchableOpacity onPress={() => handleClearDate('start_date')}>
-                    <Text style={{ color: '#d1d5db', fontSize: 16 }}>×</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
             )}
           </View>
 
