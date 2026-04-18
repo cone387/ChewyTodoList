@@ -33,10 +33,20 @@ export default function LoginPage() {
     try {
       await login(username.trim(), password);
     } catch (err: any) {
+      console.error('Login error:', JSON.stringify({
+        message: err?.message,
+        code: err?.code,
+        status: err?.response?.status,
+        data: err?.response?.data,
+        url: err?.config?.url,
+        baseURL: err?.config?.baseURL,
+      }, null, 2));
       const msg =
         err?.response?.data?.error?.message ||
         err?.response?.data?.message ||
-        '登录失败，请检查用户名和密码';
+        err?.code === 'ERR_NETWORK'
+          ? `网络错误：无法连接到服务器 (${process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000/api'})`
+          : '登录失败，请检查用户名和密码';
       setError(msg);
     } finally {
       setLoading(false);
