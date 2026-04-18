@@ -100,7 +100,7 @@
     - _需求：需求 9.3_
 
 - [ ] 33. 任务详情页 — 时间管理
-  - [ ] 33.1 实现 DateSection 组件
+  - [x] 33.1 实现 DateSection 组件
     - 创建 `mobile/components/task/detail/DatePicker.tsx`
     - 集成 `@react-native-community/datetimepicker`
     - 开始日期 + 截止日期选择器
@@ -337,8 +337,8 @@
 
 ## Phase 5：主题、离线与设置（🟢 P2）
 
-- [ ] 70. 深色模式
-  - [ ] 70.1 实现深色模式支持
+- [x] 70. 深色模式
+  - [x] 70.1 实现深色模式支持
     - 创建 ThemeContext，管理 light/dark 模式状态
     - 更新 constants/theme.ts，定义 light/dark 两套颜色方案
     - 更新所有组件的样式，支持 dark: 前缀
