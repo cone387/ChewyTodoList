@@ -50,7 +50,7 @@
 ## Phase 1：核心任务管理（🔴 P0 — 最高优先级）
 
 - [ ] 30. Toast 通知系统
-  - [ ] 30.1 实现 Toast 组件与 useToast hook
+  - [x] 30.1 实现 Toast 组件与 useToast hook
     - 创建 `mobile/components/ui/Toast.tsx` 和 `mobile/hooks/useToast.ts`
     - 支持 success/error/info/warning 四种类型
     - 3 秒自动消失，支持手动关闭
@@ -58,37 +58,37 @@
     - _需求：需求 18_
 
 - [ ] 31. 快速创建任务
-  - [ ] 31.1 实现 QuickCreateSheet 组件
+  - [x] 31.1 实现 QuickCreateSheet 组件
     - 创建 `mobile/components/task/QuickCreateSheet.tsx`
     - 底部弹出表单：标题（必填）、项目选择、优先级选择、截止日期选择
     - 标题为空时阻止提交并提示
     - 提交成功后关闭表单、刷新任务列表、展示成功 Toast
     - _需求：需求 10.2、10.3、10.4_
 
-  - [ ] 31.2 在主页集成 FAB + QuickCreateSheet
+  - [x] 31.2 在主页集成 FAB + QuickCreateSheet
     - 在 `mobile/app/(tabs)/index.tsx` 中连接 FAB 点击事件到 QuickCreateSheet
     - _需求：需求 10.1_
 
 - [ ] 32. 任务详情页 — 基础信息
-  - [ ] 32.1 实现任务详情页骨架与数据加载
+  - [x] 32.1 实现任务详情页骨架与数据加载
     - 完善 `mobile/app/task/[uid].tsx`
     - 调用 `GET /api/tasks/{uid}/` 获取任务完整数据
     - 实现 `useAutoSave` hook：debounce 1000ms 后 PATCH，顶部显示"保存中.../已保存"
     - _需求：需求 9.1、9.4_
 
-  - [ ] 32.2 实现 TitleEditor 组件
+  - [x] 32.2 实现 TitleEditor 组件
     - 创建 `mobile/components/task/detail/TitleEditor.tsx`
     - 内联 TextInput，点击即可编辑
     - _需求：需求 9.2_
 
-  - [ ] 32.3 实现 StatusPicker 组件
+  - [x] 32.3 实现 StatusPicker 组件
     - 创建 `mobile/components/task/detail/StatusPicker.tsx`
     - ActionSheet 展示四个状态选项（含颜色和图标）
     - 顶部完成状态复选框，点击乐观更新
     - 变更为"已完成"时自动记录完成时间
     - _需求：需求 9.5、9.6、9.8_
 
-  - [ ] 32.4 实现 PriorityPicker 组件
+  - [x] 32.4 实现 PriorityPicker 组件
     - 创建 `mobile/components/task/detail/PriorityPicker.tsx`
     - ActionSheet 展示四个优先级选项（含颜色标识）
     - _需求：需求 9.7_
@@ -180,7 +180,7 @@
 ## Phase 2：项目与视图管理（🔴 P0）
 
 - [ ] 40. 项目管理页
-  - [ ] 40.1 实现项目列表页
+  - [x] 40.1 实现项目列表页
     - 完善 `mobile/app/(tabs)/projects/index.tsx`（替换占位页）
     - 调用 `/api/projects/` 获取项目列表，按 Group 分组展示
     - 每个项目显示名称、图标、颜色、任务统计
@@ -188,25 +188,25 @@
     - 支持创建和管理 Group（创建、重命名、删除）
     - _需求：需求 11.1、11.3、11.6_
 
-  - [ ] 40.2 实现项目详情页
+  - [x] 40.2 实现项目详情页
     - 完善 `mobile/app/(tabs)/projects/[uid].tsx`（替换占位页）
     - 展示项目下的任务列表（复用 ListView）
     - 支持编辑项目名称和描述
     - 删除项目时 ConfirmDialog 确认
     - _需求：需求 11.2、11.4、11.5_
 
-  - [ ] 40.3 实现 useGroups hook
+  - [x] 40.3 实现 useGroups hook
     - 创建 `mobile/hooks/useGroups.ts`
     - 实现 Group CRUD（创建、更新、删除、列表）
     - _需求：需求 11.6_
 
-  - [ ] 40.4 实现 useTags hook
+  - [x] 40.4 实现 useTags hook
     - 创建 `mobile/hooks/useTags.ts`
     - 实现 Tag CRUD（创建、更新、删除、列表）
     - _需求：需求 14_
 
 - [ ] 41. 视图管理页
-  - [ ] 41.1 实现视图列表页
+  - [x] 41.1 实现视图列表页
     - 完善 `mobile/app/(tabs)/views/index.tsx`（替换占位页）
     - 展示所有 TaskView（名称、类型图标、导航栏显示状态）
     - 支持复制视图（POST `/api/views/{uid}/duplicate/`）
@@ -214,7 +214,7 @@
     - 支持切换导航栏显示状态
     - _需求：需求 12.1、12.7、12.8_
 
-  - [ ] 41.2 实现视图创建/编辑页
+  - [x] 41.2 实现视图创建/编辑页（基础版）
     - 完善 `mobile/app/(tabs)/views/create.tsx` 和 `[uid]/edit.tsx`
     - 选择视图类型（list/board/calendar/table/timeline/gallery）
     - 填写名称、关联项目、是否在导航栏显示
@@ -361,7 +361,7 @@
     - _需求：需求 15.3、15.4_
 
 - [ ] 72. 设置页完善
-  - [ ] 72.1 完善设置页
+  - [x] 72.1 完善设置页
     - 展示当前登录用户的用户名和邮箱
     - 支持修改密码（调用 POST `/api/auth/change-password/`）
     - 集成深色模式切换
