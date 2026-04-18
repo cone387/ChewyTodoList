@@ -16,7 +16,8 @@ import { ActionSheet } from '../../../components/ui/ActionSheet';
 import { useToast } from '../../../hooks/useToast';
 import { Colors } from '../../../constants/theme';
 import { useQueryClient } from '@tanstack/react-query';
-import type { Project } from '../../../shared/types/index';
+import type { Project, ViewFilter, ViewSort } from '../../../shared/types/index';
+import { FilterBuilder } from '../../../components/views/FilterBuilder';
 
 const VIEW_TYPES = [
   { label: '列表', value: 'list', icon: '☰', desc: '以列表形式展示任务' },
@@ -41,6 +42,8 @@ export default function CreateViewPage() {
   const [followSelectedProject, setFollowSelectedProject] = useState(true);
   const [showProjectPicker, setShowProjectPicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [filters, setFilters] = useState<ViewFilter[]>([]);
+  const [sorts, setSorts] = useState<ViewSort[]>([]);
 
   const selectedProject = projects.find((p) => p.uid === projectUid);
 
@@ -56,6 +59,8 @@ export default function CreateViewPage() {
         view_type: viewType,
         is_visible_in_nav: isVisibleInNav,
         follow_selected_project: followSelectedProject,
+        filters,
+        sorts,
       };
       if (projectUid) data.project_uid = projectUid;
       await viewApi.createView(data);
@@ -143,6 +148,14 @@ export default function CreateViewPage() {
             </Text>
             <Text style={{ color: '#9ca3af' }}>▼</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Filters */}
+        <View style={{ marginTop: 20, marginHorizontal: 16 }}>
+          <Text style={{ fontSize: 13, fontWeight: '600', color: '#9ca3af', marginBottom: 8 }}>筛选条件</Text>
+          <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e5e7eb' }}>
+            <FilterBuilder filters={filters} onChange={setFilters} />
+          </View>
         </View>
 
         {/* Settings */}
