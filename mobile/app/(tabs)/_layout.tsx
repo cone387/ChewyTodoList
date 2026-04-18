@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { Text, Platform } from 'react-native';
 
 function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
   return (
@@ -17,10 +17,12 @@ export default function TabsLayout() {
         tabBarStyle: {
           borderTopColor: '#e5e7eb',
           backgroundColor: '#ffffff',
+          height: Platform.OS === 'ios' ? 88 : 60,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+          paddingTop: 8,
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '500',
         },
       }}
     >
