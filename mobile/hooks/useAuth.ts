@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { router } from 'expo-router';
 import { authApi } from '../shared/services/api';
 import { storage } from '../shared/services/storage';
 
@@ -45,16 +44,19 @@ export function useAuth() {
   );
 
   const logout = useCallback(async () => {
+    // 1. Clear tokens first (synchronous-like on web, async on native)
+    await storage.removeItem(TOKEN_KEYS.access);
+    await storage.removeItem(TOKEN_KEYS.refresh);
+
+    // 2. Try to call logout API (best effort, don't block)
     try {
       await authApi.logout();
     } catch {
-      // 即使 API 失败也清除本地 token
-    } finally {
-      await storage.removeItem(TOKEN_KEYS.access);
-      await storage.removeItem(TOKEN_KEYS.refresh);
-      setIsAuthenticated(false);
-      router.replace('/(auth)/login');
+      // Ignore — tokens already cleared locally
     }
+
+    // 3. Set state — AuthGuard will handle the redirect
+    setIsAuthenticated(false);
   }, []);
 
   return { isAuthenticated, login, register, logout };

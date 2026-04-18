@@ -42,9 +42,9 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     const inAuthGroup = segments[0] === '(auth)';
 
     if (!isAuthenticated && !inAuthGroup) {
-      router.replace('/(auth)/login');
+      // Delay slightly to ensure storage is cleared before redirect
+      setTimeout(() => router.replace('/(auth)/login'), 50);
     } else if (isAuthenticated && inAuthGroup) {
-      // Small delay to ensure state is settled before navigation
       setTimeout(() => router.replace('/(tabs)'), 100);
     }
   }, [isAuthenticated, segments]);
