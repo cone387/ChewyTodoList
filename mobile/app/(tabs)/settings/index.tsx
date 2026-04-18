@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { useAuth } from '../../../hooks/useAuth';
 import { authApi } from '../../../shared/services/api';
 import { useToast } from '../../../hooks/useToast';
@@ -88,6 +89,15 @@ export default function SettingsPage() {
 
         {/* Settings items */}
         <View style={{ marginTop: 16, marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+          {/* Tag management */}
+          <TouchableOpacity
+            style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}
+            onPress={() => router.push('/(tabs)/settings/tags' as any)}
+          >
+            <Text style={{ fontSize: 15, color: '#374151', flex: 1 }}>标签管理</Text>
+            <Text style={{ color: '#d1d5db' }}>›</Text>
+          </TouchableOpacity>
+
           {/* Change password */}
           <TouchableOpacity
             style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}

@@ -1,14 +1,16 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
+  TextInput,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useNavViews, useViewTasks } from '../../hooks/useViews';
+import { useTasks } from '../../hooks/useTasks';
 import { ListView } from '../../components/views/ListView';
 import { BoardView } from '../../components/views/BoardView';
 import { CalendarView } from '../../components/views/CalendarView';
@@ -21,6 +23,7 @@ import { OfflineBanner } from '../../components/ui/OfflineBanner';
 import { QuickCreateSheet } from '../../components/task/QuickCreateSheet';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import type { Task, TaskView } from '../../shared/types/index';
+import { Colors } from '../../constants/theme';
 
 const VIEW_TYPE_ICONS: Record<string, string> = {
   list: '☰', board: '⊞', calendar: '📅', table: '⊟', timeline: '⟶', gallery: '⊡',
@@ -32,6 +35,20 @@ export default function HomePage() {
   const [selectedViewUid, setSelectedViewUid] = useState<string | null>(null);
   const [selectedProjectUid, setSelectedProjectUid] = useState<string | null>(null);
   const [showCreateSheet, setShowCreateSheet] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Search debounce
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const { data: searchData, isLoading: searchLoading } = useTasks(
+    debouncedSearch ? { search: debouncedSearch } : undefined
+  );
+  const searchResults = debouncedSearch ? (searchData?.results || []) : [];
 
   const currentView: TaskView | undefined =
     views.find((v) => v.uid === selectedViewUid) || views[0];
@@ -94,8 +111,35 @@ export default function HomePage() {
       <View style={{ backgroundColor: '#fff', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
           <Text style={{ fontSize: 20, fontWeight: '700', color: '#111418' }}>我的任务</Text>
-          <ProjectSelector selectedProjectUid={selectedProjectUid} onSelect={setSelectedProjectUid} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <TouchableOpacity onPress={() => setShowSearch(!showSearch)}>
+              <Text style={{ fontSize: 18, color: showSearch ? Colors.primary : '#6b7280' }}>🔍</Text>
+            </TouchableOpacity>
+            <ProjectSelector selectedProjectUid={selectedProjectUid} onSelect={setSelectedProjectUid} />
+          </View>
         </View>
+
+        {/* Search bar */}
+        {showSearch && (
+          <View style={{ marginBottom: 8 }}>
+            <TextInput
+              style={{
+                backgroundColor: '#f3f4f6',
+                borderRadius: 10,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                fontSize: 14,
+                color: '#111418',
+              }}
+              placeholder="搜索任务..."
+              placeholderTextColor="#9ca3af"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+              returnKeyType="search"
+            />
+          </View>
+        )}
 
         {views.length > 0 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -130,7 +174,15 @@ export default function HomePage() {
       </View>
 
       <View style={{ flex: 1 }}>
-        {currentView ? (
+        {debouncedSearch ? (
+          /* Search results */
+          <ListView
+            tasks={searchResults}
+            onTaskPress={handleTaskPress}
+            isLoading={searchLoading}
+            emptyMessage={`未找到"${debouncedSearch}"相关任务`}
+          />
+        ) : currentView ? (
           renderViewContent()
         ) : (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
