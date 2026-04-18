@@ -113,35 +113,30 @@ export default function HomePage() {
       <OfflineBanner visible={!isOnline} />
 
       <View style={{ backgroundColor: '#fff', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        {/* Row 1: Title + Project Selector */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <Text style={{ fontSize: 20, fontWeight: '700', color: '#111418' }}>我的任务</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <TouchableOpacity
-              onPress={() => setShowSearch(!showSearch)}
-              style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
-            >
-              <MaterialCommunityIcons
-                name="magnify"
-                size={22}
-                color={showSearch ? Colors.primary : '#6b7280'}
-              />
-            </TouchableOpacity>
-            <ProjectSelector selectedProjectUid={selectedProjectUid} onSelect={setSelectedProjectUid} />
-          </View>
+          <ProjectSelector selectedProjectUid={selectedProjectUid} onSelect={setSelectedProjectUid} />
         </View>
 
-        {/* Search bar */}
-        {showSearch && (
-          <View style={{ marginBottom: 8 }}>
+        {/* Row 2: Search bar (always visible, compact) */}
+        <TouchableOpacity
+          onPress={() => setShowSearch(!showSearch)}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: '#f3f4f6',
+            borderRadius: 10,
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            marginBottom: 10,
+            gap: 8,
+          }}
+        >
+          <MaterialCommunityIcons name="magnify" size={18} color="#9ca3af" />
+          {showSearch ? (
             <TextInput
-              style={{
-                backgroundColor: '#f3f4f6',
-                borderRadius: 10,
-                paddingHorizontal: 12,
-                paddingVertical: 8,
-                fontSize: 14,
-                color: '#111418',
-              }}
+              style={{ flex: 1, fontSize: 14, color: '#111418', paddingVertical: 0 }}
               placeholder="搜索任务..."
               placeholderTextColor="#9ca3af"
               value={searchQuery}
@@ -149,8 +144,15 @@ export default function HomePage() {
               autoFocus
               returnKeyType="search"
             />
-          </View>
-        )}
+          ) : (
+            <Text style={{ flex: 1, fontSize: 14, color: '#9ca3af' }}>搜索任务...</Text>
+          )}
+          {showSearch && searchQuery ? (
+            <TouchableOpacity onPress={() => { setSearchQuery(''); setShowSearch(false); }}>
+              <MaterialCommunityIcons name="close" size={16} color="#9ca3af" />
+            </TouchableOpacity>
+          ) : null}
+        </TouchableOpacity>
 
         {views.length > 0 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
