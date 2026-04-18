@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth, AuthContext, useAuthProvider } from '../hooks/useAuth';
 import { authApi } from '../shared/services/api';
 import { ToastContainer } from '../components/ui/Toast';
 import { ToastContext, useToastProvider } from '../hooks/useToast';
@@ -39,10 +39,12 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isAuthenticated === null) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
+    // On web, Expo Router strips group names from segments,
+    // so /login has segments=['login'] not segments=['(auth)','login']
+    const inAuthGroup = segments[0] === '(auth)' ||
+      segments.some(s => s === 'login' || s === 'register');
 
     if (!isAuthenticated && !inAuthGroup) {
-      // Delay slightly to ensure storage is cleared before redirect
       setTimeout(() => router.replace('/(auth)/login'), 50);
     } else if (isAuthenticated && inAuthGroup) {
       setTimeout(() => router.replace('/(tabs)'), 100);
@@ -69,6 +71,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
   const toastCtx = useToastProvider();
   const themeCtx = useThemeProvider();
+  const authCtx = useAuthProvider();
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -77,17 +80,19 @@ export default function RootLayout() {
           client={queryClient}
           persistOptions={{ persister: asyncStoragePersister, maxAge: 1000 * 60 * 60 * 24 }}
         >
-          <ThemeContext.Provider value={themeCtx}>
-            <ToastContext.Provider value={toastCtx}>
-              <StatusBar style={themeCtx.isDark ? 'light' : 'dark'} />
-              <View style={{ flex: 1, backgroundColor: themeCtx.colors.background.primary }}>
-                <AuthGuard>
-                  <Stack screenOptions={{ headerShown: false }} />
-                </AuthGuard>
-                <ToastContainer toasts={toastCtx.toasts} onDismiss={toastCtx.dismissToast} />
-              </View>
-            </ToastContext.Provider>
-          </ThemeContext.Provider>
+          <AuthContext.Provider value={authCtx}>
+            <ThemeContext.Provider value={themeCtx}>
+              <ToastContext.Provider value={toastCtx}>
+                <StatusBar style={themeCtx.isDark ? 'light' : 'dark'} />
+                <View style={{ flex: 1, backgroundColor: themeCtx.colors.background.primary }}>
+                  <AuthGuard>
+                    <Stack screenOptions={{ headerShown: false }} />
+                  </AuthGuard>
+                  <ToastContainer toasts={toastCtx.toasts} onDismiss={toastCtx.dismissToast} />
+                </View>
+              </ToastContext.Provider>
+            </ThemeContext.Provider>
+          </AuthContext.Provider>
         </PersistQueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

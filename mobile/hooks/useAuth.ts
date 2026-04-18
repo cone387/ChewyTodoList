@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { authApi } from '../shared/services/api';
 import { storage } from '../shared/services/storage';
 
@@ -7,10 +7,27 @@ const TOKEN_KEYS = {
   refresh: 'refresh_token',
 } as const;
 
-export function useAuth() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // null = loading
+export interface AuthContextValue {
+  isAuthenticated: boolean | null;
+  login: (username: string, password: string) => Promise<any>;
+  register: (username: string, password: string, email: string) => Promise<any>;
+  logout: () => Promise<void>;
+}
 
-  // 初始化时检查 token
+// Global context so AuthGuard and all pages share the same state
+export const AuthContext = createContext<AuthContextValue>({
+  isAuthenticated: null,
+  login: async () => {},
+  register: async () => {},
+  logout: async () => {},
+});
+
+/**
+ * Call this ONCE in _layout.tsx to create the provider value.
+ */
+export function useAuthProvider(): AuthContextValue {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
   useEffect(() => {
     storage.getItem(TOKEN_KEYS.access).then((token) => {
       setIsAuthenticated(!!token);
@@ -44,20 +61,18 @@ export function useAuth() {
   );
 
   const logout = useCallback(async () => {
-    // 1. Clear tokens first (synchronous-like on web, async on native)
     await storage.removeItem(TOKEN_KEYS.access);
     await storage.removeItem(TOKEN_KEYS.refresh);
-
-    // 2. Try to call logout API (best effort, don't block)
-    try {
-      await authApi.logout();
-    } catch {
-      // Ignore — tokens already cleared locally
-    }
-
-    // 3. Set state — AuthGuard will handle the redirect
+    try { await authApi.logout(); } catch {}
     setIsAuthenticated(false);
   }, []);
 
   return { isAuthenticated, login, register, logout };
+}
+
+/**
+ * Use this in any component to access auth state & actions.
+ */
+export function useAuth() {
+  return useContext(AuthContext);
 }

@@ -96,3 +96,6 @@ logs/
 
 # Docker
 .dockerignore
+
+# Playwright MCP
+.playwright-mcp/
