@@ -13,6 +13,7 @@ import { ActionSheet } from '../../ui/ActionSheet';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { useToast } from '../../../hooks/useToast';
 import { Colors } from '../../../constants/theme';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { Task } from '../../../shared/types/index';
 
 interface SubtaskListProps {
@@ -158,9 +159,13 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({
       )}
 
       {totalCount === 0 && !showAddInput && (
-        <View style={{ alignItems: 'center', paddingVertical: 8 }}>
-          <Text style={{ color: '#d1d5db', fontSize: 13 }}>暂无子任务</Text>
-        </View>
+        <TouchableOpacity
+          style={{ alignItems: 'center', paddingVertical: 12, flexDirection: 'row', justifyContent: 'center', gap: 4 }}
+          onPress={() => { setShowAddInput(true); setTimeout(() => inputRef.current?.focus(), 100); }}
+        >
+          <MaterialCommunityIcons name="plus-circle-outline" size={16} color={Colors.primary} />
+          <Text style={{ color: Colors.primary, fontSize: 13, fontWeight: '500' }}>添加子任务</Text>
+        </TouchableOpacity>
       )}
 
       {/* Subtask actions */}

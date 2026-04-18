@@ -5,14 +5,23 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
-  Animated,
+  Platform,
 } from 'react-native';
-import { Swipeable } from 'react-native-gesture-handler';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { Task, TaskView } from '../../shared/types/index';
 import { TaskCard } from '../task/TaskCard';
+import { EmptyState } from '../ui/EmptyState';
 import { useToggleTaskStatus, useDeleteTask } from '../../hooks/useTasks';
 import { useToast } from '../../hooks/useToast';
 import { Colors } from '../../constants/theme';
+
+// Conditionally import Swipeable only on native
+let Swipeable: any = null;
+if (Platform.OS !== 'web') {
+  try {
+    Swipeable = require('react-native-gesture-handler').Swipeable;
+  } catch {}
+}
 
 interface ListViewProps {
   tasks: Task[];
@@ -40,7 +49,7 @@ export const ListView: React.FC<ListViewProps> = ({
   const toggleStatus = useToggleTaskStatus();
   const deleteTask = useDeleteTask();
   const { showToast } = useToast();
-  const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
+  const swipeableRefs = useRef<Map<string, any>>(new Map());
 
   const closeSwipeable = (uid: string) => {
     swipeableRefs.current.get(uid)?.close();
@@ -75,7 +84,11 @@ export const ListView: React.FC<ListViewProps> = ({
           }}
           onPress={() => handleComplete(task)}
         >
-          <Text style={{ color: '#fff', fontSize: 18 }}>{task.is_completed ? '↩' : '✓'}</Text>
+          <MaterialCommunityIcons
+            name={task.is_completed ? 'undo' : 'check'}
+            size={20}
+            color="#fff"
+          />
           <Text style={{ color: '#fff', fontSize: 10, marginTop: 2 }}>
             {task.is_completed ? '取消' : '完成'}
           </Text>
@@ -91,7 +104,7 @@ export const ListView: React.FC<ListViewProps> = ({
           }}
           onPress={() => handleDelete(task)}
         >
-          <Text style={{ color: '#fff', fontSize: 18 }}>🗑</Text>
+          <MaterialCommunityIcons name="delete" size={20} color="#fff" />
           <Text style={{ color: '#fff', fontSize: 10, marginTop: 2 }}>删除</Text>
         </TouchableOpacity>
       </View>
@@ -99,23 +112,27 @@ export const ListView: React.FC<ListViewProps> = ({
   }, []);
 
   const renderItem = useCallback(
-    ({ item }: { item: Task }) => (
-      <Swipeable
-        ref={(ref) => { if (ref) swipeableRefs.current.set(item.uid, ref); }}
-        renderRightActions={() => renderRightActions(item)}
-        overshootRight={false}
-        friction={2}
-      >
+    ({ item }: { item: Task }) => {
+      const cardContent = (
         <View style={{ backgroundColor: '#fff' }}>
           <View style={{ position: 'relative' }}>
             <TaskCard
               task={item}
               cardConfig={view?.card_config}
               onPress={() => onTaskPress(item)}
+              style={{ paddingLeft: 44 }}
             />
-            {/* Quick complete checkbox */}
+            {/* Quick complete checkbox — inside card padding */}
             <TouchableOpacity
-              style={{ position: 'absolute', left: 16, top: 0, bottom: 0, justifyContent: 'center', width: 24 }}
+              style={{
+                position: 'absolute',
+                left: 28,
+                top: 0,
+                bottom: 0,
+                justifyContent: 'center',
+                width: 28,
+                alignItems: 'center',
+              }}
               onPress={() => toggleStatus.mutate({ task: item })}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
@@ -132,14 +149,30 @@ export const ListView: React.FC<ListViewProps> = ({
                 }}
               >
                 {item.is_completed && (
-                  <Text style={{ color: 'white', fontSize: 11, fontWeight: '700' }}>✓</Text>
+                  <MaterialCommunityIcons name="check" size={12} color="#fff" />
                 )}
               </View>
             </TouchableOpacity>
           </View>
         </View>
-      </Swipeable>
-    ),
+      );
+
+      // On web, skip Swipeable wrapper
+      if (Platform.OS === 'web' || !Swipeable) {
+        return cardContent;
+      }
+
+      return (
+        <Swipeable
+          ref={(ref: any) => { if (ref) swipeableRefs.current.set(item.uid, ref); }}
+          renderRightActions={() => renderRightActions(item)}
+          overshootRight={false}
+          friction={2}
+        >
+          {cardContent}
+        </Swipeable>
+      );
+    },
     [view, onTaskPress, toggleStatus, renderRightActions]
   );
 
@@ -161,10 +194,10 @@ export const ListView: React.FC<ListViewProps> = ({
       );
     }
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 80 }}>
-        <Text style={{ fontSize: 36, marginBottom: 12 }}>📋</Text>
-        <Text style={{ color: '#9ca3af', fontSize: 16 }}>{emptyMessage}</Text>
-      </View>
+      <EmptyState
+        icon="clipboard-text-outline"
+        message={emptyMessage}
+      />
     );
   }, [isLoading, emptyMessage]);
 

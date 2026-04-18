@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { activityApi } from '../../../shared/services/api';
 import { Colors } from '../../../constants/theme';
 import type { ActivityLog as ActivityLogType } from '../../../shared/types/index';
@@ -68,7 +69,7 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ taskUid }) => {
         onPress={handleExpand}
       >
         <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: '#374151' }}>活动日志</Text>
-        <Text style={{ color: '#9ca3af', fontSize: 14 }}>{expanded ? '▲' : '▼'}</Text>
+        <MaterialCommunityIcons name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color="#9ca3af" />
       </TouchableOpacity>
 
       {expanded && (

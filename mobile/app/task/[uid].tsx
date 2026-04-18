@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,12 +11,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTask, useUpdateTask, useDeleteTask, useCreateTask } from '../../hooks/useTasks';
 import { useProjects } from '../../hooks/useProjects';
 import { useSubtasks } from '../../hooks/useSubtasks';
 import { ActionSheet } from '../../components/ui/ActionSheet';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
-import { ProgressBar } from '../../components/ui/ProgressBar';
 import { TagPicker } from '../../components/task/detail/TagPicker';
 import { SubtaskList } from '../../components/task/detail/SubtaskList';
 import { ActivityLog } from '../../components/task/detail/ActivityLog';
@@ -26,12 +26,13 @@ import { useToast } from '../../hooks/useToast';
 import { TaskStatus, TaskPriority } from '../../shared/types/index';
 import type { Task, Project, Tag } from '../../shared/types/index';
 import { Colors } from '../../constants/theme';
+import { StatusIcons } from '../../constants/icons';
 
 const STATUS_OPTIONS = [
-  { label: '待分配', value: TaskStatus.UNASSIGNED, color: Colors.status.unassigned, icon: '○' },
-  { label: '待办', value: TaskStatus.TODO, color: Colors.status.todo, icon: '◎' },
-  { label: '已完成', value: TaskStatus.COMPLETED, color: Colors.status.completed, icon: '✓' },
-  { label: '已放弃', value: TaskStatus.ABANDONED, color: Colors.status.abandoned, icon: '✗' },
+  { label: '待分配', value: TaskStatus.UNASSIGNED, color: Colors.status.unassigned },
+  { label: '待办', value: TaskStatus.TODO, color: Colors.status.todo },
+  { label: '已完成', value: TaskStatus.COMPLETED, color: Colors.status.completed },
+  { label: '已放弃', value: TaskStatus.ABANDONED, color: Colors.status.abandoned },
 ];
 
 const PRIORITY_OPTIONS = [
@@ -40,38 +41,6 @@ const PRIORITY_OPTIONS = [
   { label: '高', value: TaskPriority.HIGH, color: Colors.priority.high },
   { label: '紧急', value: TaskPriority.URGENT, color: Colors.priority.urgent },
 ];
-
-function getRelativeDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = date.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return '今天';
-  if (diffDays === 1) return '明天';
-  if (diffDays === -1) return '昨天';
-  if (diffDays > 1 && diffDays <= 7) return `${diffDays}天后`;
-  if (diffDays < -1 && diffDays >= -7) return `${Math.abs(diffDays)}天前`;
-  return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
-}
-
-function getQuickDates() {
-  const today = new Date();
-  today.setHours(18, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const weekend = new Date(today);
-  weekend.setDate(weekend.getDate() + (6 - weekend.getDay()));
-  weekend.setHours(18, 0, 0, 0);
-  const nextMonday = new Date(today);
-  nextMonday.setDate(nextMonday.getDate() + (8 - nextMonday.getDay()) % 7);
-  nextMonday.setHours(9, 0, 0, 0);
-  return [
-    { label: '今天', value: today.toISOString(), icon: '☀️' },
-    { label: '明天', value: tomorrow.toISOString(), icon: '🌅' },
-    { label: '本周末', value: weekend.toISOString(), icon: '🏖' },
-    { label: '下周一', value: nextMonday.toISOString(), icon: '📅' },
-  ];
-}
 
 export default function TaskDetailPage() {
   const { uid } = useLocalSearchParams<{ uid: string }>();
@@ -184,30 +153,22 @@ export default function TaskDetailPage() {
     setShowProjectPicker(false);
   };
 
-  const handleQuickDate = async (isoValue: string) => {
-    if (!task || isCreate) return;
-    try {
-      await updateTask.mutateAsync({ uid: task.uid, data: { due_date: isoValue } });
-    } catch {
-      showToast('error', '日期更新失败');
-    }
-  };
-
-  const handleClearDate = async (field: 'due_date' | 'start_date') => {
-    if (!task || isCreate) return;
-    try {
-      await updateTask.mutateAsync({ uid: task.uid, data: { [field]: null } });
-    } catch {
-      showToast('error', '清除日期失败');
-    }
-  };
-
   const handleToggleTag = async (tagUid: string) => {
     if (!task || isCreate) return;
     const currentTagUids = task.tags.map((t: Tag) => t.uid);
     const newTagUids = currentTagUids.includes(tagUid)
       ? currentTagUids.filter((id: string) => id !== tagUid)
       : [...currentTagUids, tagUid];
+    try {
+      await updateTask.mutateAsync({ uid: task.uid, data: { tag_uids: newTagUids } });
+    } catch {
+      showToast('error', '标签更新失败');
+    }
+  };
+
+  const handleRemoveTag = async (tagUid: string) => {
+    if (!task || isCreate) return;
+    const newTagUids = task.tags.filter((t: Tag) => t.uid !== tagUid).map((t: Tag) => t.uid);
     try {
       await updateTask.mutateAsync({ uid: task.uid, data: { tag_uids: newTagUids } });
     } catch {
@@ -255,9 +216,6 @@ export default function TaskDetailPage() {
   }
 
   const currentStatus = STATUS_OPTIONS.find((s) => s.value === task?.status) || STATUS_OPTIONS[1];
-  const currentPriority = isCreate
-    ? PRIORITY_OPTIONS.find((p) => p.value === createPriority) || PRIORITY_OPTIONS[1]
-    : PRIORITY_OPTIONS.find((p) => p.value === task?.priority) || PRIORITY_OPTIONS[1];
   const currentProject = isCreate
     ? projects.find((p) => p.uid === createProjectUid)
     : task?.project;
@@ -266,8 +224,15 @@ export default function TaskDetailPage() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb' }}>
       {/* Header */}
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
-        <TouchableOpacity onPress={() => router.back()} style={{ padding: 6 }}>
-          <Text style={{ color: Colors.primary, fontSize: 16 }}>{isCreate ? '✕' : '← 返回'}</Text>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
+        >
+          {isCreate ? (
+            <MaterialCommunityIcons name="close" size={22} color={Colors.primary} />
+          ) : (
+            <MaterialCommunityIcons name="arrow-left" size={22} color={Colors.primary} />
+          )}
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
           {saveStatus === 'saving' && <Text style={{ color: '#9ca3af', fontSize: 12 }}>保存中...</Text>}
@@ -279,8 +244,11 @@ export default function TaskDetailPage() {
           </TouchableOpacity>
         ) : (
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            <TouchableOpacity onPress={() => setShowMoreMenu(true)} style={{ padding: 6 }}>
-              <Text style={{ fontSize: 18, color: '#6b7280' }}>⋯</Text>
+            <TouchableOpacity
+              onPress={() => setShowMoreMenu(true)}
+              style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <MaterialCommunityIcons name="dots-horizontal" size={22} color="#6b7280" />
             </TouchableOpacity>
           </View>
         )}
@@ -293,9 +261,11 @@ export default function TaskDetailPage() {
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
               {!isCreate && (
                 <TouchableOpacity onPress={handleToggleComplete} style={{ paddingTop: 4 }}>
-                  <Text style={{ fontSize: 24, color: task?.is_completed ? Colors.success : '#d1d5db' }}>
-                    {task?.is_completed ? '✓' : '○'}
-                  </Text>
+                  <MaterialCommunityIcons
+                    name={task?.is_completed ? 'check-circle' : 'circle-outline'}
+                    size={26}
+                    color={task?.is_completed ? Colors.success : '#d1d5db'}
+                  />
                 </TouchableOpacity>
               )}
               <TextInput
@@ -326,7 +296,11 @@ export default function TaskDetailPage() {
               >
                 <Text style={{ color: '#9ca3af', fontSize: 14, width: 70 }}>状态</Text>
                 <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: currentStatus.color }} />
+                  <MaterialCommunityIcons
+                    name={StatusIcons[task?.status ?? 1] || 'circle-outline'}
+                    size={16}
+                    color={currentStatus.color}
+                  />
                   <Text style={{ fontSize: 14, color: '#374151' }}>{currentStatus.label}</Text>
                 </View>
               </TouchableOpacity>
@@ -348,6 +322,10 @@ export default function TaskDetailPage() {
                         backgroundColor: isActive ? opt.color + '18' : '#f3f4f6',
                         borderWidth: 1,
                         borderColor: isActive ? opt.color : '#e5e7eb',
+                        minHeight: 44,
+                        minWidth: 48,
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
                       onPress={() => handlePriorityChange({ value: opt.value, label: opt.label })}
                     >
@@ -370,7 +348,7 @@ export default function TaskDetailPage() {
                 <Text style={{ fontSize: 14, color: currentProject ? '#374151' : '#9ca3af' }}>
                   {currentProject?.name || '收集箱'}
                 </Text>
-                <Text style={{ color: '#d1d5db' }}>›</Text>
+                <MaterialCommunityIcons name="chevron-right" size={18} color="#d1d5db" />
               </View>
             </TouchableOpacity>
 
@@ -405,15 +383,22 @@ export default function TaskDetailPage() {
                   <Text style={{ color: '#9ca3af', fontSize: 14, width: 70, paddingTop: 4 }}>标签</Text>
                   <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 6 }}>
                     {task.tags.map((tag: Tag) => (
-                      <View key={tag.uid} style={{ backgroundColor: tag.color + '20', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <View key={tag.uid} style={{ backgroundColor: tag.color + '20', borderRadius: 12, paddingLeft: 10, paddingRight: 4, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                         <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: tag.color }} />
                         <Text style={{ color: tag.color, fontSize: 12, fontWeight: '500' }}>{tag.name}</Text>
+                        <TouchableOpacity
+                          onPress={() => handleRemoveTag(tag.uid)}
+                          style={{ width: 32, height: 32, alignItems: 'center', justifyContent: 'center' }}
+                          hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                        >
+                          <MaterialCommunityIcons name="close-circle" size={14} color={tag.color + '80'} />
+                        </TouchableOpacity>
                       </View>
                     ))}
                     {task.tags.length === 0 && (
                       <Text style={{ fontSize: 13, color: '#d1d5db' }}>点击添加标签</Text>
                     )}
-                    <Text style={{ color: '#d1d5db' }}>›</Text>
+                    <MaterialCommunityIcons name="chevron-right" size={18} color="#d1d5db" />
                   </View>
                 </View>
               </TouchableOpacity>
@@ -455,7 +440,7 @@ export default function TaskDetailPage() {
           {!isCreate && task?.completed_time && (
             <View style={{ backgroundColor: '#fff', marginTop: 8, paddingHorizontal: 16, paddingVertical: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Text style={{ color: Colors.success, fontSize: 14 }}>✓</Text>
+                <MaterialCommunityIcons name="check-circle" size={16} color={Colors.success} />
                 <Text style={{ fontSize: 13, color: '#9ca3af' }}>
                   完成于 {new Date(task.completed_time).toLocaleString('zh-CN')}
                 </Text>
@@ -469,7 +454,7 @@ export default function TaskDetailPage() {
               style={{ backgroundColor: '#fff', marginTop: 8, paddingHorizontal: 16, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}
               onPress={() => router.push(`/task/${task.parent}`)}
             >
-              <Text style={{ color: '#9ca3af', fontSize: 14 }}>↑</Text>
+              <MaterialCommunityIcons name="arrow-up" size={16} color="#9ca3af" />
               <Text style={{ fontSize: 13, color: Colors.primary }}>查看父任务</Text>
             </TouchableOpacity>
           )}

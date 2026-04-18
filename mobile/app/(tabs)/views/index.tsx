@@ -4,22 +4,21 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useViews, useDeleteView, useDuplicateView } from '../../../hooks/useViews';
 import { viewApi } from '../../../shared/services/api';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { ActionSheet } from '../../../components/ui/ActionSheet';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { SkeletonListItem } from '../../../components/ui/SkeletonLoader';
 import { useToast } from '../../../hooks/useToast';
 import { Colors } from '../../../constants/theme';
+import { ViewTypeIcons } from '../../../constants/icons';
 import type { TaskView } from '../../../shared/types/index';
 import { useQueryClient } from '@tanstack/react-query';
-
-const VIEW_TYPE_ICONS: Record<string, string> = {
-  list: '☰', board: '⊞', calendar: '📅', table: '⊟', timeline: '⟶', gallery: '⊡',
-};
 
 const VIEW_TYPE_LABELS: Record<string, string> = {
   list: '列表', board: '看板', calendar: '日历', table: '表格', timeline: '时间线', gallery: '画廊',
@@ -79,9 +78,13 @@ export default function ViewsPage() {
       {/* Header */}
       <View style={{ backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <Text style={{ fontSize: 20, fontWeight: '700', color: '#111418' }}>视图</Text>
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/views/templates' as any)}>
-            <Text style={{ color: Colors.primary, fontSize: 14 }}>🏪 广场</Text>
+        <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+          <TouchableOpacity
+            onPress={() => router.push('/(tabs)/views/templates' as any)}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+          >
+            <MaterialCommunityIcons name="store" size={16} color={Colors.primary} />
+            <Text style={{ color: Colors.primary, fontSize: 14 }}>广场</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => router.push('/(tabs)/views/create' as any)}>
             <Text style={{ color: Colors.primary, fontSize: 14, fontWeight: '600' }}>+ 新建</Text>
@@ -90,8 +93,13 @@ export default function ViewsPage() {
       </View>
 
       {isLoading ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+        <View style={{ flex: 1, paddingTop: 16 }}>
+          <View style={{ marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+            <SkeletonListItem />
+            <SkeletonListItem />
+            <SkeletonListItem />
+            <SkeletonListItem />
+          </View>
         </View>
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 }}>
@@ -102,37 +110,40 @@ export default function ViewsPage() {
                 自定义视图
               </Text>
               <View style={{ marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
-                {userViews.map((view, idx) => (
-                  <TouchableOpacity
-                    key={view.uid}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      paddingHorizontal: 16,
-                      paddingVertical: 14,
-                      borderBottomWidth: idx < userViews.length - 1 ? 1 : 0,
-                      borderBottomColor: '#f3f4f6',
-                    }}
-                    onPress={() => { setSelectedView(view); setShowActions(true); }}
-                  >
-                    <Text style={{ fontSize: 20, marginRight: 12 }}>{VIEW_TYPE_ICONS[view.view_type] || '☰'}</Text>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 15, fontWeight: '500', color: '#111418' }}>{view.name}</Text>
-                      <Text style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>
-                        {VIEW_TYPE_LABELS[view.view_type] || view.view_type}
-                        {view.project ? ` · ${view.project.name}` : ''}
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      {view.is_visible_in_nav && (
-                        <View style={{ backgroundColor: '#f3f0ff', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
-                          <Text style={{ color: Colors.primary, fontSize: 10, fontWeight: '600' }}>导航栏</Text>
-                        </View>
-                      )}
-                      <Text style={{ color: '#d1d5db' }}>›</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
+                {userViews.map((view, idx) => {
+                  const iconName = ViewTypeIcons[view.view_type] || 'format-list-bulleted';
+                  return (
+                    <TouchableOpacity
+                      key={view.uid}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingHorizontal: 16,
+                        paddingVertical: 14,
+                        borderBottomWidth: idx < userViews.length - 1 ? 1 : 0,
+                        borderBottomColor: '#f3f4f6',
+                      }}
+                      onPress={() => { setSelectedView(view); setShowActions(true); }}
+                    >
+                      <MaterialCommunityIcons name={iconName} size={22} color={Colors.primary} style={{ marginRight: 12 }} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 15, fontWeight: '500', color: '#111418' }}>{view.name}</Text>
+                        <Text style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>
+                          {VIEW_TYPE_LABELS[view.view_type] || view.view_type}
+                          {view.project ? ` · ${view.project.name}` : ''}
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        {view.is_visible_in_nav && (
+                          <View style={{ backgroundColor: '#f3f0ff', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, minHeight: 20, justifyContent: 'center' }}>
+                            <Text style={{ color: Colors.primary, fontSize: 11, fontWeight: '600' }}>导航栏</Text>
+                          </View>
+                        )}
+                        <MaterialCommunityIcons name="chevron-right" size={18} color="#d1d5db" />
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </View>
           )}
@@ -144,45 +155,48 @@ export default function ViewsPage() {
                 系统视图
               </Text>
               <View style={{ marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
-                {systemViews.map((view, idx) => (
-                  <TouchableOpacity
-                    key={view.uid}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      paddingHorizontal: 16,
-                      paddingVertical: 14,
-                      borderBottomWidth: idx < systemViews.length - 1 ? 1 : 0,
-                      borderBottomColor: '#f3f4f6',
-                    }}
-                    onPress={() => { setSelectedView(view); setShowActions(true); }}
-                  >
-                    <Text style={{ fontSize: 20, marginRight: 12 }}>{VIEW_TYPE_ICONS[view.view_type] || '☰'}</Text>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 15, fontWeight: '500', color: '#111418' }}>{view.name}</Text>
-                      <Text style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>
-                        {VIEW_TYPE_LABELS[view.view_type] || view.view_type}
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      {view.is_visible_in_nav && (
-                        <View style={{ backgroundColor: '#f3f0ff', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
-                          <Text style={{ color: Colors.primary, fontSize: 10, fontWeight: '600' }}>导航栏</Text>
-                        </View>
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                ))}
+                {systemViews.map((view, idx) => {
+                  const iconName = ViewTypeIcons[view.view_type] || 'format-list-bulleted';
+                  return (
+                    <TouchableOpacity
+                      key={view.uid}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingHorizontal: 16,
+                        paddingVertical: 14,
+                        borderBottomWidth: idx < systemViews.length - 1 ? 1 : 0,
+                        borderBottomColor: '#f3f4f6',
+                      }}
+                      onPress={() => { setSelectedView(view); setShowActions(true); }}
+                    >
+                      <MaterialCommunityIcons name={iconName} size={22} color="#6b7280" style={{ marginRight: 12 }} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 15, fontWeight: '500', color: '#111418' }}>{view.name}</Text>
+                        <Text style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>
+                          {VIEW_TYPE_LABELS[view.view_type] || view.view_type}
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        {view.is_visible_in_nav && (
+                          <View style={{ backgroundColor: '#f3f0ff', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, minHeight: 20, justifyContent: 'center' }}>
+                            <Text style={{ color: Colors.primary, fontSize: 11, fontWeight: '600' }}>导航栏</Text>
+                          </View>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </View>
           )}
 
           {views.length === 0 && (
-            <View style={{ alignItems: 'center', paddingTop: 80 }}>
-              <Text style={{ fontSize: 40, marginBottom: 12 }}>👁</Text>
-              <Text style={{ fontSize: 16, color: '#9ca3af' }}>暂无视图</Text>
-              <Text style={{ fontSize: 13, color: '#d1d5db', marginTop: 4 }}>点击右上角创建自定义视图</Text>
-            </View>
+            <EmptyState
+              icon="view-dashboard-outline"
+              message="暂无视图"
+              description="点击右上角创建自定义视图"
+            />
           )}
         </ScrollView>
       )}

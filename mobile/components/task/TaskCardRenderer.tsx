@@ -4,11 +4,13 @@
  */
 import React from 'react';
 import { View, Text } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { formatDistanceToNow, isPast, isToday, isTomorrow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import type { Task, CardFieldConfig } from '../../shared/types/index';
 import { TaskStatus, TaskPriority } from '../../shared/types/index';
 import { Colors } from '../../constants/theme';
+import { PriorityIcons, StatusIcons } from '../../constants/icons';
 
 // ========================
 // 优先级字段
@@ -22,7 +24,6 @@ export const PriorityField: React.FC<{ task: Task; style: Record<string, any> }>
     [TaskPriority.URGENT]: Colors.priority.urgent,
   };
   const labels: Record<number, string> = { 0: '低', 1: '中', 2: '高', 3: '紧急' };
-  const flags: Record<number, string> = { 0: '⚑', 1: '⚑', 2: '⚑', 3: '⚑' };
   const color = colors[task.priority] || Colors.priority.low;
 
   if (variant === 'dot') {
@@ -36,7 +37,7 @@ export const PriorityField: React.FC<{ task: Task; style: Record<string, any> }>
     );
   }
   // flag (default)
-  return <Text style={{ color, fontSize: 14 }}>{flags[task.priority]}</Text>;
+  return <MaterialCommunityIcons name={PriorityIcons[task.priority] || 'flag-outline'} size={14} color={color} />;
 };
 
 // ========================
@@ -51,11 +52,10 @@ export const StatusField: React.FC<{ task: Task; style: Record<string, any> }> =
     [TaskStatus.ABANDONED]: Colors.status.abandoned,
   };
   const labels: Record<number, string> = { 0: '待分配', 1: '待办', 2: '已完成', 3: '已放弃' };
-  const icons: Record<number, string> = { 0: '○', 1: '◎', 2: '✓', 3: '✗' };
   const color = colors[task.status] || Colors.status.todo;
 
   if (variant === 'icon') {
-    return <Text style={{ color, fontSize: 14 }}>{icons[task.status]}</Text>;
+    return <MaterialCommunityIcons name={StatusIcons[task.status] || 'circle-outline'} size={14} color={color} />;
   }
   if (variant === 'dot') {
     return <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />;
@@ -116,7 +116,7 @@ export const DueDateField: React.FC<{ task: Task; style: Record<string, any> }> 
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-      {style.showIcon && <Text style={{ color, fontSize: 11, marginRight: 2 }}>📅</Text>}
+      {style.showIcon && <MaterialCommunityIcons name="calendar" size={11} color={color} style={{ marginRight: 2 }} />}
       <Text style={{ color, fontSize: 11 }}>{label}</Text>
     </View>
   );
@@ -169,7 +169,8 @@ export const ProjectField: React.FC<{ task: Task; style: Record<string, any> }> 
   if (!task.project) return null;
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-      <Text style={{ color: '#9ca3af', fontSize: 11 }}>📁 {task.project.name}</Text>
+      <MaterialCommunityIcons name="folder" size={11} color="#9ca3af" style={{ marginRight: 3 }} />
+      <Text style={{ color: '#9ca3af', fontSize: 11 }}>{task.project.name}</Text>
     </View>
   );
 };
@@ -185,7 +186,7 @@ export const SubtasksProgressField: React.FC<{ task: Task; style: Record<string,
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
       {style.showProgress && (
         <View style={{ width: 32, height: 3, backgroundColor: '#e5e7eb', borderRadius: 2, overflow: 'hidden' }}>
-          <View style={{ width: `${ratio * 100}%`, height: 3, backgroundColor: '#8b5cf6', borderRadius: 2 }} />
+          <View style={{ width: `${ratio * 100}%` as any, height: 3, backgroundColor: Colors.primary, borderRadius: 2 }} />
         </View>
       )}
       <Text style={{ color: '#9ca3af', fontSize: 11 }}>

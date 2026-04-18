@@ -1,5 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Colors, Shadows } from '../../constants/theme';
 
 interface FABProps {
   onPress: () => void;
@@ -7,26 +9,28 @@ interface FABProps {
   label?: string;
 }
 
-export const FAB: React.FC<FABProps> = ({ onPress, icon = '+', label }) => {
+export const FAB: React.FC<FABProps> = ({ onPress, icon, label }) => {
   return (
-    <View className="absolute bottom-6 right-5">
+    <View style={{ position: 'absolute', bottom: 24, right: 20 }}>
       <TouchableOpacity
-        className="bg-purple-500 rounded-full shadow-lg items-center justify-center flex-row"
         style={{
+          backgroundColor: Colors.primary,
+          borderRadius: 28,
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'row',
           width: label ? undefined : 56,
           height: 56,
           paddingHorizontal: label ? 20 : 0,
-          shadowColor: '#8b5cf6',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.4,
-          shadowRadius: 8,
-          elevation: 8,
+          ...Shadows.primaryMedium,
         }}
         onPress={onPress}
         activeOpacity={0.85}
       >
-        <Text className="text-white text-2xl font-light">{icon}</Text>
-        {label && <Text className="text-white font-semibold ml-2">{label}</Text>}
+        <MaterialCommunityIcons name="plus" size={28} color="#fff" />
+        {label && (
+          <Text style={{ color: '#fff', fontWeight: '600', marginLeft: 8, fontSize: 15 }}>{label}</Text>
+        )}
       </TouchableOpacity>
     </View>
   );

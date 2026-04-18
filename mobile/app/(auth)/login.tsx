@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Link } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
 import { Colors } from '../../constants/theme';
 
@@ -50,8 +51,9 @@ export default function LoginPage() {
   return (
     <View style={{ flex: 1, backgroundColor: '#f0f0ff' }}>
       {/* Background decorations */}
-      <View style={{ position: 'absolute', top: -80, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(139,92,246,0.12)' }} />
-      <View style={{ position: 'absolute', bottom: -80, left: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(59,130,246,0.1)' }} />
+      <View style={{ position: 'absolute', top: -80, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: Colors.primary + '14' }} />
+      <View style={{ position: 'absolute', bottom: -80, left: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: Colors.primary + '0D' }} />
+      <View style={{ position: 'absolute', top: '40%' as any, left: -40, width: 120, height: 120, borderRadius: 60, backgroundColor: Colors.primary + '0A' }} />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -71,7 +73,7 @@ export default function LoginPage() {
               shadowOpacity: 0.35, shadowRadius: 16, elevation: 12,
               marginBottom: 16,
             }}>
-              <Text style={{ color: '#fff', fontSize: 32, fontWeight: '700' }}>✓</Text>
+              <MaterialCommunityIcons name="check-bold" size={36} color="#fff" />
             </View>
             <Text style={{ fontSize: 28, fontWeight: '800', color: '#1e1b4b', marginBottom: 6 }}>
               欢迎回来
@@ -81,14 +83,14 @@ export default function LoginPage() {
             </Text>
           </View>
 
-          {/* Form card */}
+          {/* Form card — glassmorphism */}
           <View style={{
-            backgroundColor: 'rgba(255,255,255,0.85)',
+            backgroundColor: 'rgba(255,255,255,0.75)',
             borderRadius: 24,
             padding: 24,
             shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.08, shadowRadius: 20, elevation: 8,
-            borderWidth: 1, borderColor: 'rgba(255,255,255,0.5)',
+            borderWidth: 1, borderColor: 'rgba(255,255,255,0.6)',
           }}>
             {/* Error */}
             {error ? (
@@ -97,7 +99,7 @@ export default function LoginPage() {
                 borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 16,
                 flexDirection: 'row', alignItems: 'center', gap: 8,
               }}>
-                <Text style={{ color: '#ef4444', fontSize: 16 }}>⚠</Text>
+                <MaterialCommunityIcons name="alert-circle" size={18} color="#ef4444" />
                 <Text style={{ color: '#dc2626', fontSize: 13, flex: 1 }}>{error}</Text>
               </View>
             ) : null}
@@ -111,7 +113,12 @@ export default function LoginPage() {
                 borderRadius: 16, backgroundColor: '#f9fafb',
                 paddingHorizontal: 14,
               }}>
-                <Text style={{ fontSize: 18, color: focusedField === 'username' ? Colors.primary : '#9ca3af', marginRight: 10 }}>👤</Text>
+                <MaterialCommunityIcons
+                  name="account"
+                  size={20}
+                  color={focusedField === 'username' ? Colors.primary : '#9ca3af'}
+                  style={{ marginRight: 10 }}
+                />
                 <TextInput
                   style={{ flex: 1, paddingVertical: 14, fontSize: 16, color: '#111827' }}
                   placeholder="输入用户名"
@@ -136,7 +143,12 @@ export default function LoginPage() {
                 borderRadius: 16, backgroundColor: '#f9fafb',
                 paddingHorizontal: 14,
               }}>
-                <Text style={{ fontSize: 18, color: focusedField === 'password' ? Colors.primary : '#9ca3af', marginRight: 10 }}>🔒</Text>
+                <MaterialCommunityIcons
+                  name="lock"
+                  size={20}
+                  color={focusedField === 'password' ? Colors.primary : '#9ca3af'}
+                  style={{ marginRight: 10 }}
+                />
                 <TextInput
                   style={{ flex: 1, paddingVertical: 14, fontSize: 16, color: '#111827' }}
                   placeholder="输入密码"
@@ -150,7 +162,11 @@ export default function LoginPage() {
                   onSubmitEditing={handleLogin}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 4 }}>
-                  <Text style={{ fontSize: 16, color: '#9ca3af' }}>{showPassword ? '🙈' : '👁'}</Text>
+                  <MaterialCommunityIcons
+                    name={showPassword ? 'eye-off' : 'eye'}
+                    size={20}
+                    color="#9ca3af"
+                  />
                 </TouchableOpacity>
               </View>
             </View>
@@ -165,7 +181,7 @@ export default function LoginPage() {
                 width: 32, height: 32, borderRadius: 16,
                 backgroundColor: '#3b82f6', alignItems: 'center', justifyContent: 'center', marginRight: 10,
               }}>
-                <Text style={{ color: '#fff', fontSize: 14 }}>⚡</Text>
+                <MaterialCommunityIcons name="lightning-bolt" size={16} color="#fff" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 13, fontWeight: '600', color: '#1d4ed8' }}>演示账户</Text>
@@ -182,32 +198,43 @@ export default function LoginPage() {
               </TouchableOpacity>
             </View>
 
-            {/* Login button */}
-            <TouchableOpacity
-              onPress={handleLogin}
-              disabled={loading}
-              style={{
-                backgroundColor: Colors.primary,
-                borderRadius: 16, paddingVertical: 16,
-                alignItems: 'center', justifyContent: 'center',
-                flexDirection: 'row', gap: 8,
-                shadowColor: Colors.primary, shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.35, shadowRadius: 12, elevation: 8,
-                opacity: loading ? 0.7 : 1,
-              }}
-            >
-              {loading ? (
-                <>
-                  <ActivityIndicator color="#fff" size="small" />
-                  <Text style={{ color: '#fff', fontSize: 17, fontWeight: '600' }}>登录中...</Text>
-                </>
-              ) : (
-                <>
-                  <Text style={{ fontSize: 18 }}>→</Text>
-                  <Text style={{ color: '#fff', fontSize: 17, fontWeight: '600' }}>立即登录</Text>
-                </>
-              )}
-            </TouchableOpacity>
+            {/* Login button — layered gradient effect */}
+            <View style={{ borderRadius: 16, overflow: 'hidden' }}>
+              <TouchableOpacity
+                onPress={handleLogin}
+                disabled={loading}
+                activeOpacity={0.85}
+                style={{
+                  borderRadius: 16,
+                  paddingVertical: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'row',
+                  gap: 8,
+                  backgroundColor: '#7c3aed',
+                  opacity: loading ? 0.7 : 1,
+                  shadowColor: Colors.primary, shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.35, shadowRadius: 12, elevation: 8,
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                {/* Gradient layers */}
+                <View style={{ position: 'absolute', top: 0, left: 0, right: '50%' as any, bottom: 0, backgroundColor: '#6366f1', opacity: 0.5 }} />
+                <View style={{ position: 'absolute', top: 0, left: '50%' as any, right: 0, bottom: 0, backgroundColor: '#a855f7', opacity: 0.4 }} />
+                {loading ? (
+                  <>
+                    <ActivityIndicator color="#fff" size="small" />
+                    <Text style={{ color: '#fff', fontSize: 17, fontWeight: '600' }}>登录中...</Text>
+                  </>
+                ) : (
+                  <>
+                    <MaterialCommunityIcons name="login" size={20} color="#fff" />
+                    <Text style={{ color: '#fff', fontSize: 17, fontWeight: '600' }}>立即登录</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Divider */}
@@ -226,7 +253,7 @@ export default function LoginPage() {
                 backgroundColor: '#f3f4f6', borderRadius: 16,
                 paddingHorizontal: 24, paddingVertical: 12,
               }}>
-                <Text style={{ fontSize: 16 }}>👤</Text>
+                <MaterialCommunityIcons name="account-plus" size={18} color="#374151" />
                 <Text style={{ color: '#374151', fontSize: 15, fontWeight: '600' }}>创建新账户</Text>
               </TouchableOpacity>
             </Link>

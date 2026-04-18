@@ -8,7 +8,7 @@ import { View, TouchableOpacity } from 'react-native';
 import type { Task, TaskCardConfig, CardFieldConfig } from '../../shared/types/index';
 import { TaskStatus } from '../../shared/types/index';
 import { FieldRenderer, groupFieldsByPosition } from './TaskCardRenderer';
-import { CardLayout } from '../../constants/theme';
+import { CardLayout, Shadows } from '../../constants/theme';
 
 // 默认字段配置（当视图没有绑定 card_config 时使用）
 const DEFAULT_FIELD_CONFIGS: CardFieldConfig[] = [
@@ -55,13 +55,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, cardConfig, onPress, s
           marginHorizontal: 16,
           marginVertical: 4,
           opacity: isCompleted ? 0.7 : 1,
-          ...(shadow && {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.06,
-            shadowRadius: 4,
-            elevation: 2,
-          }),
+          ...(shadow ? Shadows.low : {}),
         },
         style,
       ]}

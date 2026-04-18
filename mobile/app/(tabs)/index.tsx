@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavViews, useViewTasks } from '../../hooks/useViews';
 import { useTasks } from '../../hooks/useTasks';
 import { ListView } from '../../components/views/ListView';
@@ -21,13 +22,11 @@ import { ProjectSelector } from '../../components/navigation/ProjectSelector';
 import { FAB } from '../../components/ui/FAB';
 import { OfflineBanner } from '../../components/ui/OfflineBanner';
 import { QuickCreateSheet } from '../../components/task/QuickCreateSheet';
+import { SkeletonCard } from '../../components/ui/SkeletonLoader';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import type { Task, TaskView } from '../../shared/types/index';
 import { Colors } from '../../constants/theme';
-
-const VIEW_TYPE_ICONS: Record<string, string> = {
-  list: '☰', board: '⊞', calendar: '📅', table: '⊟', timeline: '⟶', gallery: '⊡',
-};
+import { ViewTypeIcons } from '../../constants/icons';
 
 export default function HomePage() {
   const { isOnline } = useNetworkStatus();
@@ -98,8 +97,13 @@ export default function HomePage() {
 
   if (viewsLoading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb', alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" color="#8b5cf6" />
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+        <View style={{ paddingTop: 60 }}>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </View>
       </SafeAreaView>
     );
   }
@@ -112,8 +116,15 @@ export default function HomePage() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
           <Text style={{ fontSize: 20, fontWeight: '700', color: '#111418' }}>我的任务</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <TouchableOpacity onPress={() => setShowSearch(!showSearch)}>
-              <Text style={{ fontSize: 18, color: showSearch ? Colors.primary : '#6b7280' }}>🔍</Text>
+            <TouchableOpacity
+              onPress={() => setShowSearch(!showSearch)}
+              style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <MaterialCommunityIcons
+                name="magnify"
+                size={22}
+                color={showSearch ? Colors.primary : '#6b7280'}
+              />
             </TouchableOpacity>
             <ProjectSelector selectedProjectUid={selectedProjectUid} onSelect={setSelectedProjectUid} />
           </View>
@@ -145,6 +156,7 @@ export default function HomePage() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {views.map((view) => {
               const isActive = view.uid === currentView?.uid;
+              const iconName = ViewTypeIcons[view.view_type] || 'format-list-bulleted';
               return (
                 <TouchableOpacity
                   key={view.uid}
@@ -156,14 +168,20 @@ export default function HomePage() {
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: 4,
-                    backgroundColor: isActive ? '#8b5cf6' : '#f3f4f6',
+                    backgroundColor: isActive ? Colors.primary : '#f3f4f6',
                   }}
                   onPress={() => setSelectedViewUid(view.uid)}
                 >
-                  <Text style={{ fontSize: 12, color: isActive ? '#fff' : '#6b7280' }}>
-                    {VIEW_TYPE_ICONS[view.view_type] || '☰'}
-                  </Text>
-                  <Text style={{ fontSize: 14, fontWeight: '500', color: isActive ? '#fff' : '#4b5563' }}>
+                  <MaterialCommunityIcons
+                    name={iconName}
+                    size={14}
+                    color={isActive ? '#fff' : '#6b7280'}
+                  />
+                  <Text style={{
+                    fontSize: 14,
+                    fontWeight: isActive ? '700' : '500',
+                    color: isActive ? '#fff' : '#4b5563',
+                  }}>
                     {view.name}
                   </Text>
                 </TouchableOpacity>

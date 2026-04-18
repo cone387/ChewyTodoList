@@ -6,16 +6,18 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useProjects, useCreateProject, useDeleteProject } from '../../../hooks/useProjects';
 import { useGroups, useCreateGroup, useDeleteGroup } from '../../../hooks/useGroups';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { ActionSheet } from '../../../components/ui/ActionSheet';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { SkeletonListItem } from '../../../components/ui/SkeletonLoader';
 import { useToast } from '../../../hooks/useToast';
-import { Colors } from '../../../constants/theme';
+import { Colors, Shadows } from '../../../constants/theme';
 import type { Project, Group } from '../../../shared/types/index';
 
 export default function ProjectsPage() {
@@ -119,8 +121,13 @@ export default function ProjectsPage() {
       </View>
 
       {isLoading ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+        <View style={{ flex: 1, paddingTop: 16 }}>
+          <View style={{ marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+            <SkeletonListItem />
+            <SkeletonListItem />
+            <SkeletonListItem />
+            <SkeletonListItem />
+          </View>
         </View>
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 }}>
@@ -166,7 +173,7 @@ export default function ProjectsPage() {
                 <Text style={{ flex: 1, fontSize: 14, color: selectedGroup ? '#374151' : '#9ca3af' }}>
                   {selectedGroup ? selectedGroup.name : '选择分组'}
                 </Text>
-                <Text style={{ color: '#9ca3af' }}>▼</Text>
+                <MaterialCommunityIcons name="chevron-down" size={16} color="#9ca3af" />
               </TouchableOpacity>
               <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'flex-end' }}>
                 <TouchableOpacity onPress={() => { setShowCreateProject(false); setNewProjectName(''); }} style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
@@ -188,9 +195,9 @@ export default function ProjectsPage() {
                 </Text>
                 <TouchableOpacity
                   onPress={() => setDeleteConfirm({ type: 'group', uid: group.uid, name: group.name })}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
                 >
-                  <Text style={{ color: '#d1d5db', fontSize: 12 }}>⋯</Text>
+                  <MaterialCommunityIcons name="dots-horizontal" size={18} color="#9ca3af" />
                 </TouchableOpacity>
               </View>
 
@@ -199,7 +206,7 @@ export default function ProjectsPage() {
                   <Text style={{ color: '#d1d5db', fontSize: 13 }}>暂无项目</Text>
                 </View>
               ) : (
-                <View style={{ marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+                <View style={{ marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden', ...Shadows.low }}>
                   {groupProjects.map((project, idx) => (
                     <TouchableOpacity
                       key={project.uid}
@@ -215,7 +222,7 @@ export default function ProjectsPage() {
                       onLongPress={() => setDeleteConfirm({ type: 'project', uid: project.uid, name: project.name })}
                     >
                       <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#f3f0ff', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
-                        <Text style={{ fontSize: 16 }}>📋</Text>
+                        <MaterialCommunityIcons name="folder" size={18} color={Colors.primary} />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 15, fontWeight: '500', color: '#111418' }}>{project.name}</Text>
@@ -235,11 +242,11 @@ export default function ProjectsPage() {
           ))}
 
           {groupedProjects.length === 0 && !isLoading && (
-            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80 }}>
-              <Text style={{ fontSize: 40, marginBottom: 12 }}>📋</Text>
-              <Text style={{ fontSize: 16, color: '#9ca3af' }}>暂无项目</Text>
-              <Text style={{ fontSize: 13, color: '#d1d5db', marginTop: 4 }}>点击右上角创建分组和项目</Text>
-            </View>
+            <EmptyState
+              icon="folder-multiple-outline"
+              message="暂无项目"
+              description="点击右上角创建分组和项目"
+            />
           )}
         </ScrollView>
       )}
