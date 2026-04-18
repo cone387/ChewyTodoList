@@ -56,33 +56,53 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onCancel}>
       <TouchableWithoutFeedback onPress={onCancel}>
-        <View className="flex-1 bg-black/40 justify-end">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}>
           <TouchableWithoutFeedback>
             <Animated.View
-              style={{ transform: [{ translateY: slideAnim }] }}
-              className="bg-white rounded-t-2xl pb-8"
+              style={{
+                transform: [{ translateY: slideAnim }],
+                backgroundColor: '#fff',
+                borderTopLeftRadius: 20,
+                borderTopRightRadius: 20,
+                paddingBottom: 34,
+              }}
             >
+              {/* Handle bar */}
+              <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 4 }}>
+                <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: '#d1d5db' }} />
+              </View>
+
               {title && (
-                <View className="px-4 py-3 border-b border-gray-100">
-                  <Text className="text-center text-sm text-gray-500 font-medium">{title}</Text>
+                <View style={{ paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+                  <Text style={{ textAlign: 'center', fontSize: 14, color: '#6b7280', fontWeight: '500' }}>{title}</Text>
                 </View>
               )}
-              <ScrollView>
+              <ScrollView style={{ maxHeight: 300 }}>
                 {options.map((option, index) => (
                   <TouchableOpacity
                     key={`${option.value}-${index}`}
-                    className="px-4 py-4 border-b border-gray-50 flex-row items-center"
+                    style={{
+                      paddingHorizontal: 16,
+                      paddingVertical: 14,
+                      borderBottomWidth: 1,
+                      borderBottomColor: '#f9fafb',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                    }}
                     onPress={() => {
                       onSelect(option);
                       onCancel();
                     }}
                   >
                     {option.icon && (
-                      <Text className="text-lg mr-3">{option.icon}</Text>
+                      <Text style={{ fontSize: 18, marginRight: 12 }}>{option.icon}</Text>
                     )}
                     <Text
-                      className="text-base flex-1"
-                      style={{ color: option.destructive ? '#ef4444' : option.color || '#111418' }}
+                      style={{
+                        fontSize: 16,
+                        flex: 1,
+                        color: option.destructive ? '#ef4444' : option.color || '#111418',
+                      }}
                     >
                       {option.label}
                     </Text>
@@ -90,10 +110,17 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
                 ))}
               </ScrollView>
               <TouchableOpacity
-                className="mx-4 mt-3 py-3.5 bg-gray-100 rounded-xl items-center"
+                style={{
+                  marginHorizontal: 16,
+                  marginTop: 12,
+                  paddingVertical: 14,
+                  backgroundColor: '#f3f4f6',
+                  borderRadius: 12,
+                  alignItems: 'center',
+                }}
                 onPress={onCancel}
               >
-                <Text className="text-base font-medium text-gray-700">{cancelLabel}</Text>
+                <Text style={{ fontSize: 16, fontWeight: '500', color: '#374151' }}>{cancelLabel}</Text>
               </TouchableOpacity>
             </Animated.View>
           </TouchableWithoutFeedback>

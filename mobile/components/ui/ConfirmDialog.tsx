@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import { Colors } from '../../constants/theme';
 
 interface ConfirmDialogProps {
   visible: boolean;
@@ -25,30 +26,27 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <TouchableWithoutFeedback onPress={onCancel}>
-        <View className="flex-1 bg-black/50 items-center justify-center px-6">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
           <TouchableWithoutFeedback>
-            <View className="bg-white rounded-2xl w-full overflow-hidden">
-              <View className="px-5 pt-5 pb-4">
-                <Text className="text-lg font-semibold text-gray-900 text-center">{title}</Text>
+            <View style={{ backgroundColor: '#fff', borderRadius: 20, width: '100%', overflow: 'hidden' }}>
+              <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16 }}>
+                <Text style={{ fontSize: 18, fontWeight: '600', color: '#111418', textAlign: 'center' }}>{title}</Text>
                 {message && (
-                  <Text className="text-sm text-gray-500 text-center mt-2 leading-5">{message}</Text>
+                  <Text style={{ fontSize: 14, color: '#6b7280', textAlign: 'center', marginTop: 8, lineHeight: 20 }}>{message}</Text>
                 )}
               </View>
-              <View className="border-t border-gray-100 flex-row">
+              <View style={{ borderTopWidth: 1, borderTopColor: '#f3f4f6', flexDirection: 'row' }}>
                 <TouchableOpacity
-                  className="flex-1 py-3.5 items-center border-r border-gray-100"
+                  style={{ flex: 1, paddingVertical: 14, alignItems: 'center', borderRightWidth: 1, borderRightColor: '#f3f4f6' }}
                   onPress={onCancel}
                 >
-                  <Text className="text-base text-gray-600">{cancelText}</Text>
+                  <Text style={{ fontSize: 16, color: '#6b7280' }}>{cancelText}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="flex-1 py-3.5 items-center"
+                  style={{ flex: 1, paddingVertical: 14, alignItems: 'center' }}
                   onPress={() => { onConfirm(); onCancel(); }}
                 >
-                  <Text
-                    className="text-base font-semibold"
-                    style={{ color: destructive ? '#ef4444' : '#8b5cf6' }}
-                  >
+                  <Text style={{ fontSize: 16, fontWeight: '600', color: destructive ? '#ef4444' : Colors.primary }}>
                     {confirmText}
                   </Text>
                 </TouchableOpacity>

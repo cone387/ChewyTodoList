@@ -4,8 +4,8 @@ import { useLocalSearchParams } from 'expo-router';
 export default function EditViewPage() {
   const { uid } = useLocalSearchParams<{ uid: string }>();
   return (
-    <View className="flex-1 bg-white items-center justify-center">
-      <Text className="text-lg text-gray-600">编辑视图 {uid}（开发中）</Text>
+    <View style={{ flex: 1, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ fontSize: 18, color: '#6b7280' }}>编辑视图 {uid}（开发中）</Text>
     </View>
   );
 }
