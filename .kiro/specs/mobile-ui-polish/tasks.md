@@ -2,7 +2,7 @@
 
 ## Task 1: Theme Constants and Shared Infrastructure
 
-- [-] 1.1 Add shadow system constants (`Shadows.low`, `Shadows.medium`, `Shadows.primaryMedium`) to `mobile/constants/theme.ts`
+- [x] 1.1 Add shadow system constants (`Shadows.low`, `Shadows.medium`, `Shadows.primaryMedium`) to `mobile/constants/theme.ts`
 - [ ] 1.2 Create icon mapping file `mobile/constants/icons.ts` with all icon name constants (TabIcons, ViewTypeIcons, StatusIcons, PriorityIcons, SettingsIcons, ActionIcons)
 - [ ] 1.3 Create `mobile/components/ui/SkeletonLoader.tsx` with base SkeletonLoader, SkeletonCard, and SkeletonListItem components using Animated opacity pulse
 - [ ] 1.4 Create `mobile/components/ui/EmptyState.tsx` with standardized empty state layout (vector icon, primary message, optional description, optional action button)

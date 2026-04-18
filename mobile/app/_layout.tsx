@@ -1,7 +1,6 @@
-import '../global.css';
 import { useEffect } from 'react';
 import { View } from 'react-native';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Slot, useRouter, useSegments } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
@@ -86,7 +85,7 @@ export default function RootLayout() {
                 <StatusBar style={themeCtx.isDark ? 'light' : 'dark'} />
                 <View style={{ flex: 1, backgroundColor: themeCtx.colors.background.primary }}>
                   <AuthGuard>
-                    <Stack screenOptions={{ headerShown: false }} />
+                    <Slot />
                   </AuthGuard>
                   <ToastContainer toasts={toastCtx.toasts} onDismiss={toastCtx.dismissToast} />
                 </View>

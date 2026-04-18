@@ -1,84 +1,69 @@
-import { Tabs } from 'expo-router';
-import { Platform, Pressable } from 'react-native';
-import { router } from 'expo-router';
+import { Slot, usePathname, router } from 'expo-router';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { TabIcons } from '../../constants/icons';
 import { Colors } from '../../constants/theme';
 
+const TABS = [
+  { name: 'index', path: '/(tabs)', title: '主页', icon: TabIcons.home },
+  { name: 'projects', path: '/(tabs)/projects', title: '项目', icon: TabIcons.projects },
+  { name: 'views', path: '/(tabs)/views', title: '视图', icon: TabIcons.views },
+  { name: 'settings', path: '/(tabs)/settings', title: '我的', icon: TabIcons.settings },
+] as const;
+
 export default function TabsLayout() {
-  // Only use custom tab buttons on web (to fix navigation)
-  const webTabButton = Platform.OS === 'web'
-    ? (to: string) => (props: any) => {
-        const { children, style: _style, ...rest } = props;
-        return (
-          <Pressable
-            onPress={() => router.replace(to as any)}
-            style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
-          >
-            {children}
-          </Pressable>
-        );
-      }
-    : undefined;
+  const pathname = usePathname();
+  const insets = useSafeAreaInsets();
+
+  const getIsActive = (tab: typeof TABS[number]) => {
+    if (tab.name === 'index') {
+      return pathname === '/' || pathname === '/(tabs)';
+    }
+    return pathname.startsWith(`/${tab.name}`);
+  };
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: '#9ca3af',
-        tabBarStyle: {
+    <View style={{ flex: 1 }}>
+      <Slot />
+      <View
+        style={{
+          flexDirection: 'row',
+          borderTopWidth: 1,
           borderTopColor: '#e5e7eb',
           backgroundColor: '#ffffff',
-          height: Platform.OS === 'ios' ? 88 : 60,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+          paddingBottom: Platform.OS === 'ios' ? insets.bottom : 8,
           paddingTop: 8,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: '主页',
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name={TabIcons.home} size={24} color={color} />
-          ),
-          ...(webTabButton ? { tabBarButton: webTabButton('/(tabs)') } : {}),
         }}
-      />
-      <Tabs.Screen
-        name="projects"
-        options={{
-          title: '项目',
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name={TabIcons.projects} size={24} color={color} />
-          ),
-          ...(webTabButton ? { tabBarButton: webTabButton('/(tabs)/projects') } : {}),
-        }}
-      />
-      <Tabs.Screen
-        name="views"
-        options={{
-          title: '视图',
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name={TabIcons.views} size={24} color={color} />
-          ),
-          ...(webTabButton ? { tabBarButton: webTabButton('/(tabs)/views') } : {}),
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: '我的',
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name={TabIcons.settings} size={24} color={color} />
-          ),
-          ...(webTabButton ? { tabBarButton: webTabButton('/(tabs)/settings') } : {}),
-        }}
-      />
-    </Tabs>
+      >
+        {TABS.map((tab) => {
+          const active = getIsActive(tab);
+          return (
+            <TouchableOpacity
+              key={tab.name}
+              onPress={() => router.replace(tab.path as any)}
+              style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 4 }}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons
+                name={tab.icon}
+                size={24}
+                color={active ? Colors.primary : '#9ca3af'}
+              />
+              <Text
+                style={{
+                  fontSize: 11,
+                  marginTop: 2,
+                  color: active ? Colors.primary : '#9ca3af',
+                  fontWeight: active ? '600' : '400',
+                }}
+              >
+                {tab.title}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
   );
 }
