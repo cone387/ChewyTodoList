@@ -238,8 +238,8 @@
 
 ## Phase 3：多视图类型（🟡 P1）
 
-- [ ] 50. 看板视图
-  - [ ] 50.1 实现 BoardView 组件
+- [x] 50. 看板视图
+  - [x] 50.1 实现 BoardView 组件
     - 创建 `mobile/components/views/BoardView.tsx`
     - 外层 ScrollView horizontal 包裹四列（待分配/待办/已完成/已放弃）
     - 每列内部 FlatList 渲染该状态的任务卡片
@@ -251,8 +251,8 @@
     - API 失败时回滚并展示错误 Toast
     - _需求：需求 4.3、4.4_
 
-- [ ] 51. 日历视图
-  - [ ] 51.1 实现 CalendarView 组件
+- [x] 51. 日历视图
+  - [x] 51.1 实现 CalendarView 组件
     - 创建 `mobile/components/views/CalendarView.tsx`
     - 使用 react-native-calendars 渲染月历网格
     - 有任务的日期显示标记点（markedDates）
@@ -260,30 +260,30 @@
     - 点击日期后在下方展示该日期任务列表
     - _需求：需求 5.1-5.4_
 
-- [ ] 52. 表格视图
-  - [ ] 52.1 实现 TableView 组件
+- [x] 52. 表格视图
+  - [x] 52.1 实现 TableView 组件
     - 创建 `mobile/components/views/TableView.tsx`
     - 外层 ScrollView horizontal，内层 FlatList 渲染行
     - 固定列头（标题、状态、优先级、截止日期、项目、标签）
     - 点击行跳转任务详情
     - _需求：需求 6.1-6.3_
 
-- [ ] 53. 时间线视图
-  - [ ] 53.1 实现 TimelineView 组件
+- [x] 53. 时间线视图
+  - [x] 53.1 实现 TimelineView 组件
     - 创建 `mobile/components/views/TimelineView.tsx`
     - 按时间轴渲染有 start_date 或 due_date 的任务条目
     - 支持按周/月切换粒度
     - _需求：需求 7.1-7.3_
 
-- [ ] 54. 画廊视图
-  - [ ] 54.1 实现 GalleryView 组件
+- [x] 54. 画廊视图
+  - [x] 54.1 实现 GalleryView 组件
     - 创建 `mobile/components/views/GalleryView.tsx`
     - FlatList numColumns=2 双列网格
     - 每项使用 TaskCard
     - _需求：需求 8.1-8.3_
 
-- [ ] 55. 在主页集成所有视图类型
-  - [ ] 55.1 更新主页视图渲染逻辑
+- [x] 55. 在主页集成所有视图类型
+  - [x] 55.1 更新主页视图渲染逻辑
     - 在 `mobile/app/(tabs)/index.tsx` 中根据 view_type 动态渲染对应视图组件
     - list → ListView, board → BoardView, calendar → CalendarView, table → TableView, timeline → TimelineView, gallery → GalleryView
     - _需求：需求 2.2_
@@ -310,8 +310,8 @@
     - 应用到视图时更新 card_config_uid
     - _需求：需求 13.4-13.7_
 
-- [ ] 61. 标签管理
-  - [ ] 61.1 实现标签管理页
+- [x] 61. 标签管理
+  - [x] 61.1 实现标签管理页
     - 在设置页提供标签管理入口
     - 展示所有 Tag 列表（名称 + 颜色圆点）
     - 支持创建标签（名称 + 颜色选择/随机生成）
@@ -319,8 +319,8 @@
     - 删除时 ConfirmDialog 确认
     - _需求：需求 14.1-14.4_
 
-- [ ] 62. 任务搜索
-  - [ ] 62.1 实现搜索功能
+- [x] 62. 任务搜索
+  - [x] 62.1 实现搜索功能
     - 在主页顶部添加搜索入口（搜索图标 → 展开搜索栏）
     - 调用 `/api/tasks/?search=` 进行在线搜索，300ms 防抖
     - 展示搜索结果列表，点击跳转任务详情
