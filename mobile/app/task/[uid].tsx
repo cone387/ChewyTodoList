@@ -13,9 +13,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTask, useUpdateTask, useDeleteTask, useCreateTask } from '../../hooks/useTasks';
 import { useProjects } from '../../hooks/useProjects';
+import { useSubtasks } from '../../hooks/useSubtasks';
 import { ActionSheet } from '../../components/ui/ActionSheet';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { ProgressBar } from '../../components/ui/ProgressBar';
+import { TagPicker } from '../../components/task/detail/TagPicker';
+import { SubtaskList } from '../../components/task/detail/SubtaskList';
+import { ActivityLog } from '../../components/task/detail/ActivityLog';
 import { useToast } from '../../hooks/useToast';
 import { TaskStatus, TaskPriority } from '../../shared/types/index';
 import type { Task, Project, Tag } from '../../shared/types/index';
@@ -78,6 +82,10 @@ export default function TaskDetailPage() {
   const { showToast } = useToast();
 
   const projects: Project[] = (projectsData as Project[]) || [];
+
+  // Fetch subtasks for edit mode
+  const { data: subtasksData, refetch: refetchSubtasks } = useSubtasks(!isCreate && task ? uid : '');
+  const subtasks = (subtasksData as Task[]) || [];
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -189,6 +197,19 @@ export default function TaskDetailPage() {
       await updateTask.mutateAsync({ uid: task.uid, data: { [field]: null } });
     } catch {
       showToast('error', '清除日期失败');
+    }
+  };
+
+  const handleToggleTag = async (tagUid: string) => {
+    if (!task || isCreate) return;
+    const currentTagUids = task.tags.map((t: Tag) => t.uid);
+    const newTagUids = currentTagUids.includes(tagUid)
+      ? currentTagUids.filter((id: string) => id !== tagUid)
+      : [...currentTagUids, tagUid];
+    try {
+      await updateTask.mutateAsync({ uid: task.uid, data: { tag_uids: newTagUids } });
+    } catch {
+      showToast('error', '标签更新失败');
     }
   };
 
@@ -390,9 +411,12 @@ export default function TaskDetailPage() {
               </View>
             )}
 
-            {/* Tags */}
+            {/* Tags - tappable to open picker */}
             {!isCreate && task && (
-              <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+              <TouchableOpacity
+                style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}
+                onPress={() => setShowTagPicker(true)}
+              >
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
                   <Text style={{ color: '#9ca3af', fontSize: 14, width: 70, paddingTop: 4 }}>标签</Text>
                   <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 6 }}>
@@ -403,11 +427,12 @@ export default function TaskDetailPage() {
                       </View>
                     ))}
                     {task.tags.length === 0 && (
-                      <Text style={{ fontSize: 13, color: '#d1d5db' }}>无标签</Text>
+                      <Text style={{ fontSize: 13, color: '#d1d5db' }}>点击添加标签</Text>
                     )}
+                    <Text style={{ color: '#d1d5db' }}>›</Text>
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             )}
 
             {/* Start date */}
@@ -426,20 +451,13 @@ export default function TaskDetailPage() {
             )}
           </View>
 
-          {/* Subtasks */}
-          {!isCreate && task && task.subtasks_count > 0 && (
-            <View style={{ backgroundColor: '#fff', marginTop: 8, paddingHorizontal: 16, paddingVertical: 14 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151' }}>子任务</Text>
-                <Text style={{ fontSize: 12, color: '#9ca3af' }}>
-                  {task.completed_subtasks_count}/{task.subtasks_count} 已完成
-                </Text>
-              </View>
-              <ProgressBar
-                value={task.subtasks_count > 0 ? task.completed_subtasks_count / task.subtasks_count : 0}
-                color={Colors.success}
-              />
-            </View>
+          {/* Subtasks - full interactive list */}
+          {!isCreate && task && (
+            <SubtaskList
+              parentTask={task}
+              subtasks={subtasks}
+              onRefresh={() => refetchSubtasks()}
+            />
           )}
 
           {/* Content / Notes */}
@@ -477,6 +495,11 @@ export default function TaskDetailPage() {
               <Text style={{ color: '#9ca3af', fontSize: 14 }}>↑</Text>
               <Text style={{ fontSize: 13, color: Colors.primary }}>查看父任务</Text>
             </TouchableOpacity>
+          )}
+
+          {/* Activity Log */}
+          {!isCreate && task && (
+            <ActivityLog taskUid={task.uid} />
           )}
 
           {/* Meta info */}
@@ -550,6 +573,16 @@ export default function TaskDetailPage() {
         }}
         onCancel={() => setShowMoreMenu(false)}
       />
+
+      {/* Tag Picker */}
+      {!isCreate && task && (
+        <TagPicker
+          visible={showTagPicker}
+          selectedTagUids={task.tags.map((t: Tag) => t.uid)}
+          onToggleTag={handleToggleTag}
+          onClose={() => setShowTagPicker(false)}
+        />
+      )}
 
       <ConfirmDialog
         visible={showDeleteConfirm}
