@@ -10,6 +10,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useNavViews, useViewTasks } from '../../hooks/useViews';
 import { ListView } from '../../components/views/ListView';
+import { BoardView } from '../../components/views/BoardView';
+import { CalendarView } from '../../components/views/CalendarView';
+import { TableView } from '../../components/views/TableView';
+import { TimelineView } from '../../components/views/TimelineView';
+import { GalleryView } from '../../components/views/GalleryView';
 import { ProjectSelector } from '../../components/navigation/ProjectSelector';
 import { FAB } from '../../components/ui/FAB';
 import { OfflineBanner } from '../../components/ui/OfflineBanner';
@@ -44,6 +49,35 @@ export default function HomePage() {
   const handleTaskPress = useCallback((task: Task) => {
     router.push(`/task/${task.uid}`);
   }, []);
+
+  const viewProps = {
+    tasks,
+    view: currentView,
+    onTaskPress: handleTaskPress,
+    onRefresh: () => refetch(),
+    isRefreshing: isRefetching,
+    isLoading: tasksLoading,
+    emptyMessage: '这个视图暂无任务',
+  };
+
+  const renderViewContent = () => {
+    if (!currentView) return null;
+    switch (currentView.view_type) {
+      case 'board':
+        return <BoardView {...viewProps} />;
+      case 'calendar':
+        return <CalendarView {...viewProps} />;
+      case 'table':
+        return <TableView {...viewProps} />;
+      case 'timeline':
+        return <TimelineView {...viewProps} />;
+      case 'gallery':
+        return <GalleryView {...viewProps} />;
+      case 'list':
+      default:
+        return <ListView {...viewProps} />;
+    }
+  };
 
   if (viewsLoading) {
     return (
@@ -97,15 +131,7 @@ export default function HomePage() {
 
       <View style={{ flex: 1 }}>
         {currentView ? (
-          <ListView
-            tasks={tasks}
-            view={currentView}
-            onTaskPress={handleTaskPress}
-            onRefresh={() => refetch()}
-            isRefreshing={isRefetching}
-            isLoading={tasksLoading}
-            emptyMessage="这个视图暂无任务"
-          />
+          renderViewContent()
         ) : (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ color: '#9ca3af', fontSize: 16 }}>暂无视图</Text>
