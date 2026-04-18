@@ -98,6 +98,15 @@ export default function SettingsPage() {
             <Text style={{ color: '#d1d5db' }}>›</Text>
           </TouchableOpacity>
 
+          {/* Card config */}
+          <TouchableOpacity
+            style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}
+            onPress={() => router.push('/(tabs)/settings/card-configs' as any)}
+          >
+            <Text style={{ fontSize: 15, color: '#374151', flex: 1 }}>卡片配置</Text>
+            <Text style={{ color: '#d1d5db' }}>›</Text>
+          </TouchableOpacity>
+
           {/* Change password */}
           <TouchableOpacity
             style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}

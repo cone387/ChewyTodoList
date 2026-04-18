@@ -20,6 +20,7 @@ import { ProgressBar } from '../../components/ui/ProgressBar';
 import { TagPicker } from '../../components/task/detail/TagPicker';
 import { SubtaskList } from '../../components/task/detail/SubtaskList';
 import { ActivityLog } from '../../components/task/detail/ActivityLog';
+import { AttachmentList } from '../../components/task/detail/AttachmentList';
 import { useToast } from '../../hooks/useToast';
 import { TaskStatus, TaskPriority } from '../../shared/types/index';
 import type { Task, Project, Tag } from '../../shared/types/index';
@@ -457,6 +458,14 @@ export default function TaskDetailPage() {
               parentTask={task}
               subtasks={subtasks}
               onRefresh={() => refetchSubtasks()}
+            />
+          )}
+
+          {/* Attachments */}
+          {!isCreate && task && (
+            <AttachmentList
+              attachments={task.attachments || []}
+              onContentInsert={(text) => setContent((prev) => prev + text)}
             />
           )}
 

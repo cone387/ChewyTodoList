@@ -10,6 +10,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAuth } from '../hooks/useAuth';
+import { authApi } from '../shared/services/api';
 import { ToastContainer } from '../components/ui/Toast';
 import { ToastContext, useToastProvider } from '../hooks/useToast';
 
@@ -45,6 +46,20 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       router.replace('/(tabs)');
     }
   }, [isAuthenticated, segments]);
+
+  // User initialization check
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    authApi.checkInitialized().then((res) => {
+      const data = res.data.data || res.data;
+      if (!data.is_initialized) {
+        authApi.initializeUser().then(() => {
+          // Refresh all caches after initialization
+          queryClient.invalidateQueries();
+        }).catch(() => {});
+      }
+    }).catch(() => {});
+  }, [isAuthenticated]);
 
   return <>{children}</>;
 }
