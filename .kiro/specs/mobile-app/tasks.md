@@ -138,12 +138,12 @@
     - _需求：需求 9.21-9.26_
 
 - [ ] 36. 任务详情页 — 附件
-  - [ ] 36.1 在 shared/services/api.ts 中添加 attachmentApi
+  - [x] 36.1 在 shared/services/api.ts 中添加 attachmentApi
     - 实现附件上传（multipart/form-data）、列表获取、删除接口
     - 集成 `expo-image-picker` 和 `expo-document-picker`
     - _需求：需求 9.27-9.31_
 
-  - [ ] 36.2 实现 AttachmentList 组件
+  - [x] 36.2 实现 AttachmentList 组件
     - 创建 `mobile/components/task/detail/AttachmentList.tsx`
     - 附件列表（文件名、类型图标、文件大小）
     - 上传入口（相机拍照、相册选图、文件系统）
@@ -295,14 +295,14 @@
 
 ## Phase 4：卡片配置与标签管理（🟡 P1）
 
-- [ ] 60. 卡片配置编辑器
-  - [ ] 60.1 实现卡片配置列表与预览
+- [x] 60. 卡片配置编辑器
+  - [x] 60.1 实现卡片配置列表与预览
     - 在视图编辑页或独立页面中获取 TaskCardConfig 列表
     - 展示每个配置的实时预览卡片（复用 TaskCard）
     - 支持从预设配置创建用户自定义副本
     - _需求：需求 13.1-13.3_
 
-  - [ ] 60.2 实现卡片配置编辑器
+  - [x] 60.2 实现卡片配置编辑器
     - 编辑布局密度（compact/comfortable/spacious）
     - 编辑每个 CardField 的 visible、position、style
     - 实时更新预览卡片
@@ -354,7 +354,7 @@
     - 配置各查询的 staleTime（views: 5min, view-tasks: 1min, task: 30s, projects: 5min, tags: 10min）
     - _需求：需求 15.1_
 
-  - [ ] 71.2 实现离线写操作拦截
+  - [x] 71.2 实现离线写操作拦截
     - 在所有写操作前检查 isOnline
     - 离线时阻止操作，展示 Toast 提示
     - 恢复联网时自动 invalidateQueries 刷新缓存
@@ -369,8 +369,8 @@
     - 显示 App 版本信息
     - _需求：需求 16.1-16.4_
 
-- [ ] 73. 用户初始化
-  - [ ] 73.1 实现用户初始化流程
+- [x] 73. 用户初始化
+  - [x] 73.1 实现用户初始化流程
     - 在根布局中检查用户是否已初始化
     - 未初始化时调用 `/api/auth/initialize/`
     - 初始化完成后刷新所有缓存
