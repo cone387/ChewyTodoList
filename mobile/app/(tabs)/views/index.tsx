@@ -79,9 +79,14 @@ export default function ViewsPage() {
       {/* Header */}
       <View style={{ backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <Text style={{ fontSize: 20, fontWeight: '700', color: '#111418' }}>视图</Text>
-        <TouchableOpacity onPress={() => router.push('/(tabs)/views/create' as any)}>
-          <Text style={{ color: Colors.primary, fontSize: 14, fontWeight: '600' }}>+ 新建</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/views/templates' as any)}>
+            <Text style={{ color: Colors.primary, fontSize: 14 }}>🏪 广场</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/views/create' as any)}>
+            <Text style={{ color: Colors.primary, fontSize: 14, fontWeight: '600' }}>+ 新建</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {isLoading ? (
