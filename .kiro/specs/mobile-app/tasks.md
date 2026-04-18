@@ -119,7 +119,7 @@
     - 自定义分组字段（custom_group）文本输入
     - _需求：需求 9.15-9.17_
 
-  - [ ] 34.2 实现 TagPicker 组件
+  - [x] 34.2 实现 TagPicker 组件
     - 创建 `mobile/components/task/detail/TagPicker.tsx`
     - 展示所有 Tag（带颜色圆点），支持多选和搜索
     - 底部"创建新标签"入口
@@ -127,7 +127,7 @@
     - _需求：需求 9.18-9.20_
 
 - [ ] 35. 任务详情页 — 子任务
-  - [ ] 35.1 实现 SubtaskList 组件
+  - [x] 35.1 实现 SubtaskList 组件
     - 创建 `mobile/components/task/detail/SubtaskList.tsx`
     - 子任务列表（标题、完成状态、优先级）
     - 完成进度（"N/M 已完成"）+ ProgressBar
@@ -153,7 +153,7 @@
     - _需求：需求 9.27-9.31_
 
 - [ ] 37. 任务详情页 — 活动日志与父任务
-  - [ ] 37.1 实现 ActivityLog 组件
+  - [x] 37.1 实现 ActivityLog 组件
     - 创建 `mobile/components/task/detail/ActivityLog.tsx`
     - 默认折叠，点击展开后加载
     - 时间线形式展示（操作类型、内容、时间戳）
@@ -165,7 +165,7 @@
     - 支持设置/解除父任务关联
     - _需求：需求 9.35-9.37_
 
-  - [ ] 37.3 实现任务删除确认逻辑
+  - [x] 37.3 实现任务删除确认逻辑
     - ConfirmDialog 确认删除
     - 有子任务时二次确认提示
     - 确认后 DELETE + 返回上一页 + 刷新列表
@@ -224,7 +224,7 @@
     - 保存时调用 PATCH `/api/views/{uid}/`
     - _需求：需求 12.2-12.6_
 
-  - [ ] 41.3 实现移动端 FilterBuilder 组件
+  - [x] 41.3 实现移动端 FilterBuilder 组件
     - 创建 `mobile/components/views/FilterBuilder.tsx`
     - 支持筛选字段：状态、优先级、标签、截止日期、开始日期、项目、是否逾期
     - 支持操作符：等于、不等于、包含、is_today、is_overdue 等
@@ -327,8 +327,8 @@
     - 搜索为空时恢复当前视图
     - _需求：需求 17_
 
-- [ ] 63. 列表视图左滑操作
-  - [ ] 63.1 实现左滑快捷操作
+- [x] 63. 列表视图左滑操作
+  - [x] 63.1 实现左滑快捷操作
     - 在 ListView 中集成 react-native-gesture-handler 的 Swipeable
     - 左滑展示"完成"和"删除"操作按钮
     - _需求：需求 3.6_
@@ -347,8 +347,8 @@
     - 持久化用户偏好到 AsyncStorage
     - _需求：需求 16.3_
 
-- [ ] 71. 离线支持完善
-  - [ ] 71.1 配置 QueryClient 持久化缓存
+- [x] 71. 离线支持完善
+  - [x] 71.1 配置 QueryClient 持久化缓存
     - 在根布局中配置 persistQueryClient
     - 使用 @tanstack/query-async-storage-persister + AsyncStorage
     - 配置各查询的 staleTime（views: 5min, view-tasks: 1min, task: 30s, projects: 5min, tags: 10min）
