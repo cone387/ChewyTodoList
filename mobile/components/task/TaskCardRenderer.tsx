@@ -115,7 +115,7 @@ export const DueDateField: React.FC<{ task: Task; style: Record<string, any> }> 
   }
 
   return (
-    <View className="flex-row items-center">
+    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
       {style.showIcon && <Text style={{ color, fontSize: 11, marginRight: 2 }}>📅</Text>}
       <Text style={{ color, fontSize: 11 }}>{label}</Text>
     </View>
@@ -132,7 +132,7 @@ export const TagsField: React.FC<{ task: Task; style: Record<string, any> }> = (
   const visibleTags = task.tags.slice(0, maxCount);
 
   return (
-    <View className="flex-row flex-wrap gap-1">
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
       {visibleTags.map((tag) => {
         if (variant === 'minimal') {
           return (
@@ -168,7 +168,7 @@ export const TagsField: React.FC<{ task: Task; style: Record<string, any> }> = (
 export const ProjectField: React.FC<{ task: Task; style: Record<string, any> }> = ({ task }) => {
   if (!task.project) return null;
   return (
-    <View className="flex-row items-center">
+    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
       <Text style={{ color: '#9ca3af', fontSize: 11 }}>📁 {task.project.name}</Text>
     </View>
   );
@@ -182,7 +182,7 @@ export const SubtasksProgressField: React.FC<{ task: Task; style: Record<string,
   const ratio = task.completed_subtasks_count / task.subtasks_count;
 
   return (
-    <View className="flex-row items-center gap-1.5">
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
       {style.showProgress && (
         <View style={{ width: 32, height: 3, backgroundColor: '#e5e7eb', borderRadius: 2, overflow: 'hidden' }}>
           <View style={{ width: `${ratio * 100}%`, height: 3, backgroundColor: '#8b5cf6', borderRadius: 2 }} />

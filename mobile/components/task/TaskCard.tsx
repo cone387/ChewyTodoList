@@ -67,14 +67,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, cardConfig, onPress, s
       ]}
     >
       {/* Header row */}
-      <View className="flex-row items-center" style={{ gap: spacing.gap }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.gap }}>
         {/* header_left */}
         {groups.header_left.map((fc) => (
           <FieldRenderer key={fc.field} field={fc.field} task={task} fieldStyle={fc.style} />
         ))}
 
         {/* header (title) — flex: 1 */}
-        <View className="flex-1 flex-row items-center" style={{ gap: spacing.gap }}>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.gap }}>
           {groups.header.map((fc) => (
             <FieldRenderer key={fc.field} field={fc.field} task={task} fieldStyle={fc.style} />
           ))}
@@ -97,7 +97,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, cardConfig, onPress, s
 
       {/* Footer */}
       {groups.footer.length > 0 && (
-        <View className="flex-row flex-wrap items-center" style={{ marginTop: spacing.gap, gap: spacing.gap }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: spacing.gap, gap: spacing.gap }}>
           {groups.footer.map((fc) => (
             <FieldRenderer key={fc.field} field={fc.field} task={task} fieldStyle={fc.style} />
           ))}

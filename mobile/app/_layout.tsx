@@ -44,7 +44,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated && !inAuthGroup) {
       router.replace('/(auth)/login');
     } else if (isAuthenticated && inAuthGroup) {
-      router.replace('/(tabs)');
+      // Small delay to ensure state is settled before navigation
+      setTimeout(() => router.replace('/(tabs)'), 100);
     }
   }, [isAuthenticated, segments]);
 
