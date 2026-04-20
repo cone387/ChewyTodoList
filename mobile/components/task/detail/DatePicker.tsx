@@ -7,6 +7,7 @@ import {
   TouchableWithoutFeedback,
   Platform,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Colors } from '../../../constants/theme';
 
@@ -15,6 +16,7 @@ interface DatePickerProps {
   value: string | null | undefined;
   onChange: (isoValue: string | null) => void;
   isOverdue?: boolean;
+  compact?: boolean;
 }
 
 function getRelativeDate(dateStr: string): string {
@@ -54,6 +56,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   value,
   onChange,
   isOverdue = false,
+  compact = false,
 }) => {
   const [showPicker, setShowPicker] = useState(false);
   const [pickerDate, setPickerDate] = useState(value ? new Date(value) : new Date());
@@ -87,6 +90,56 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   };
 
   const relative = value ? getRelativeDate(value) : '';
+
+  const renderPicker = () => (
+    <>
+      {Platform.OS === 'ios' && showPicker && (
+        <Modal transparent animationType="slide" onRequestClose={() => setShowPicker(false)}>
+          <TouchableWithoutFeedback onPress={() => setShowPicker(false)}>
+            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}>
+              <TouchableWithoutFeedback>
+                <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 34 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+                    <TouchableOpacity onPress={() => setShowPicker(false)}><Text style={{ color: '#6b7280', fontSize: 15 }}>取消</Text></TouchableOpacity>
+                    <Text style={{ fontSize: 15, fontWeight: '600', color: '#111418' }}>选择日期时间</Text>
+                    <TouchableOpacity onPress={handleIOSConfirm}><Text style={{ color: Colors.primary, fontSize: 15, fontWeight: '600' }}>确定</Text></TouchableOpacity>
+                  </View>
+                  <DateTimePicker value={pickerDate} mode="datetime" display="spinner" onChange={handlePickerChange} locale="zh-CN" style={{ height: 200 }} />
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      )}
+      {Platform.OS === 'android' && showPicker && (
+        <DateTimePicker value={pickerDate} mode={pickerMode} display="default" onChange={handlePickerChange} />
+      )}
+    </>
+  );
+
+  // Compact mode — inline chip
+  if (compact) {
+    return (
+      <>
+        <TouchableOpacity
+          onPress={() => { setPickerDate(value ? new Date(value) : new Date()); setShowPicker(true); }}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: value ? (isOverdue ? '#fef2f2' : '#f3f4f6') : '#f3f4f6',
+            borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5, flex: 1 }}
+        >
+          <MaterialCommunityIcons name="calendar" size={12} color={isOverdue ? '#ef4444' : '#9ca3af'} />
+          <Text style={{ fontSize: 12, color: value ? (isOverdue ? '#ef4444' : '#374151') : '#9ca3af' }} numberOfLines={1}>
+            {value ? `${label} ${new Date(value).toLocaleDateString('zh-CN')}` : label}
+          </Text>
+          {value && (
+            <TouchableOpacity onPress={() => onChange(null)} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}>
+              <MaterialCommunityIcons name="close-circle" size={14} color="#d1d5db" />
+            </TouchableOpacity>
+          )}
+        </TouchableOpacity>
+        {renderPicker()}
+      </>
+    );
+  }
 
   return (
     <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
@@ -135,46 +188,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         )}
       </View>
 
-      {/* iOS picker modal */}
-      {Platform.OS === 'ios' && showPicker && (
-        <Modal transparent animationType="slide" onRequestClose={() => setShowPicker(false)}>
-          <TouchableWithoutFeedback onPress={() => setShowPicker(false)}>
-            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}>
-              <TouchableWithoutFeedback>
-                <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 34 }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
-                    <TouchableOpacity onPress={() => setShowPicker(false)}>
-                      <Text style={{ color: '#6b7280', fontSize: 15 }}>取消</Text>
-                    </TouchableOpacity>
-                    <Text style={{ fontSize: 15, fontWeight: '600', color: '#111418' }}>选择日期时间</Text>
-                    <TouchableOpacity onPress={handleIOSConfirm}>
-                      <Text style={{ color: Colors.primary, fontSize: 15, fontWeight: '600' }}>确定</Text>
-                    </TouchableOpacity>
-                  </View>
-                  <DateTimePicker
-                    value={pickerDate}
-                    mode="datetime"
-                    display="spinner"
-                    onChange={handlePickerChange}
-                    locale="zh-CN"
-                    style={{ height: 200 }}
-                  />
-                </View>
-              </TouchableWithoutFeedback>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
-      )}
-
-      {/* Android picker */}
-      {Platform.OS === 'android' && showPicker && (
-        <DateTimePicker
-          value={pickerDate}
-          mode={pickerMode}
-          display="default"
-          onChange={handlePickerChange}
-        />
-      )}
+      {renderPicker()}
     </View>
   );
 };
