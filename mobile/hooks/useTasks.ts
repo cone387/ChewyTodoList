@@ -33,6 +33,7 @@ export function useCreateTask() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['view-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['activity-logs'] });
     },
   });
 }
@@ -46,6 +47,7 @@ export function useUpdateTask() {
       queryClient.invalidateQueries({ queryKey: ['task', uid] });
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['view-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['activity-logs'] });
     },
   });
 }
@@ -57,6 +59,7 @@ export function useDeleteTask() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['view-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['activity-logs'] });
     },
   });
 }
@@ -101,6 +104,7 @@ export function useToggleTaskStatus() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['view-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['activity-logs'] });
     },
   });
 }

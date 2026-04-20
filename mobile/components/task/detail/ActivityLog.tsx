@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
 import { activityApi } from '../../../shared/services/api';
 import { Colors } from '../../../constants/theme';
 import type { ActivityLog as ActivityLogType } from '../../../shared/types/index';
@@ -38,43 +39,34 @@ const ACTION_ICONS: Record<string, { icon: string; color: string }> = {
 
 export const ActivityLog: React.FC<ActivityLogProps> = ({ taskUid }) => {
   const [expanded, setExpanded] = useState(false);
-  const [logs, setLogs] = useState<ActivityLogType[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loaded, setLoaded] = useState(false);
 
-  const handleExpand = async () => {
-    if (expanded) {
-      setExpanded(false);
-      return;
-    }
-    setExpanded(true);
-    if (!loaded) {
-      setLoading(true);
-      try {
-        const res = await activityApi.getActivityLogs({ task: taskUid });
-        setLogs(res.data.data.results || []);
-        setLoaded(true);
-      } catch {
-        setLogs([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
+  const { data, isLoading } = useQuery({
+    queryKey: ['activity-logs', { task: taskUid }],
+    queryFn: async () => {
+      const res = await activityApi.getActivityLogs({ task: taskUid });
+      return res.data.data.results || [];
+    },
+    enabled: expanded && !!taskUid,
+    staleTime: 1000 * 30,
+  });
+
+  const logs: ActivityLogType[] = data || [];
 
   return (
     <View style={{ backgroundColor: '#fff', marginTop: 8 }}>
       <TouchableOpacity
         style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 }}
-        onPress={handleExpand}
+        onPress={() => setExpanded(!expanded)}
       >
-        <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: '#374151' }}>活动日志</Text>
+        <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: '#374151' }}>
+          活动日志{logs.length > 0 ? ` (${logs.length})` : ''}
+        </Text>
         <MaterialCommunityIcons name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color="#9ca3af" />
       </TouchableOpacity>
 
       {expanded && (
         <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
-          {loading ? (
+          {isLoading ? (
             <ActivityIndicator size="small" color={Colors.primary} style={{ paddingVertical: 12 }} />
           ) : logs.length === 0 ? (
             <Text style={{ color: '#d1d5db', fontSize: 13, textAlign: 'center', paddingVertical: 12 }}>暂无活动记录</Text>
@@ -84,14 +76,12 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ taskUid }) => {
                 const actionInfo = ACTION_ICONS[log.action] || ACTION_ICONS.updated;
                 return (
                   <View key={log.id} style={{ flexDirection: 'row', gap: 10, marginBottom: idx < logs.length - 1 ? 12 : 0 }}>
-                    {/* Timeline dot + line */}
                     <View style={{ alignItems: 'center', width: 24 }}>
                       <Text style={{ fontSize: 14 }}>{actionInfo.icon}</Text>
                       {idx < logs.length - 1 && (
                         <View style={{ width: 1, flex: 1, backgroundColor: '#e5e7eb', marginTop: 4 }} />
                       )}
                     </View>
-                    {/* Content */}
                     <View style={{ flex: 1, paddingBottom: 4 }}>
                       <Text style={{ fontSize: 13, color: '#374151' }}>{log.action_display}</Text>
                       {log.detail && (
