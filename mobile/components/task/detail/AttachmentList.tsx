@@ -176,11 +176,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
             </View>
           </TouchableOpacity>
         ))
-      ) : (
-        <View style={{ alignItems: 'center', paddingVertical: 8 }}>
-          <Text style={{ color: '#d1d5db', fontSize: 13 }}>暂无附件</Text>
-        </View>
-      )}
+      ) : null}
 
       {/* Upload options */}
       <ActionSheet

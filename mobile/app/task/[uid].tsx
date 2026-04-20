@@ -13,14 +13,13 @@ import { ActionSheet } from '../../components/ui/ActionSheet';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { TagPicker } from '../../components/task/detail/TagPicker';
 import { SubtaskList } from '../../components/task/detail/SubtaskList';
-import { ActivityLog } from '../../components/task/detail/ActivityLog';
 import { AttachmentList } from '../../components/task/detail/AttachmentList';
 import { DatePicker } from '../../components/task/detail/DatePicker';
+import { MarkdownEditor } from '../../components/task/detail/MarkdownEditor';
 import { useToast } from '../../hooks/useToast';
 import { TaskStatus, TaskPriority } from '../../shared/types/index';
 import type { Task, Project, Tag } from '../../shared/types/index';
 import { Colors } from '../../constants/theme';
-import { StatusIcons } from '../../constants/icons';
 
 const STATUSES = [
   { label: '待分配', value: TaskStatus.UNASSIGNED, color: Colors.status.unassigned, icon: 'circle-outline' },
@@ -62,7 +61,6 @@ export default function TaskDetailPage() {
 
   useEffect(() => { if (task) { setTitle(task.title); setContent(task.content || ''); } }, [task]);
 
-  // Auto-save
   useEffect(() => {
     if (!task || isCreate) return;
     if (title === task.title && content === (task.content || '')) return;
@@ -72,48 +70,24 @@ export default function TaskDetailPage() {
       try {
         await updateTask.mutateAsync({ uid: task.uid, data: { title: title.trim(), content: content.trim() || undefined } });
         setSaveStatus('saved'); setTimeout(() => setSaveStatus('idle'), 2000);
-      } catch { setSaveStatus('idle'); showToast('error', '保存失败'); }
+      } catch { setSaveStatus('idle'); }
     }, 1000);
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
   }, [title, content]);
 
-  const handleStatusChange = async (opt: any) => {
-    if (!task) return;
-    try { await updateTask.mutateAsync({ uid: task.uid, data: { status: opt.value } }); } catch { showToast('error', '更新失败'); }
-  };
-  const handlePriorityChange = async (val: TaskPriority) => {
-    if (isCreate) { setCreatePriority(val); return; }
-    if (!task) return;
-    try { await updateTask.mutateAsync({ uid: task.uid, data: { priority: val } }); } catch { showToast('error', '更新失败'); }
-  };
-  const handleToggleComplete = async () => {
-    if (!task || isCreate) return;
-    const ns = task.is_completed ? TaskStatus.TODO : TaskStatus.COMPLETED;
-    try { await updateTask.mutateAsync({ uid: task.uid, data: { status: ns } }); } catch { showToast('error', '操作失败'); }
-  };
-  const handleProjectChange = async (pUid: string | null) => {
-    if (isCreate) { setCreateProjectUid(pUid); setShowProjectPicker(false); return; }
-    if (!task) return;
-    try { await updateTask.mutateAsync({ uid: task.uid, data: { project_uid: pUid || undefined } }); } catch { showToast('error', '更新失败'); }
-    setShowProjectPicker(false);
-  };
-  const handleToggleTag = async (tagUid: string) => {
-    if (!task || isCreate) return;
-    const cur = task.tags.map((t: Tag) => t.uid);
-    const next = cur.includes(tagUid) ? cur.filter((id: string) => id !== tagUid) : [...cur, tagUid];
-    try { await updateTask.mutateAsync({ uid: task.uid, data: { tag_uids: next } }); } catch { showToast('error', '更新失败'); }
-  };
-  const handleDelete = async () => {
-    if (!task) return;
-    try { await deleteTask.mutateAsync(task.uid); showToast('success', '已删除'); router.back(); } catch { showToast('error', '删除失败'); }
-  };
+  const handleStatusChange = async (opt: any) => { if (!task) return; try { await updateTask.mutateAsync({ uid: task.uid, data: { status: opt.value } }); } catch {} };
+  const handlePriorityChange = async (val: TaskPriority) => { if (isCreate) { setCreatePriority(val); return; } if (!task) return; try { await updateTask.mutateAsync({ uid: task.uid, data: { priority: val } }); } catch {} };
+  const handleToggleComplete = async () => { if (!task || isCreate) return; try { await updateTask.mutateAsync({ uid: task.uid, data: { status: task.is_completed ? TaskStatus.TODO : TaskStatus.COMPLETED } }); } catch {} };
+  const handleProjectChange = async (pUid: string | null) => { if (isCreate) { setCreateProjectUid(pUid); setShowProjectPicker(false); return; } if (!task) return; try { await updateTask.mutateAsync({ uid: task.uid, data: { project_uid: pUid || undefined } }); } catch {} setShowProjectPicker(false); };
+  const handleToggleTag = async (tagUid: string) => { if (!task || isCreate) return; const cur = task.tags.map((t: Tag) => t.uid); const next = cur.includes(tagUid) ? cur.filter((id: string) => id !== tagUid) : [...cur, tagUid]; try { await updateTask.mutateAsync({ uid: task.uid, data: { tag_uids: next } }); } catch {} };
+  const handleDelete = async () => { if (!task) return; try { await deleteTask.mutateAsync(task.uid); router.back(); } catch {} };
   const handleCreate = async () => {
     if (!title.trim()) { showToast('error', '请输入标题'); return; }
     try {
       const d: Record<string, any> = { title: title.trim(), priority: createPriority };
       if (content.trim()) d.content = content.trim();
       if (createProjectUid) d.project_uid = createProjectUid;
-      await createTask.mutateAsync(d); showToast('success', '已创建'); router.back();
+      await createTask.mutateAsync(d); router.back();
     } catch { showToast('error', '创建失败'); }
   };
 
@@ -124,9 +98,9 @@ export default function TaskDetailPage() {
   const curProject = isCreate ? projects.find((p) => p.uid === createProjectUid) : task?.project;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* Header */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 6, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
         <TouchableOpacity onPress={() => router.back()} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
           <MaterialCommunityIcons name={isCreate ? 'close' : 'arrow-left'} size={22} color={Colors.primary} />
         </TouchableOpacity>
@@ -139,121 +113,111 @@ export default function TaskDetailPage() {
             <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>创建</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity onPress={() => setShowMoreMenu(true)} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
-            <MaterialCommunityIcons name="dots-horizontal" size={22} color="#6b7280" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {/* Activity log button */}
+            <TouchableOpacity onPress={() => router.push(`/task/activity?uid=${task?.uid}` as any)} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
+              <MaterialCommunityIcons name="history" size={20} color="#6b7280" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowMoreMenu(true)} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
+              <MaterialCommunityIcons name="dots-horizontal" size={22} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
         )}
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 40 }}>
-          {/* ===== Title ===== */}
-          <View style={{ backgroundColor: '#fff', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
-              {!isCreate && (
-                <TouchableOpacity onPress={handleToggleComplete} style={{ paddingTop: 4 }}>
-                  <MaterialCommunityIcons name={task?.is_completed ? 'check-circle' : 'circle-outline'} size={24} color={task?.is_completed ? Colors.success : '#d1d5db'} />
-                </TouchableOpacity>
-              )}
-              <TextInput
-                style={{ flex: 1, fontSize: 18, fontWeight: '600', color: task?.is_completed ? '#9ca3af' : '#111418', lineHeight: 26,
-                  textDecorationLine: task?.is_completed ? 'line-through' : 'none' }}
-                placeholder="任务标题" placeholderTextColor="#9ca3af" value={title} onChangeText={setTitle} multiline />
-            </View>
-          </View>
-
-          {/* ===== Compact property chips ===== */}
-          <View style={{ backgroundColor: '#fff', paddingHorizontal: 16, paddingBottom: 10 }}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
-              {/* Status */}
-              {!isCreate && (
-                <TouchableOpacity onPress={() => setShowStatusSheet(true)}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: curStatus.color + '14', borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 }}>
-                  <MaterialCommunityIcons name={curStatus.icon as any} size={14} color={curStatus.color} />
-                  <Text style={{ fontSize: 12, fontWeight: '500', color: curStatus.color }}>{curStatus.label}</Text>
-                </TouchableOpacity>
-              )}
-              {/* Priority */}
-              {PRIORITIES.map((p) => {
-                const active = curPriority === p.value;
-                return (
-                  <TouchableOpacity key={p.value} onPress={() => handlePriorityChange(p.value)}
-                    style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14,
-                      backgroundColor: active ? p.color + '18' : '#f3f4f6',
-                      borderWidth: 1, borderColor: active ? p.color + '40' : 'transparent' }}>
-                    <Text style={{ fontSize: 12, fontWeight: active ? '600' : '400', color: active ? p.color : '#9ca3af' }}>{p.label}</Text>
+        <View style={{ flex: 1 }}>
+          {/* ===== Top section: title, properties, subtasks, attachments ===== */}
+          <View style={{ flexShrink: 0 }}>
+            {/* Title */}
+            <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                {!isCreate && (
+                  <TouchableOpacity onPress={handleToggleComplete}>
+                    <MaterialCommunityIcons name={task?.is_completed ? 'check-circle' : 'circle-outline'} size={22} color={task?.is_completed ? Colors.success : '#d1d5db'} />
                   </TouchableOpacity>
-                );
-              })}
-              {/* Project */}
-              <TouchableOpacity onPress={() => setShowProjectPicker(true)}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f3f4f6', borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 }}>
-                <MaterialCommunityIcons name="folder" size={12} color="#9ca3af" />
-                <Text style={{ fontSize: 12, color: curProject ? '#374151' : '#9ca3af' }} numberOfLines={1}>{curProject?.name || '收集箱'}</Text>
-              </TouchableOpacity>
-              {/* Tags */}
-              {!isCreate && task && (
-                <TouchableOpacity onPress={() => setShowTagPicker(true)}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f3f4f6', borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 }}>
-                  <MaterialCommunityIcons name="tag" size={12} color="#9ca3af" />
-                  <Text style={{ fontSize: 12, color: task.tags.length > 0 ? '#374151' : '#9ca3af' }}>
-                    {task.tags.length > 0 ? task.tags.map((t: Tag) => t.name).join(', ') : '标签'}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </ScrollView>
-
-            {/* Date row */}
-            {!isCreate && task && (
-              <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
-                <DatePicker label="截止" value={task.due_date} isOverdue={task.is_overdue} compact
-                  onChange={(v) => { updateTask.mutateAsync({ uid: task.uid, data: { due_date: v || undefined } }).catch(() => {}); }} />
-                <DatePicker label="开始" value={task.start_date} compact
-                  onChange={(v) => { updateTask.mutateAsync({ uid: task.uid, data: { start_date: v || undefined } }).catch(() => {}); }} />
+                )}
+                <TextInput
+                  style={{ flex: 1, fontSize: 18, fontWeight: '600', color: task?.is_completed ? '#9ca3af' : '#111418', lineHeight: 24,
+                    textDecorationLine: task?.is_completed ? 'line-through' : 'none', paddingVertical: 0 }}
+                  placeholder="任务标题" placeholderTextColor="#9ca3af" value={title} onChangeText={setTitle} multiline />
               </View>
+            </View>
+
+            {/* Properties — label: value rows */}
+            <View style={{ paddingHorizontal: 16, paddingBottom: 6 }}>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                {/* Priority */}
+                <PropRow label="优先级">
+                  <View style={{ flexDirection: 'row', gap: 4 }}>
+                    {PRIORITIES.map((p) => {
+                      const active = curPriority === p.value;
+                      return (
+                        <TouchableOpacity key={p.value} onPress={() => handlePriorityChange(p.value)}
+                          style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10,
+                            backgroundColor: active ? p.color + '18' : 'transparent' }}>
+                          <Text style={{ fontSize: 12, fontWeight: active ? '600' : '400', color: active ? p.color : '#9ca3af' }}>{p.label}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </PropRow>
+                {/* Project */}
+                <PropRow label="项目">
+                  <TouchableOpacity onPress={() => setShowProjectPicker(true)}>
+                    <Text style={{ fontSize: 12, color: curProject ? '#374151' : '#9ca3af' }}>{curProject?.name || '收集箱'}</Text>
+                  </TouchableOpacity>
+                </PropRow>
+                {/* Tags */}
+                {!isCreate && task && (
+                  <PropRow label="标签">
+                    <TouchableOpacity onPress={() => setShowTagPicker(true)}>
+                      <Text style={{ fontSize: 12, color: task.tags.length > 0 ? '#374151' : '#9ca3af' }}>
+                        {task.tags.length > 0 ? task.tags.map((t: Tag) => t.name).join(', ') : '无'}
+                      </Text>
+                    </TouchableOpacity>
+                  </PropRow>
+                )}
+              </View>
+              {/* Dates */}
+              {!isCreate && task && (
+                <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+                  <DatePicker label="截止" value={task.due_date} isOverdue={task.is_overdue} compact
+                    onChange={(v) => { updateTask.mutateAsync({ uid: task.uid, data: { due_date: v || undefined } }).catch(() => {}); }} />
+                  <DatePicker label="开始" value={task.start_date} compact
+                    onChange={(v) => { updateTask.mutateAsync({ uid: task.uid, data: { start_date: v || undefined } }).catch(() => {}); }} />
+                </View>
+              )}
+            </View>
+
+            {/* Subtasks (compact when empty) */}
+            {!isCreate && task && <SubtaskList parentTask={task} subtasks={subtasks} onRefresh={() => refetchSubtasks()} />}
+
+            {/* Attachments — only show section if has attachments */}
+            {!isCreate && task && task.attachments && task.attachments.length > 0 && (
+              <AttachmentList attachments={task.attachments} onContentInsert={(t) => setContent((p) => p + t)} />
+            )}
+
+            {task?.parent && (
+              <TouchableOpacity onPress={() => router.push(`/task/${task.parent}`)} style={{ paddingHorizontal: 16, paddingVertical: 2 }}>
+                <Text style={{ fontSize: 10, color: Colors.primary }}>查看父任务 →</Text>
+              </TouchableOpacity>
             )}
           </View>
 
-          {/* ===== Content — the main editing area ===== */}
-          <View style={{ backgroundColor: '#fff', marginTop: 6, paddingHorizontal: 16, paddingVertical: 12, minHeight: 200 }}>
-            <TextInput
-              style={{ fontSize: 15, color: '#374151', lineHeight: 24, minHeight: 180 }}
-              placeholder="输入任务内容..."
-              placeholderTextColor="#c4c4c4"
+          {/* ===== Content editor — fills ALL remaining space ===== */}
+          <View style={{ flex: 1, borderTopWidth: 1, borderTopColor: '#f3f4f6' }}>
+            <MarkdownEditor
               value={content}
-              onChangeText={setContent}
-              multiline
-              textAlignVertical="top"
+              onChange={setContent}
+              placeholder="输入任务内容... (支持 Markdown)"
+              footerText={!isCreate && task ? (
+                (task.completed_time ? `完成于 ${new Date(task.completed_time).toLocaleString('zh-CN')} · ` : '') +
+                `创建于 ${new Date(task.created_at).toLocaleString('zh-CN')}`
+              ) : undefined}
             />
           </View>
-
-          {/* ===== Subtasks ===== */}
-          {!isCreate && task && <SubtaskList parentTask={task} subtasks={subtasks} onRefresh={() => refetchSubtasks()} />}
-
-          {/* ===== Attachments ===== */}
-          {!isCreate && task && <AttachmentList attachments={task.attachments || []} onContentInsert={(t) => setContent((p) => p + t)} />}
-
-          {/* ===== Activity Log ===== */}
-          {!isCreate && task && <ActivityLog taskUid={task.uid} />}
-
-          {/* ===== Meta ===== */}
-          {!isCreate && task && (
-            <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
-              {task.completed_time && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                  <MaterialCommunityIcons name="check-circle" size={12} color={Colors.success} />
-                  <Text style={{ fontSize: 11, color: '#9ca3af' }}>完成于 {new Date(task.completed_time).toLocaleString('zh-CN')}</Text>
-                </View>
-              )}
-              <Text style={{ fontSize: 11, color: '#d1d5db' }}>创建于 {new Date(task.created_at).toLocaleString('zh-CN')}</Text>
-              {task.parent && (
-                <TouchableOpacity onPress={() => router.push(`/task/${task.parent}`)} style={{ marginTop: 4 }}>
-                  <Text style={{ fontSize: 11, color: Colors.primary }}>查看父任务 →</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-        </ScrollView>
+        </View>
       </KeyboardAvoidingView>
 
       {/* Sheets */}
@@ -278,5 +242,14 @@ export default function TaskDetailPage() {
         message={task?.subtasks_count ? `包含 ${task.subtasks_count} 个子任务，删除后无法恢复` : '确认删除？'}
         confirmText="删除" destructive onConfirm={handleDelete} onCancel={() => setShowDeleteConfirm(false)} />
     </SafeAreaView>
+  );
+}
+
+function PropRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+      <Text style={{ fontSize: 12, color: '#9ca3af' }}>{label}:</Text>
+      {children}
+    </View>
   );
 }
