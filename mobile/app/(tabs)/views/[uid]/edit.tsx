@@ -28,23 +28,38 @@ const VT = [
   { v: 'timeline', l: '时间线', i: 'chart-timeline-variant' },
   { v: 'gallery', l: '画廊', i: 'view-grid' },
 ];
-const SORT_FIELDS = [
+const SF = [
   { k: 'created_at', l: '创建时间' }, { k: 'updated_at', l: '更新时间' },
   { k: 'due_date', l: '截止日期' }, { k: 'priority', l: '优先级' },
   { k: 'status', l: '状态' }, { k: 'title', l: '标题' }, { k: 'sort_order', l: '自定义' },
 ];
-const GROUP_OPTS = [
+const GO = [
   { k: '', l: '不分组' }, { k: 'status', l: '状态' }, { k: 'priority', l: '优先级' },
   { k: 'project', l: '项目' }, { k: 'tags', l: '标签' }, { k: 'due_date', l: '截止日期' },
 ];
-const DISPLAY_FIELDS = [
+const DF = [
   { k: 'show_project' as const, l: '项目' }, { k: 'show_tags' as const, l: '标签' },
   { k: 'show_due_date' as const, l: '日期' }, { k: 'show_priority' as const, l: '优先级' },
   { k: 'show_status' as const, l: '状态' }, { k: 'show_completed' as const, l: '已完成' },
   { k: 'compact_mode' as const, l: '紧凑' },
 ];
+// Label maps for read-only display
+const FIELD_L: Record<string, string> = { status: '状态', priority: '优先级', due_date: '截止日期', start_date: '开始日期', is_overdue: '逾期', is_completed: '完成', title: '标题', content: '内容', tags__name: '标签', project__name: '项目', created_at: '创建时间', updated_at: '更新时间' };
+const OP_L: Record<string, string> = { eq: '等于', neq: '不等于', gte: '≥', equals: '等于', not_equals: '不等于', in: '包含', is_today: '今天', is_tomorrow: '明天', is_this_week: '本周', is_next_week: '下周', is_overdue: '已逾期', has_no_date: '无日期', is_true: '是', is_false: '否', is_this_month: '本月', is_yesterday: '昨天' };
+const VAL_L: Record<string, Record<string, string>> = {
+  status: { '0': '待分配', '1': '待办', '2': '已完成', '3': '已放弃' },
+  priority: { '0': '低', '1': '中', '2': '高', '3': '紧急' },
+};
 
 type DS = { show_project: boolean; show_tags: boolean; show_due_date: boolean; show_priority: boolean; show_status: boolean; compact_mode: boolean; show_completed: boolean };
+
+function fmtVal(field: string, val: any): string {
+  if (val === null || val === undefined) return '';
+  if (Array.isArray(val)) return val.map((v) => fmtVal(field, v)).join(',');
+  const m = VAL_L[field];
+  if (m && m[String(val)]) return m[String(val)];
+  return String(val);
+}
 
 export default function EditViewPage() {
   const { uid } = useLocalSearchParams<{ uid: string }>();
@@ -54,7 +69,7 @@ export default function EditViewPage() {
   const { data: pd } = useProjects();
   const { showToast } = useToast();
   const projects: Project[] = (pd as Project[]) || [];
-  const ro = !!view?.is_system; // read-only
+  const ro = !!view?.is_system;
 
   const [name, setName] = useState('');
   const [vt, setVt] = useState('list');
@@ -108,12 +123,20 @@ export default function EditViewPage() {
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40, paddingHorizontal: 16 }}>
-        {/* Name */}
-        <TextInput style={{ backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 16, color: '#111418', borderWidth: 1, borderColor: '#e5e7eb', marginTop: 14 }}
-          placeholder="视图名称" placeholderTextColor="#9ca3af" value={name} onChangeText={setName} editable={!ro} />
+        {/* Row 1: Name + Nav toggle on same line */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 }}>
+          <TextInput style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 16, color: '#111418', borderWidth: 1, borderColor: '#e5e7eb' }}
+            placeholder="视图名称" placeholderTextColor="#9ca3af" value={name} onChangeText={setName} editable={!ro} />
+          <TouchableOpacity onPress={() => !ro && setNav(!nav)} disabled={ro}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10,
+              backgroundColor: nav ? Colors.primary + '14' : '#f3f4f6', borderWidth: 1, borderColor: nav ? Colors.primary + '30' : '#e5e7eb' }}>
+            <MaterialCommunityIcons name={nav ? 'eye' : 'eye-off'} size={16} color={nav ? Colors.primary : '#9ca3af'} />
+            <Text style={{ fontSize: 12, fontWeight: '600', color: nav ? Colors.primary : '#9ca3af' }}>导航栏</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* View type — compact horizontal chips */}
-        <Text style={{ fontSize: 12, fontWeight: '600', color: '#9ca3af', marginTop: 14, marginBottom: 6 }}>类型</Text>
+        <Lbl text="类型" />
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {VT.map((t) => (
             <TouchableOpacity key={t.v} disabled={ro} onPress={() => setVt(t.v)}
@@ -126,87 +149,85 @@ export default function EditViewPage() {
           ))}
         </ScrollView>
 
-        {/* Project + Group by — side by side */}
-        <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+        {/* Project + Group + Follow — compact row */}
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 12, fontWeight: '600', color: '#9ca3af', marginBottom: 6 }}>项目</Text>
+            <Lbl text="项目" />
             <TouchableOpacity onPress={() => !ro && setShowPP(true)} disabled={ro}
-              style={{ backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: '#e5e7eb', flexDirection: 'row', alignItems: 'center' }}>
+              style={boxStyle}>
               <Text style={{ flex: 1, fontSize: 13, color: proj ? '#374151' : '#9ca3af' }} numberOfLines={1}>{proj?.name || '无'}</Text>
-              {!ro && <MaterialCommunityIcons name="chevron-down" size={16} color="#9ca3af" />}
+              {!ro && <MaterialCommunityIcons name="chevron-down" size={14} color="#9ca3af" />}
             </TouchableOpacity>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 12, fontWeight: '600', color: '#9ca3af', marginBottom: 6 }}>分组</Text>
-            <TouchableOpacity onPress={() => !ro && setShowGB(true)} disabled={ro}
-              style={{ backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: '#e5e7eb', flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ flex: 1, fontSize: 13, color: gb ? '#374151' : '#9ca3af' }} numberOfLines={1}>{GROUP_OPTS.find((o) => o.k === gb)?.l || '不分组'}</Text>
-              {!ro && <MaterialCommunityIcons name="chevron-down" size={16} color="#9ca3af" />}
+            <Lbl text="分组" />
+            <TouchableOpacity onPress={() => !ro && setShowGB(true)} disabled={ro} style={boxStyle}>
+              <Text style={{ flex: 1, fontSize: 13, color: gb ? '#374151' : '#9ca3af' }} numberOfLines={1}>{GO.find((o) => o.k === gb)?.l || '不分组'}</Text>
+              {!ro && <MaterialCommunityIcons name="chevron-down" size={14} color="#9ca3af" />}
+            </TouchableOpacity>
+          </View>
+          <View style={{ flex: 0.7 }}>
+            <Lbl text="跟随项目" />
+            <TouchableOpacity onPress={() => !ro && setFollow(!follow)} disabled={ro}
+              style={{ ...boxStyle, justifyContent: 'center' }}>
+              <MaterialCommunityIcons name={follow ? 'check-circle' : 'circle-outline'} size={18} color={follow ? Colors.primary : '#d1d5db'} />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Display — compact toggle chips */}
-        <Text style={{ fontSize: 12, fontWeight: '600', color: '#9ca3af', marginTop: 14, marginBottom: 6 }}>显示字段</Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {DISPLAY_FIELDS.map((f) => {
+        {/* Display fields — toggle chips */}
+        <Lbl text="显示字段" />
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+          {DF.map((f) => {
             const on = ds[f.k];
             return (
               <TouchableOpacity key={f.k} disabled={ro} onPress={() => setDs({ ...ds, [f.k]: !on })}
-                style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16,
+                style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14,
                   backgroundColor: on ? Colors.primary + '14' : '#f3f4f6',
                   borderWidth: 1, borderColor: on ? Colors.primary + '30' : 'transparent' }}>
-                <Text style={{ fontSize: 13, color: on ? Colors.primary : '#9ca3af', fontWeight: on ? '600' : '400' }}>{f.l}</Text>
+                <Text style={{ fontSize: 12, color: on ? Colors.primary : '#9ca3af', fontWeight: on ? '600' : '400' }}>{f.l}</Text>
               </TouchableOpacity>
             );
           })}
         </View>
 
-        {/* Filters */}
-        <Text style={{ fontSize: 12, fontWeight: '600', color: '#9ca3af', marginTop: 14, marginBottom: 6 }}>筛选条件</Text>
-        <View style={{ backgroundColor: '#fff', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#e5e7eb' }}>
-          {ro ? (
-            filters.length > 0 ? filters.map((f, i) => (
-              <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 }}>
-                {i > 0 && <Text style={{ fontSize: 10, color: '#9ca3af' }}>且</Text>}
-                <View style={{ backgroundColor: '#e0e7ff', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}><Text style={{ fontSize: 11, color: '#4338ca' }}>{f.field}</Text></View>
-                <Text style={{ fontSize: 11, color: '#6b7280' }}>{f.operator}</Text>
-                {f.value !== null && <Text style={{ fontSize: 11, color: '#92400e' }}>{JSON.stringify(f.value)}</Text>}
-              </View>
-            )) : <Text style={{ fontSize: 12, color: '#9ca3af' }}>无</Text>
-          ) : <FilterBuilder filters={filters} onChange={setFilters} />}
+        {/* Sorts — horizontal chips */}
+        <Lbl text="排序" />
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+          {sorts.map((s, i) => (
+            <View key={i} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fef3c7', borderRadius: 14, paddingLeft: 8, paddingRight: ro ? 8 : 2, paddingVertical: 3, gap: 4 }}>
+              <Text style={{ fontSize: 12, color: '#92400e', fontWeight: '500' }}>{SF.find((f) => f.k === s.field)?.l || s.field}</Text>
+              <TouchableOpacity onPress={() => { if (ro) return; const n = [...sorts]; n[i] = { ...n[i], direction: n[i].direction === 'asc' ? 'desc' : 'asc' }; setSorts(n); }} disabled={ro}>
+                <MaterialCommunityIcons name={s.direction === 'asc' ? 'arrow-up' : 'arrow-down'} size={14} color="#92400e" />
+              </TouchableOpacity>
+              {!ro && <TouchableOpacity onPress={() => setSorts(sorts.filter((_, j) => j !== i))} style={{ padding: 2 }}>
+                <MaterialCommunityIcons name="close-circle" size={14} color="#d4a574" />
+              </TouchableOpacity>}
+            </View>
+          ))}
+          {!ro && <TouchableOpacity onPress={() => setShowSF(true)} style={{ paddingHorizontal: 8, paddingVertical: 4, borderRadius: 14, backgroundColor: '#f3f4f6' }}>
+            <Text style={{ fontSize: 12, color: Colors.primary, fontWeight: '600' }}>+ 排序</Text>
+          </TouchableOpacity>}
+          {sorts.length === 0 && ro && <Text style={{ fontSize: 12, color: '#9ca3af' }}>无</Text>}
         </View>
 
-        {/* Sorts */}
-        <Text style={{ fontSize: 12, fontWeight: '600', color: '#9ca3af', marginTop: 14, marginBottom: 6 }}>排序</Text>
-        {sorts.map((s, i) => (
-          <View key={i} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9fafb', borderRadius: 8, padding: 8, marginBottom: 6, gap: 6 }}>
-            <View style={{ backgroundColor: '#e0e7ff', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}><Text style={{ fontSize: 11, color: '#4338ca' }}>{SORT_FIELDS.find((f) => f.k === s.field)?.l || s.field}</Text></View>
-            <TouchableOpacity onPress={() => { if (ro) return; const n = [...sorts]; n[i] = { ...n[i], direction: n[i].direction === 'asc' ? 'desc' : 'asc' }; setSorts(n); }} disabled={ro}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#fef3c7', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
-                <MaterialCommunityIcons name={s.direction === 'asc' ? 'arrow-up' : 'arrow-down'} size={12} color="#92400e" />
-                <Text style={{ fontSize: 11, color: '#92400e' }}>{s.direction === 'asc' ? '升' : '降'}</Text>
+        {/* Filters */}
+        <Lbl text="筛选条件" />
+        <View style={{ backgroundColor: '#fff', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#e5e7eb' }}>
+          {ro ? (
+            filters.length > 0 ? (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                {filters.map((f, i) => (
+                  <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#e0e7ff', borderRadius: 14, paddingHorizontal: 8, paddingVertical: 3 }}>
+                    {i > 0 && <Text style={{ fontSize: 10, color: '#6b7280' }}>且</Text>}
+                    <Text style={{ fontSize: 11, color: '#4338ca', fontWeight: '500' }}>{FIELD_L[f.field] || f.field}</Text>
+                    <Text style={{ fontSize: 11, color: '#6b7280' }}>{OP_L[f.operator] || f.operator}</Text>
+                    {f.value !== null && f.value !== undefined && <Text style={{ fontSize: 11, color: '#92400e', fontWeight: '500' }}>{fmtVal(f.field, f.value)}</Text>}
+                  </View>
+                ))}
               </View>
-            </TouchableOpacity>
-            <View style={{ flex: 1 }} />
-            {!ro && <TouchableOpacity onPress={() => setSorts(sorts.filter((_, j) => j !== i))}><Text style={{ color: '#d1d5db', fontSize: 14 }}>×</Text></TouchableOpacity>}
-          </View>
-        ))}
-        {!ro && <TouchableOpacity onPress={() => setShowSF(true)} style={{ paddingVertical: 6 }}><Text style={{ color: Colors.primary, fontSize: 12, fontWeight: '600' }}>+ 添加排序</Text></TouchableOpacity>}
-        {sorts.length === 0 && ro && <Text style={{ fontSize: 12, color: '#9ca3af' }}>无</Text>}
-
-        {/* Toggles — compact row */}
-        <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-          <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#e5e7eb' }}>
-            <Text style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>导航栏</Text>
-            <Switch value={nav} onValueChange={(v) => !ro && setNav(v)} disabled={ro}
-              trackColor={{ false: '#e5e7eb', true: Colors.primary + '60' }} thumbColor={nav ? Colors.primary : '#f4f3f4'} />
-          </View>
-          <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#e5e7eb' }}>
-            <Text style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>跟随项目</Text>
-            <Switch value={follow} onValueChange={(v) => !ro && setFollow(v)} disabled={ro}
-              trackColor={{ false: '#e5e7eb', true: Colors.primary + '60' }} thumbColor={follow ? Colors.primary : '#f4f3f4'} />
-          </View>
+            ) : <Text style={{ fontSize: 12, color: '#9ca3af' }}>无</Text>
+          ) : <FilterBuilder filters={filters} onChange={setFilters} />}
         </View>
 
         {/* Delete */}
@@ -219,9 +240,9 @@ export default function EditViewPage() {
 
       <ActionSheet visible={showPP} title="选择项目" options={[{ label: '不关联', value: '__none__', icon: '📥' }, ...projects.map((p) => ({ label: p.name, value: p.uid, icon: '📁' }))]}
         onSelect={(o) => { setPUid(o.value === '__none__' ? null : o.value as string); setShowPP(false); }} onCancel={() => setShowPP(false)} />
-      <ActionSheet visible={showSF} title="排序字段" options={SORT_FIELDS.map((f) => ({ label: f.l, value: f.k }))}
+      <ActionSheet visible={showSF} title="排序字段" options={SF.map((f) => ({ label: f.l, value: f.k }))}
         onSelect={(o) => { setSorts([...sorts, { field: o.value as string, direction: 'asc' }]); setShowSF(false); }} onCancel={() => setShowSF(false)} />
-      <ActionSheet visible={showGB} title="分组方式" options={GROUP_OPTS.map((o) => ({ label: o.l, value: o.k }))}
+      <ActionSheet visible={showGB} title="分组方式" options={GO.map((o) => ({ label: o.l, value: o.k }))}
         onSelect={(o) => { setGb(o.value as string); setShowGB(false); }} onCancel={() => setShowGB(false)} />
       <ConfirmDialog visible={showDel} title="删除视图" message={`确认删除「${view?.name}」？`}
         confirmText="删除" destructive onConfirm={async () => { try { await deleteView.mutateAsync(uid); showToast('success', '已删除'); router.back(); } catch { showToast('error', '失败'); } }}
@@ -229,3 +250,12 @@ export default function EditViewPage() {
     </SafeAreaView>
   );
 }
+
+function Lbl({ text }: { text: string }) {
+  return <Text style={{ fontSize: 12, fontWeight: '600', color: '#9ca3af', marginTop: 14, marginBottom: 6 }}>{text}</Text>;
+}
+
+const boxStyle = {
+  backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
+  borderWidth: 1, borderColor: '#e5e7eb', flexDirection: 'row' as const, alignItems: 'center' as const,
+};
