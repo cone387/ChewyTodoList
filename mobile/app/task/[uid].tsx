@@ -196,23 +196,16 @@ export default function TaskDetailPage() {
                   )}
                 </TouchableOpacity>
               )}
-              {/* Due date row */}
+              {/* Date row: 开始 [date] — 截止 [date] */}
               {!isCreate && task && (
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 13, color: '#9ca3af', width: 56 }}>截止</Text>
-                  <View style={{ flex: 1 }}>
-                    <DatePicker label="" value={task.due_date} isOverdue={task.is_overdue} compact
-                      onChange={(v) => { updateTask.mutateAsync({ uid: task.uid, data: { due_date: v || undefined } }).catch(() => {}); }} />
-                  </View>
-                </View>
-              )}
-              {/* Start date row */}
-              {!isCreate && task && (
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 13, color: '#9ca3af', width: 56 }}>开始</Text>
-                  <View style={{ flex: 1 }}>
-                    <DatePicker label="" value={task.start_date} compact
+                  <Text style={{ fontSize: 13, color: '#9ca3af', width: 56 }}>时间</Text>
+                  <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <DatePicker label="开始" value={task.start_date} compact
                       onChange={(v) => { updateTask.mutateAsync({ uid: task.uid, data: { start_date: v || undefined } }).catch(() => {}); }} />
+                    <Text style={{ fontSize: 13, color: '#d1d5db' }}>—</Text>
+                    <DatePicker label="截止" value={task.due_date} isOverdue={task.is_overdue} compact
+                      onChange={(v) => { updateTask.mutateAsync({ uid: task.uid, data: { due_date: v || undefined } }).catch(() => {}); }} />
                   </View>
                 </View>
               )}
