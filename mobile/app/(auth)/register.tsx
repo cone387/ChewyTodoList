@@ -21,7 +21,6 @@ export default function RegisterPage() {
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const handleRegister = async () => {
     if (!username.trim() || !email.trim() || !password.trim()) {
@@ -48,14 +47,15 @@ export default function RegisterPage() {
     }
   };
 
-  const inputStyle = (field: string) => ({
+  const inputStyle = () => ({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    borderWidth: 2,
-    borderColor: focusedField === field ? Colors.primary : '#e5e7eb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
     borderRadius: 16,
     backgroundColor: '#f9fafb',
     paddingHorizontal: 14,
+    height: 48,
   });
 
   return (
@@ -105,16 +105,14 @@ export default function RegisterPage() {
             {/* Username */}
             <View style={{ marginBottom: 14 }}>
               <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8 }}>用户名</Text>
-              <View style={inputStyle('username')}>
-                <Text style={{ fontSize: 16, color: focusedField === 'username' ? Colors.primary : '#9ca3af', marginRight: 10 }}>👤</Text>
+              <View style={inputStyle()}>
+                <Text style={{ fontSize: 16, color: '#9ca3af', marginRight: 10 }}>👤</Text>
                 <TextInput
-                  style={{ flex: 1, paddingVertical: 13, fontSize: 16, color: '#111827' }}
+                  style={{ flex: 1, paddingVertical: 0, fontSize: 16, color: '#111827' }}
                   placeholder="输入用户名"
                   placeholderTextColor="#9ca3af"
                   value={username}
                   onChangeText={setUsername}
-                  onFocus={() => setFocusedField('username')}
-                  onBlur={() => setFocusedField(null)}
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
@@ -124,16 +122,14 @@ export default function RegisterPage() {
             {/* Email */}
             <View style={{ marginBottom: 14 }}>
               <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8 }}>邮箱</Text>
-              <View style={inputStyle('email')}>
-                <Text style={{ fontSize: 16, color: focusedField === 'email' ? Colors.primary : '#9ca3af', marginRight: 10 }}>📧</Text>
+              <View style={inputStyle()}>
+                <Text style={{ fontSize: 16, color: '#9ca3af', marginRight: 10 }}>📧</Text>
                 <TextInput
-                  style={{ flex: 1, paddingVertical: 13, fontSize: 16, color: '#111827' }}
+                  style={{ flex: 1, paddingVertical: 0, fontSize: 16, color: '#111827' }}
                   placeholder="输入邮箱"
                   placeholderTextColor="#9ca3af"
                   value={email}
                   onChangeText={setEmail}
-                  onFocus={() => setFocusedField('email')}
-                  onBlur={() => setFocusedField(null)}
                   autoCapitalize="none"
                   keyboardType="email-address"
                 />
@@ -143,16 +139,14 @@ export default function RegisterPage() {
             {/* Password */}
             <View style={{ marginBottom: 14 }}>
               <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8 }}>密码</Text>
-              <View style={inputStyle('password')}>
-                <Text style={{ fontSize: 16, color: focusedField === 'password' ? Colors.primary : '#9ca3af', marginRight: 10 }}>🔒</Text>
+              <View style={inputStyle()}>
+                <Text style={{ fontSize: 16, color: '#9ca3af', marginRight: 10 }}>🔒</Text>
                 <TextInput
-                  style={{ flex: 1, paddingVertical: 13, fontSize: 16, color: '#111827' }}
+                  style={{ flex: 1, paddingVertical: 0, fontSize: 16, color: '#111827' }}
                   placeholder="输入密码（至少8位）"
                   placeholderTextColor="#9ca3af"
                   value={password}
                   onChangeText={setPassword}
-                  onFocus={() => setFocusedField('password')}
-                  onBlur={() => setFocusedField(null)}
                   secureTextEntry
                 />
               </View>
@@ -161,16 +155,14 @@ export default function RegisterPage() {
             {/* Confirm password */}
             <View style={{ marginBottom: 20 }}>
               <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8 }}>确认密码</Text>
-              <View style={inputStyle('confirm')}>
-                <Text style={{ fontSize: 16, color: focusedField === 'confirm' ? Colors.primary : '#9ca3af', marginRight: 10 }}>🔒</Text>
+              <View style={inputStyle()}>
+                <Text style={{ fontSize: 16, color: '#9ca3af', marginRight: 10 }}>🔒</Text>
                 <TextInput
-                  style={{ flex: 1, paddingVertical: 13, fontSize: 16, color: '#111827' }}
+                  style={{ flex: 1, paddingVertical: 0, fontSize: 16, color: '#111827' }}
                   placeholder="再次输入密码"
                   placeholderTextColor="#9ca3af"
                   value={passwordConfirm}
                   onChangeText={setPasswordConfirm}
-                  onFocus={() => setFocusedField('confirm')}
-                  onBlur={() => setFocusedField(null)}
                   secureTextEntry
                   returnKeyType="done"
                   onSubmitEditing={handleRegister}

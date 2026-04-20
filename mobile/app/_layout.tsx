@@ -1,6 +1,15 @@
+import '../global.css';
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { View, TextInput, Platform } from 'react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
+
+// Globally disable the iOS blue/purple focus ring on all TextInputs
+const defaultProps = (TextInput as any).defaultProps || {};
+defaultProps.underlineColorAndroid = 'transparent';
+defaultProps.selectionColor = '#9ca3af';
+defaultProps.cursorColor = '#9ca3af';
+defaultProps.tintColor = '#9ca3af';
+(TextInput as any).defaultProps = defaultProps;
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';

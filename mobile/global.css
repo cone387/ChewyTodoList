@@ -1,0 +1,5 @@
+/* Remove browser default focus outline on all inputs */
+input:focus, textarea:focus, [contenteditable]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}

@@ -21,7 +21,6 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
@@ -44,9 +43,9 @@ export default function LoginPage() {
       const msg =
         err?.response?.data?.error?.message ||
         err?.response?.data?.message ||
-        err?.code === 'ERR_NETWORK'
-          ? `网络错误：无法连接到服务器 (${process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000/api'})`
-          : '登录失败，请检查用户名和密码';
+        (err?.code === 'ERR_NETWORK'
+          ? `网络错误：无法连接到服务器`
+          : '登录失败，请检查用户名和密码');
       setError(msg);
     } finally {
       setLoading(false);
@@ -60,10 +59,8 @@ export default function LoginPage() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#f0f0ff' }}>
-      {/* Background decorations */}
       <View style={{ position: 'absolute', top: -80, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: Colors.primary + '14' }} />
       <View style={{ position: 'absolute', bottom: -80, left: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: Colors.primary + '0D' }} />
-      <View style={{ position: 'absolute', top: '40%' as any, left: -40, width: 120, height: 120, borderRadius: 60, backgroundColor: Colors.primary + '0A' }} />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -93,16 +90,14 @@ export default function LoginPage() {
             </Text>
           </View>
 
-          {/* Form card — glassmorphism */}
+          {/* Form card */}
           <View style={{
             backgroundColor: 'rgba(255,255,255,0.75)',
-            borderRadius: 24,
-            padding: 24,
+            borderRadius: 24, padding: 24,
             shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.08, shadowRadius: 20, elevation: 8,
             borderWidth: 1, borderColor: 'rgba(255,255,255,0.6)',
           }}>
-            {/* Error */}
             {error ? (
               <View style={{
                 backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca',
@@ -114,29 +109,22 @@ export default function LoginPage() {
               </View>
             ) : null}
 
-            {/* Username */}
+            {/* Username — no colored focus border */}
             <View style={{ marginBottom: 16 }}>
-              <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8 }}>用户名</Text>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8, lineHeight: 18 }}>用户名</Text>
               <View style={{
                 flexDirection: 'row', alignItems: 'center',
-                borderWidth: 2, borderColor: focusedField === 'username' ? Colors.primary : '#e5e7eb',
+                borderWidth: 1, borderColor: '#e5e7eb',
                 borderRadius: 16, backgroundColor: '#f9fafb',
-                paddingHorizontal: 14,
+                paddingHorizontal: 14, height: 48,
               }}>
-                <MaterialCommunityIcons
-                  name="account"
-                  size={20}
-                  color={focusedField === 'username' ? Colors.primary : '#9ca3af'}
-                  style={{ marginRight: 10 }}
-                />
+                <MaterialCommunityIcons name="account" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
                 <TextInput
-                  style={{ flex: 1, paddingVertical: 14, fontSize: 16, color: '#111827' }}
+                  style={{ flex: 1, fontSize: 16, color: '#111827', paddingVertical: 0 }}
                   placeholder="输入用户名"
                   placeholderTextColor="#9ca3af"
                   value={username}
                   onChangeText={setUsername}
-                  onFocus={() => setFocusedField('username')}
-                  onBlur={() => setFocusedField(null)}
                   autoCapitalize="none"
                   autoCorrect={false}
                   returnKeyType="next"
@@ -144,44 +132,33 @@ export default function LoginPage() {
               </View>
             </View>
 
-            {/* Password */}
+            {/* Password — no colored focus border */}
             <View style={{ marginBottom: 16 }}>
-              <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8 }}>密码</Text>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8, lineHeight: 18 }}>密码</Text>
               <View style={{
                 flexDirection: 'row', alignItems: 'center',
-                borderWidth: 2, borderColor: focusedField === 'password' ? Colors.primary : '#e5e7eb',
+                borderWidth: 1, borderColor: '#e5e7eb',
                 borderRadius: 16, backgroundColor: '#f9fafb',
-                paddingHorizontal: 14,
+                paddingHorizontal: 14, height: 48,
               }}>
-                <MaterialCommunityIcons
-                  name="lock"
-                  size={20}
-                  color={focusedField === 'password' ? Colors.primary : '#9ca3af'}
-                  style={{ marginRight: 10 }}
-                />
+                <MaterialCommunityIcons name="lock" size={20} color="#9ca3af" style={{ marginRight: 10 }} />
                 <TextInput
-                  style={{ flex: 1, paddingVertical: 14, fontSize: 16, color: '#111827' }}
+                  style={{ flex: 1, fontSize: 16, color: '#111827', paddingVertical: 0 }}
                   placeholder="输入密码"
                   placeholderTextColor="#9ca3af"
                   value={password}
                   onChangeText={setPassword}
-                  onFocus={() => setFocusedField('password')}
-                  onBlur={() => setFocusedField(null)}
                   secureTextEntry={!showPassword}
                   returnKeyType="done"
                   onSubmitEditing={handleLogin}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 4 }}>
-                  <MaterialCommunityIcons
-                    name={showPassword ? 'eye-off' : 'eye'}
-                    size={20}
-                    color="#9ca3af"
-                  />
+                  <MaterialCommunityIcons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#9ca3af" />
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Quick login hint */}
+            {/* Quick login */}
             <View style={{
               backgroundColor: '#eff6ff', borderRadius: 16, padding: 14,
               borderWidth: 1, borderColor: '#bfdbfe50',
@@ -199,52 +176,37 @@ export default function LoginPage() {
               </View>
               <TouchableOpacity
                 onPress={handleQuickLogin}
-                style={{
-                  backgroundColor: '#3b82f6', borderRadius: 10,
-                  paddingHorizontal: 14, paddingVertical: 8,
-                }}
+                style={{ backgroundColor: '#3b82f6', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 }}
               >
                 <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>一键填入</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Login button — layered gradient effect */}
-            <View style={{ borderRadius: 16, overflow: 'hidden' }}>
-              <TouchableOpacity
-                onPress={handleLogin}
-                disabled={loading}
-                activeOpacity={0.85}
-                style={{
-                  borderRadius: 16,
-                  paddingVertical: 16,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'row',
-                  gap: 8,
-                  backgroundColor: '#7c3aed',
-                  opacity: loading ? 0.7 : 1,
-                  shadowColor: Colors.primary, shadowOffset: { width: 0, height: 6 },
-                  shadowOpacity: 0.35, shadowRadius: 12, elevation: 8,
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* Gradient layers */}
-                <View style={{ position: 'absolute', top: 0, left: 0, right: '50%' as any, bottom: 0, backgroundColor: '#6366f1', opacity: 0.5 }} />
-                <View style={{ position: 'absolute', top: 0, left: '50%' as any, right: 0, bottom: 0, backgroundColor: '#a855f7', opacity: 0.4 }} />
-                {loading ? (
-                  <>
-                    <ActivityIndicator color="#fff" size="small" />
-                    <Text style={{ color: '#fff', fontSize: 17, fontWeight: '600' }}>登录中...</Text>
-                  </>
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="login" size={20} color="#fff" />
-                    <Text style={{ color: '#fff', fontSize: 17, fontWeight: '600' }}>立即登录</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
+            {/* Login button */}
+            <TouchableOpacity
+              onPress={handleLogin}
+              disabled={loading}
+              activeOpacity={0.85}
+              style={{
+                borderRadius: 16, paddingVertical: 16,
+                alignItems: 'center', justifyContent: 'center',
+                flexDirection: 'row', gap: 8,
+                backgroundColor: Colors.primary,
+                opacity: loading ? 0.7 : 1,
+              }}
+            >
+              {loading ? (
+                <>
+                  <ActivityIndicator color="#fff" size="small" />
+                  <Text style={{ color: '#fff', fontSize: 17, fontWeight: '600' }}>登录中...</Text>
+                </>
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="login" size={20} color="#fff" />
+                  <Text style={{ color: '#fff', fontSize: 17, fontWeight: '600' }}>立即登录</Text>
+                </>
+              )}
+            </TouchableOpacity>
           </View>
 
           {/* Divider */}
@@ -269,7 +231,6 @@ export default function LoginPage() {
             </Link>
           </View>
 
-          {/* Footer */}
           <Text style={{ textAlign: 'center', fontSize: 12, color: '#9ca3af', marginTop: 24 }}>
             © 2026 ChewyTodo · 让效率成为习惯
           </Text>

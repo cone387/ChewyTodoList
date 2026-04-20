@@ -93,7 +93,7 @@ export default function ProjectDetailPage() {
         <View style={{ flex: 1, alignItems: 'center' }}>
           {isEditingName ? (
             <TextInput
-              style={{ fontSize: 17, fontWeight: '600', color: '#111418', textAlign: 'center', borderBottomWidth: 1, borderBottomColor: Colors.primary, paddingVertical: 2, minWidth: 120 }}
+              style={{ fontSize: 17, fontWeight: '600', color: '#111418', textAlign: 'center', borderBottomWidth: 1, borderBottomColor: '#e5e7eb', paddingVertical: 2, minWidth: 120 }}
               value={editName}
               onChangeText={setEditName}
               onBlur={handleSaveName}
