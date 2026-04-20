@@ -59,7 +59,7 @@ export const QuickCreateSheet: React.FC<QuickCreateSheetProps> = ({
       setSelectedProjectUid(defaultProjectUid || null);
       Animated.spring(slideAnim, {
         toValue: 0,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
         tension: 65,
         friction: 11,
       }).start(() => {
@@ -69,7 +69,7 @@ export const QuickCreateSheet: React.FC<QuickCreateSheetProps> = ({
       Animated.timing(slideAnim, {
         toValue: 400,
         duration: 200,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }).start();
     }
   }, [visible]);

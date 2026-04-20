@@ -7,6 +7,7 @@ import {
   TouchableWithoutFeedback,
   Animated,
   ScrollView,
+  Platform,
 } from 'react-native';
 
 export interface ActionSheetOption {
@@ -40,7 +41,7 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
     if (visible) {
       Animated.spring(slideAnim, {
         toValue: 0,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
         tension: 65,
         friction: 11,
       }).start();
@@ -48,7 +49,7 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
       Animated.timing(slideAnim, {
         toValue: 300,
         duration: 200,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }).start();
     }
   }, [visible]);
