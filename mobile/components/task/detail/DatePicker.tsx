@@ -93,6 +93,35 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 
   const renderPicker = () => (
     <>
+      {Platform.OS === 'web' && showPicker && (
+        <Modal transparent animationType="fade" onRequestClose={() => setShowPicker(false)}>
+          <TouchableWithoutFeedback onPress={() => setShowPicker(false)}>
+            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' }}>
+              <TouchableWithoutFeedback>
+                <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 20, width: 300 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '600', color: '#111418', marginBottom: 12 }}>选择日期时间</Text>
+                  {/* @ts-ignore — web-only input */}
+                  <input
+                    type="datetime-local"
+                    defaultValue={pickerDate.toISOString().slice(0, 16)}
+                    onChange={(e: any) => setPickerDate(new Date(e.target.value))}
+                    style={{ width: '100%', padding: 10, fontSize: 16, borderRadius: 8, border: '1px solid #e5e7eb', marginBottom: 16 }}
+                  />
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TouchableOpacity onPress={() => setShowPicker(false)} style={{ flex: 1, paddingVertical: 10, backgroundColor: '#f3f4f6', borderRadius: 10, alignItems: 'center' }}>
+                      <Text style={{ color: '#6b7280', fontSize: 14 }}>取消</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => { onChange(pickerDate.toISOString()); setShowPicker(false); }}
+                      style={{ flex: 1, paddingVertical: 10, backgroundColor: Colors.primary, borderRadius: 10, alignItems: 'center' }}>
+                      <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>确定</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      )}
       {Platform.OS === 'ios' && showPicker && (
         <Modal transparent animationType="slide" onRequestClose={() => setShowPicker(false)}>
           <TouchableWithoutFeedback onPress={() => setShowPicker(false)}>

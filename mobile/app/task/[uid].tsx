@@ -99,10 +99,16 @@ export default function TaskDetailPage() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      {/* Header */}
+      {/* Header: back | project dropdown | save status | activity + more */}
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
         <TouchableOpacity onPress={() => router.back()} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
           <MaterialCommunityIcons name={isCreate ? 'close' : 'arrow-left'} size={22} color={Colors.primary} />
+        </TouchableOpacity>
+        {/* Project selector in header */}
+        <TouchableOpacity onPress={() => setShowProjectPicker(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, backgroundColor: '#f3f4f6' }}>
+          <MaterialCommunityIcons name="folder" size={14} color="#6b7280" />
+          <Text style={{ fontSize: 13, color: '#374151', maxWidth: 120 }} numberOfLines={1}>{curProject?.name || '收集箱'}</Text>
+          <MaterialCommunityIcons name="chevron-down" size={14} color="#9ca3af" />
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
           {saveStatus === 'saving' && <Text style={{ color: '#9ca3af', fontSize: 12 }}>保存中...</Text>}
@@ -114,7 +120,6 @@ export default function TaskDetailPage() {
           </TouchableOpacity>
         ) : (
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            {/* Activity log button */}
             <TouchableOpacity onPress={() => router.push(`/task/activity?uid=${task?.uid}` as any)} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
               <MaterialCommunityIcons name="history" size={20} color="#6b7280" />
             </TouchableOpacity>
@@ -127,68 +132,55 @@ export default function TaskDetailPage() {
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={{ flex: 1 }}>
-          {/* ===== Top section: title, properties, subtasks, attachments ===== */}
           <View style={{ flexShrink: 0 }}>
-            {/* Title */}
-            <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                {!isCreate && (
-                  <TouchableOpacity onPress={handleToggleComplete}>
-                    <MaterialCommunityIcons name={task?.is_completed ? 'check-circle' : 'circle-outline'} size={22} color={task?.is_completed ? Colors.success : '#d1d5db'} />
-                  </TouchableOpacity>
-                )}
-                <TextInput
-                  style={{ flex: 1, fontSize: 18, fontWeight: '600', color: task?.is_completed ? '#9ca3af' : '#111418', lineHeight: 24,
-                    textDecorationLine: task?.is_completed ? 'line-through' : 'none', paddingVertical: 0 }}
-                  placeholder="任务标题" placeholderTextColor="#9ca3af" value={title} onChangeText={setTitle} multiline />
-              </View>
+            {/* Title — checkbox vertically centered with first line of text */}
+            <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4, flexDirection: 'row', alignItems: 'flex-start' }}>
+              {!isCreate && (
+                <TouchableOpacity onPress={handleToggleComplete} style={{ marginRight: 8, marginTop: 2 }}>
+                  <MaterialCommunityIcons name={task?.is_completed ? 'check-circle' : 'circle-outline'} size={20} color={task?.is_completed ? Colors.success : '#d1d5db'} />
+                </TouchableOpacity>
+              )}
+              <TextInput
+                style={{ flex: 1, fontSize: 17, fontWeight: '600', color: task?.is_completed ? '#9ca3af' : '#111418', lineHeight: 22, paddingVertical: 0,
+                  textDecorationLine: task?.is_completed ? 'line-through' : 'none' }}
+                placeholder="任务标题" placeholderTextColor="#9ca3af" value={title} onChangeText={setTitle} multiline />
             </View>
 
-            {/* Properties — label: value rows */}
-            <View style={{ paddingHorizontal: 16, paddingBottom: 6 }}>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-                {/* Priority */}
-                <PropRow label="优先级">
-                  <View style={{ flexDirection: 'row', gap: 4 }}>
-                    {PRIORITIES.map((p) => {
-                      const active = curPriority === p.value;
-                      return (
-                        <TouchableOpacity key={p.value} onPress={() => handlePriorityChange(p.value)}
-                          style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10,
-                            backgroundColor: active ? p.color + '18' : 'transparent' }}>
-                          <Text style={{ fontSize: 12, fontWeight: active ? '600' : '400', color: active ? p.color : '#9ca3af' }}>{p.label}</Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </PropRow>
-                {/* Project */}
-                <PropRow label="项目">
-                  <TouchableOpacity onPress={() => setShowProjectPicker(true)}>
-                    <Text style={{ fontSize: 12, color: curProject ? '#374151' : '#9ca3af' }}>{curProject?.name || '收集箱'}</Text>
-                  </TouchableOpacity>
-                </PropRow>
-                {/* Tags */}
-                {!isCreate && task && (
-                  <PropRow label="标签">
-                    <TouchableOpacity onPress={() => setShowTagPicker(true)}>
-                      <Text style={{ fontSize: 12, color: task.tags.length > 0 ? '#374151' : '#9ca3af' }}>
-                        {task.tags.length > 0 ? task.tags.map((t: Tag) => t.name).join(', ') : '无'}
-                      </Text>
+            {/* Properties — single horizontal scrollable row: 优先级: 低 中 高 紧急 | 标签: xxx | 截止: xxx | 开始: xxx */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 6, gap: 12, alignItems: 'center' }}>
+              {/* Priority */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Text style={{ fontSize: 12, color: '#9ca3af' }}>优先级:</Text>
+                {PRIORITIES.map((p) => {
+                  const active = curPriority === p.value;
+                  return (
+                    <TouchableOpacity key={p.value} onPress={() => handlePriorityChange(p.value)}
+                      style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8, backgroundColor: active ? p.color + '18' : 'transparent' }}>
+                      <Text style={{ fontSize: 12, fontWeight: active ? '600' : '400', color: active ? p.color : '#c4c4c4' }}>{p.label}</Text>
                     </TouchableOpacity>
-                  </PropRow>
-                )}
+                  );
+                })}
               </View>
+              {/* Tags */}
+              {!isCreate && task && (
+                <TouchableOpacity onPress={() => setShowTagPicker(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Text style={{ fontSize: 12, color: '#9ca3af' }}>标签:</Text>
+                  <Text style={{ fontSize: 12, color: task.tags.length > 0 ? '#374151' : '#c4c4c4' }}>
+                    {task.tags.length > 0 ? task.tags.map((t: Tag) => t.name).join(', ') : '无'}
+                  </Text>
+                </TouchableOpacity>
+              )}
               {/* Dates */}
               {!isCreate && task && (
-                <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+                <>
                   <DatePicker label="截止" value={task.due_date} isOverdue={task.is_overdue} compact
                     onChange={(v) => { updateTask.mutateAsync({ uid: task.uid, data: { due_date: v || undefined } }).catch(() => {}); }} />
                   <DatePicker label="开始" value={task.start_date} compact
                     onChange={(v) => { updateTask.mutateAsync({ uid: task.uid, data: { start_date: v || undefined } }).catch(() => {}); }} />
-                </View>
+                </>
               )}
-            </View>
+            </ScrollView>
 
             {/* Subtasks (compact when empty) */}
             {!isCreate && task && <SubtaskList parentTask={task} subtasks={subtasks} onRefresh={() => refetchSubtasks()} />}
@@ -245,11 +237,4 @@ export default function TaskDetailPage() {
   );
 }
 
-function PropRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-      <Text style={{ fontSize: 12, color: '#9ca3af' }}>{label}:</Text>
-      {children}
-    </View>
-  );
-}
+// No extra components needed
