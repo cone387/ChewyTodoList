@@ -143,8 +143,8 @@ export default function CreateViewPage() {
             style={{ backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: '#e5e7eb', flexDirection: 'row', alignItems: 'center' }}
             onPress={() => setShowProjectPicker(true)}
           >
-            <Text style={{ flex: 1, fontSize: 14, color: selectedProject ? '#374151' : '#9ca3af' }}>
-              {selectedProject ? selectedProject.name : '不关联项目'}
+            <Text style={{ flex: 1, fontSize: 14, color: followSelectedProject ? Colors.primary : (selectedProject ? '#374151' : '#9ca3af') }}>
+              {followSelectedProject ? '跟随主页选择（默认）' : (selectedProject ? selectedProject.name : '不关联项目')}
             </Text>
             <Text style={{ color: '#9ca3af' }}>▼</Text>
           </TouchableOpacity>
@@ -160,7 +160,7 @@ export default function CreateViewPage() {
 
         {/* Settings */}
         <View style={{ marginTop: 20, marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 }}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 15, color: '#374151' }}>显示在导航栏</Text>
               <Text style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>在主页视图切换栏中显示</Text>
@@ -172,18 +172,6 @@ export default function CreateViewPage() {
               thumbColor={isVisibleInNav ? Colors.primary : '#f4f3f4'}
             />
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 }}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 15, color: '#374151' }}>跟随项目选择器</Text>
-              <Text style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>根据主页选择的项目动态过滤</Text>
-            </View>
-            <Switch
-              value={followSelectedProject}
-              onValueChange={setFollowSelectedProject}
-              trackColor={{ false: '#e5e7eb', true: Colors.primary + '60' }}
-              thumbColor={followSelectedProject ? Colors.primary : '#f4f3f4'}
-            />
-          </View>
         </View>
       </ScrollView>
 
@@ -192,10 +180,16 @@ export default function CreateViewPage() {
         visible={showProjectPicker}
         title="选择项目"
         options={[
+          { label: '跟随主页选择（默认）', value: '__follow__', icon: '🔄' },
           { label: '不关联项目', value: '__none__', icon: '📥' },
           ...projects.map((p) => ({ label: p.name, value: p.uid, icon: '📁' })),
         ]}
-        onSelect={(opt) => { setProjectUid(opt.value === '__none__' ? null : opt.value as string); setShowProjectPicker(false); }}
+        onSelect={(opt) => {
+          if (opt.value === '__follow__') { setFollowSelectedProject(true); setProjectUid(null); }
+          else if (opt.value === '__none__') { setFollowSelectedProject(false); setProjectUid(null); }
+          else { setFollowSelectedProject(false); setProjectUid(opt.value as string); }
+          setShowProjectPicker(false);
+        }}
         onCancel={() => setShowProjectPicker(false)}
       />
     </SafeAreaView>

@@ -149,13 +149,15 @@ export default function EditViewPage() {
           ))}
         </ScrollView>
 
-        {/* Project + Group + Follow — compact row */}
+        {/* Project + Group — two columns */}
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
           <View style={{ flex: 1 }}>
             <Lbl text="项目" />
             <TouchableOpacity onPress={() => !ro && setShowPP(true)} disabled={ro}
               style={boxStyle}>
-              <Text style={{ flex: 1, fontSize: 13, color: proj ? '#374151' : '#9ca3af' }} numberOfLines={1}>{proj?.name || '无'}</Text>
+              <Text style={{ flex: 1, fontSize: 13, color: follow ? Colors.primary : (proj ? '#374151' : '#9ca3af') }} numberOfLines={1}>
+                {follow ? '跟随主页选择' : (proj?.name || '不关联')}
+              </Text>
               {!ro && <MaterialCommunityIcons name="chevron-down" size={14} color="#9ca3af" />}
             </TouchableOpacity>
           </View>
@@ -164,13 +166,6 @@ export default function EditViewPage() {
             <TouchableOpacity onPress={() => !ro && setShowGB(true)} disabled={ro} style={boxStyle}>
               <Text style={{ flex: 1, fontSize: 13, color: gb ? '#374151' : '#9ca3af' }} numberOfLines={1}>{GO.find((o) => o.k === gb)?.l || '不分组'}</Text>
               {!ro && <MaterialCommunityIcons name="chevron-down" size={14} color="#9ca3af" />}
-            </TouchableOpacity>
-          </View>
-          <View style={{ flex: 0.7 }}>
-            <Lbl text="跟随项目" />
-            <TouchableOpacity onPress={() => !ro && setFollow(!follow)} disabled={ro}
-              style={{ ...boxStyle, justifyContent: 'center' }}>
-              <MaterialCommunityIcons name={follow ? 'check-circle' : 'circle-outline'} size={18} color={follow ? Colors.primary : '#d1d5db'} />
             </TouchableOpacity>
           </View>
         </View>
@@ -238,8 +233,17 @@ export default function EditViewPage() {
         )}
       </ScrollView>
 
-      <ActionSheet visible={showPP} title="选择项目" options={[{ label: '不关联', value: '__none__', icon: '📥' }, ...projects.map((p) => ({ label: p.name, value: p.uid, icon: '📁' }))]}
-        onSelect={(o) => { setPUid(o.value === '__none__' ? null : o.value as string); setShowPP(false); }} onCancel={() => setShowPP(false)} />
+      <ActionSheet visible={showPP} title="选择项目" options={[
+        { label: '跟随主页选择（默认）', value: '__follow__', icon: '🔄' },
+        { label: '不关联项目', value: '__none__', icon: '📥' },
+        ...projects.map((p) => ({ label: p.name, value: p.uid, icon: '📁' })),
+      ]}
+        onSelect={(o) => {
+          if (o.value === '__follow__') { setFollow(true); setPUid(null); }
+          else if (o.value === '__none__') { setFollow(false); setPUid(null); }
+          else { setFollow(false); setPUid(o.value as string); }
+          setShowPP(false);
+        }} onCancel={() => setShowPP(false)} />
       <ActionSheet visible={showSF} title="排序字段" options={SF.map((f) => ({ label: f.l, value: f.k }))}
         onSelect={(o) => { setSorts([...sorts, { field: o.value as string, direction: 'asc' }]); setShowSF(false); }} onCancel={() => setShowSF(false)} />
       <ActionSheet visible={showGB} title="分组方式" options={GO.map((o) => ({ label: o.l, value: o.k }))}
