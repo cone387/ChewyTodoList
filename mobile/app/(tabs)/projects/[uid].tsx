@@ -13,7 +13,6 @@ import { useTasks } from '../../../hooks/useTasks';
 import { ListView } from '../../../components/views/ListView';
 import { FAB } from '../../../components/ui/FAB';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
-import { QuickCreateSheet } from '../../../components/task/QuickCreateSheet';
 import { useToast } from '../../../hooks/useToast';
 import { Colors } from '../../../constants/theme';
 import type { Task } from '../../../shared/types/index';
@@ -30,7 +29,6 @@ export default function ProjectDetailPage() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showCreateSheet, setShowCreateSheet] = useState(false);
 
   const tasks = taskData?.results || [];
 
@@ -135,12 +133,7 @@ export default function ProjectDetailPage() {
         />
       </View>
 
-      <FAB onPress={() => setShowCreateSheet(true)} />
-      <QuickCreateSheet
-        visible={showCreateSheet}
-        onClose={() => setShowCreateSheet(false)}
-        defaultProjectUid={uid}
-      />
+      <FAB onPress={() => router.push(`/task/create?project_uid=${uid}` as any)} />
 
       <ConfirmDialog
         visible={showDeleteConfirm}

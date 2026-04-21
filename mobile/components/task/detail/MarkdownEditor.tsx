@@ -8,6 +8,7 @@ interface Props {
   placeholder?: string;
   editable?: boolean;
   footerText?: string;
+  autoFocus?: boolean;
 }
 
 const TOOLS = [
@@ -26,7 +27,7 @@ const TOOLS = [
   { icon: 'minus', label: '—', prefix: '\n---\n', suffix: '' },
 ] as const;
 
-export const MarkdownEditor: React.FC<Props> = ({ value, onChange, placeholder, editable = true, footerText }) => {
+export const MarkdownEditor: React.FC<Props> = ({ value, onChange, placeholder, editable = true, footerText, autoFocus = false }) => {
   const inputRef = useRef<TextInput>(null);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
 
@@ -77,6 +78,7 @@ export const MarkdownEditor: React.FC<Props> = ({ value, onChange, placeholder, 
         multiline
         textAlignVertical="top"
         editable={editable}
+        autoFocus={autoFocus}
       />
 
       {/* Footer meta text — right-aligned inside editor */}

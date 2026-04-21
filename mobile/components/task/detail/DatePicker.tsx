@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -60,7 +60,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 }) => {
   const [showPicker, setShowPicker] = useState(false);
   const [pickerDate, setPickerDate] = useState(value ? new Date(value) : new Date());
-  const [pickerMode, setPickerMode] = useState<'date' | 'time'>('date');
+  const webInputRef = useRef<any>(null);
 
   const handleQuickDate = (isoValue: string) => {
     onChange(isoValue);
@@ -69,16 +69,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   const handlePickerChange = (_: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
       setShowPicker(false);
-      if (selectedDate) {
-        if (pickerMode === 'date') {
-          setPickerDate(selectedDate);
-          setPickerMode('time');
-          setShowPicker(true);
-        } else {
-          onChange(selectedDate.toISOString());
-          setPickerMode('date');
-        }
-      }
+      if (selectedDate) onChange(selectedDate.toISOString());
     } else {
       if (selectedDate) setPickerDate(selectedDate);
     }
@@ -93,34 +84,20 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 
   const renderPicker = () => (
     <>
-      {Platform.OS === 'web' && showPicker && (
-        <Modal transparent animationType="fade" onRequestClose={() => setShowPicker(false)}>
-          <TouchableWithoutFeedback onPress={() => setShowPicker(false)}>
-            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' }}>
-              <TouchableWithoutFeedback>
-                <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 20, width: 300 }}>
-                  <Text style={{ fontSize: 15, fontWeight: '600', color: '#111418', marginBottom: 12 }}>选择日期时间</Text>
-                  {/* @ts-ignore — web-only input */}
-                  <input
-                    type="datetime-local"
-                    defaultValue={pickerDate.toISOString().slice(0, 16)}
-                    onChange={(e: any) => setPickerDate(new Date(e.target.value))}
-                    style={{ width: '100%', padding: 10, fontSize: 16, borderRadius: 8, border: '1px solid #e5e7eb', marginBottom: 16 }}
-                  />
-                  <View style={{ flexDirection: 'row', gap: 8 }}>
-                    <TouchableOpacity onPress={() => setShowPicker(false)} style={{ flex: 1, paddingVertical: 10, backgroundColor: '#f3f4f6', borderRadius: 10, alignItems: 'center' }}>
-                      <Text style={{ color: '#6b7280', fontSize: 14 }}>取消</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => { onChange(pickerDate.toISOString()); setShowPicker(false); }}
-                      style={{ flex: 1, paddingVertical: 10, backgroundColor: Colors.primary, borderRadius: 10, alignItems: 'center' }}>
-                      <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>确定</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </TouchableWithoutFeedback>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
+      {Platform.OS === 'web' && (
+        // @ts-ignore — web-only input
+        <input
+          ref={webInputRef}
+          type="datetime-local"
+          value={pickerDate.toISOString().slice(0, 16)}
+          onChange={(e: any) => {
+            if (!e?.target?.value) return;
+            const next = new Date(e.target.value);
+            setPickerDate(next);
+            onChange(next.toISOString());
+          }}
+          style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
+        />
       )}
       {Platform.OS === 'ios' && showPicker && (
         <Modal transparent animationType="slide" onRequestClose={() => setShowPicker(false)}>
@@ -141,7 +118,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         </Modal>
       )}
       {Platform.OS === 'android' && showPicker && (
-        <DateTimePicker value={pickerDate} mode={pickerMode} display="default" onChange={handlePickerChange} />
+        <DateTimePicker value={pickerDate} mode="datetime" display="default" onChange={handlePickerChange} />
       )}
     </>
   );
@@ -151,19 +128,23 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     return (
       <>
         <TouchableOpacity
-          onPress={() => { setPickerDate(value ? new Date(value) : new Date()); setShowPicker(true); }}
+          onPress={() => {
+            const base = value ? new Date(value) : new Date();
+            setPickerDate(base);
+            if (Platform.OS === 'web') {
+              if (webInputRef.current?.showPicker) webInputRef.current.showPicker();
+              else webInputRef.current?.click?.();
+              return;
+            }
+            setShowPicker(true);
+          }}
           style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: value ? (isOverdue ? '#fef2f2' : '#f3f4f6') : '#f3f4f6',
-            borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5, flex: 1 }}
+            borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5, alignSelf: 'flex-start' }}
         >
           <MaterialCommunityIcons name="calendar" size={12} color={isOverdue ? '#ef4444' : '#9ca3af'} />
           <Text style={{ fontSize: 12, color: value ? (isOverdue ? '#ef4444' : '#374151') : '#9ca3af' }} numberOfLines={1}>
             {value ? `${label} ${new Date(value).toLocaleDateString('zh-CN')}` : label}
           </Text>
-          {value && (
-            <TouchableOpacity onPress={() => onChange(null)} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}>
-              <MaterialCommunityIcons name="close-circle" size={14} color="#d1d5db" />
-            </TouchableOpacity>
-          )}
         </TouchableOpacity>
         {renderPicker()}
       </>

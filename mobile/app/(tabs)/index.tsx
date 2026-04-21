@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  PanResponder,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -26,7 +27,6 @@ import {
 } from '../../components/navigation/FilterBar';
 import { FAB } from '../../components/ui/FAB';
 import { OfflineBanner } from '../../components/ui/OfflineBanner';
-import { QuickCreateSheet } from '../../components/task/QuickCreateSheet';
 import { SkeletonCard } from '../../components/ui/SkeletonLoader';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import type { Task, TaskView, ViewSort } from '../../shared/types/index';
@@ -38,7 +38,6 @@ export default function HomePage() {
   const { data: views = [], isLoading: viewsLoading } = useNavViews();
   const [selectedViewUid, setSelectedViewUid] = useState<string | null>(null);
   const [selectedProjectUid, setSelectedProjectUid] = useState<string | null>(null);
-  const [showCreateSheet, setShowCreateSheet] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,6 +60,24 @@ export default function HomePage() {
 
   const currentView: TaskView | undefined =
     views.find((v) => v.uid === selectedViewUid) || views[0];
+
+  const activeViewIndex = views.findIndex((v) => v.uid === currentView?.uid);
+
+  const switchViewByOffset = useCallback((offset: 1 | -1) => {
+    if (activeViewIndex < 0) return;
+    const nextIndex = activeViewIndex + offset;
+    if (nextIndex < 0 || nextIndex >= views.length) return;
+    setSelectedViewUid(views[nextIndex].uid);
+  }, [activeViewIndex, views]);
+
+  const swipeResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy),
+    onPanResponderRelease: (_, g) => {
+      if (Math.abs(g.dx) < 56) return;
+      if (g.dx < 0) switchViewByOffset(1);
+      if (g.dx > 0) switchViewByOffset(-1);
+    },
+  });
 
   useEffect(() => {
     if (!currentView) return;
@@ -295,7 +312,7 @@ export default function HomePage() {
                 backgroundColor: '#f3f4f6',
               }}
             >
-              <MaterialCommunityIcons name="cog-outline" size={16} color="#6b7280" />
+              <MaterialCommunityIcons name="menu" size={16} color="#6b7280" />
             </TouchableOpacity>
           </View>
         </View>
@@ -312,7 +329,7 @@ export default function HomePage() {
         />
       </View>
 
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1 }} {...swipeResponder.panHandlers}>
         {debouncedSearch ? (
           <ListView
             tasks={applyClientSideTaskTransforms(searchResults)}
@@ -331,11 +348,11 @@ export default function HomePage() {
         )}
       </View>
 
-      <FAB onPress={() => setShowCreateSheet(true)} />
-      <QuickCreateSheet
-        visible={showCreateSheet}
-        onClose={() => setShowCreateSheet(false)}
-        defaultProjectUid={selectedProjectUid}
+      <FAB
+        onPress={() => {
+          const query = selectedProjectUid ? `?project_uid=${selectedProjectUid}` : '';
+          router.push(`/task/create${query}` as any);
+        }}
       />
     </SafeAreaView>
   );

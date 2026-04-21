@@ -36,6 +36,7 @@ const PRIORITIES = [
 
 export default function TaskDetailPage() {
   const { uid } = useLocalSearchParams<{ uid: string }>();
+  const params = useLocalSearchParams<{ uid: string; project_uid?: string }>();
   const isCreate = uid === 'create';
   const { data: task, isLoading } = useTask(isCreate ? '' : uid);
   const updateTask = useUpdateTask();
@@ -57,6 +58,9 @@ export default function TaskDetailPage() {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [createProjectUid, setCreateProjectUid] = useState<string | null>(null);
   const [createPriority, setCreatePriority] = useState<TaskPriority>(TaskPriority.MEDIUM);
+  const [createTagUids, setCreateTagUids] = useState<string[]>([]);
+  const [createStartDate, setCreateStartDate] = useState<string | null>(null);
+  const [createDueDate, setCreateDueDate] = useState<string | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialLoadRef = useRef(true);
 
@@ -90,7 +94,16 @@ export default function TaskDetailPage() {
   const handlePriorityChange = async (val: TaskPriority) => { if (isCreate) { setCreatePriority(val); return; } if (!task) return; try { await updateTask.mutateAsync({ uid: task.uid, data: { priority: val } }); } catch {} };
   const handleToggleComplete = async () => { if (!task || isCreate) return; try { await updateTask.mutateAsync({ uid: task.uid, data: { status: task.is_completed ? TaskStatus.TODO : TaskStatus.COMPLETED } }); } catch {} };
   const handleProjectChange = async (pUid: string | null) => { if (isCreate) { setCreateProjectUid(pUid); setShowProjectPicker(false); return; } if (!task) return; try { await updateTask.mutateAsync({ uid: task.uid, data: { project_uid: pUid || undefined } }); } catch {} setShowProjectPicker(false); };
-  const handleToggleTag = async (tagUid: string) => { if (!task || isCreate) return; const cur = task.tags.map((t: Tag) => t.uid); const next = cur.includes(tagUid) ? cur.filter((id: string) => id !== tagUid) : [...cur, tagUid]; try { await updateTask.mutateAsync({ uid: task.uid, data: { tag_uids: next } }); } catch {} };
+  const handleToggleTag = async (tagUid: string) => {
+    if (isCreate) {
+      setCreateTagUids((prev) => prev.includes(tagUid) ? prev.filter((id) => id !== tagUid) : [...prev, tagUid]);
+      return;
+    }
+    if (!task) return;
+    const cur = task.tags.map((t: Tag) => t.uid);
+    const next = cur.includes(tagUid) ? cur.filter((id: string) => id !== tagUid) : [...cur, tagUid];
+    try { await updateTask.mutateAsync({ uid: task.uid, data: { tag_uids: next } }); } catch {}
+  };
   const handleDelete = async () => { if (!task) return; try { await deleteTask.mutateAsync(task.uid); router.back(); } catch {} };
   const handleCreate = async () => {
     if (!title.trim()) { showToast('error', '请输入标题'); return; }
@@ -98,15 +111,48 @@ export default function TaskDetailPage() {
       const d: Record<string, any> = { title: title.trim(), priority: createPriority };
       if (content.trim()) d.content = content.trim();
       if (createProjectUid) d.project_uid = createProjectUid;
+      if (createTagUids.length > 0) d.tag_uids = createTagUids;
+      if (createStartDate) d.start_date = createStartDate;
+      if (createDueDate) d.due_date = createDueDate;
       await createTask.mutateAsync(d); router.back();
     } catch { showToast('error', '创建失败'); }
   };
 
+  const handleQuickTime = async (field: 'start_date' | 'due_date', action: 'today' | 'tomorrow' | 'clear') => {
+    let nextValue: string | null = null;
+    if (action === 'clear') {
+      nextValue = null;
+    } else {
+      const date = new Date();
+      if (action === 'tomorrow') {
+        date.setDate(date.getDate() + 1);
+      }
+      date.setHours(action === 'today' ? 9 : 18, 0, 0, 0);
+      nextValue = date.toISOString();
+    }
+    if (isCreate) {
+      if (field === 'start_date') setCreateStartDate(nextValue);
+      else setCreateDueDate(nextValue);
+      return;
+    }
+    if (!task) return;
+    try {
+      await updateTask.mutateAsync({ uid: task.uid, data: { [field]: nextValue } });
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (!isCreate) return;
+    if (params.project_uid && !createProjectUid) setCreateProjectUid(params.project_uid);
+  }, [isCreate, params.project_uid, createProjectUid]);
+
   if (isLoading && !isCreate) return <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size="large" color={Colors.primary} /></SafeAreaView>;
 
-  const curStatus = STATUSES.find((s) => s.value === task?.status) || STATUSES[1];
   const curPriority = isCreate ? createPriority : (task?.priority ?? TaskPriority.MEDIUM);
   const curProject = isCreate ? projects.find((p) => p.uid === createProjectUid) : task?.project;
+  const selectedTagUids = isCreate ? createTagUids : (task?.tags?.map((t: Tag) => t.uid) || []);
+  const startDateValue = isCreate ? createStartDate : (task?.start_date || null);
+  const dueDateValue = isCreate ? createDueDate : (task?.due_date || null);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -143,16 +189,17 @@ export default function TaskDetailPage() {
         <View style={{ flex: 1 }}>
           <View style={{ flexShrink: 0 }}>
             {/* Title row */}
-            <View style={{ flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 16, paddingVertical: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 16, paddingTop: 4, paddingBottom: 0 }}>
               {!isCreate && (
                 <TouchableOpacity onPress={handleToggleComplete} style={{ marginRight: 8, height: 22, justifyContent: 'center' }}>
                   <MaterialCommunityIcons name={task?.is_completed ? 'check-circle' : 'circle-outline'} size={20} color={task?.is_completed ? Colors.success : '#d1d5db'} />
                 </TouchableOpacity>
               )}
               <TextInput
-                style={{ flex: 1, fontSize: 17, fontWeight: '600', color: task?.is_completed ? '#9ca3af' : '#111418', lineHeight: 22, paddingVertical: 0,
-                  textDecorationLine: task?.is_completed ? 'line-through' : 'none' }}
-                placeholder="任务标题" placeholderTextColor="#9ca3af" value={title} onChangeText={setTitle} multiline />
+                style={{ flex: 1, fontSize: 17, fontWeight: '600', color: task?.is_completed ? '#9ca3af' : '#111418', lineHeight: 20, paddingTop: 0, paddingBottom: 0,
+                  textDecorationLine: task?.is_completed ? 'line-through' : 'none', ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}) }}
+                placeholder="任务标题" placeholderTextColor="#9ca3af" value={title} onChangeText={setTitle} multiline autoFocus={isCreate}
+                textAlignVertical="top" />
               {/* Save status — inline right of title */}
               {saveStatus !== 'idle' && (
                 <Text style={{ fontSize: 11, color: saveStatus === 'saving' ? '#9ca3af' : Colors.success, marginLeft: 8, lineHeight: 22 }}>
@@ -162,11 +209,11 @@ export default function TaskDetailPage() {
             </View>
 
             {/* Properties — each on its own row */}
-            <View style={{ paddingHorizontal: 16, gap: 6, paddingBottom: 6 }}>
+            <View style={{ paddingHorizontal: 16, gap: 3, paddingBottom: 6 }}>
               {/* Priority row */}
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Text style={{ fontSize: 13, color: '#9ca3af', width: 56 }}>优先级</Text>
-                <View style={{ flexDirection: 'row', gap: 4 }}>
+                <View style={{ flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center' }}>
                   {PRIORITIES.map((p) => {
                     const active = curPriority === p.value;
                     return (
@@ -179,33 +226,66 @@ export default function TaskDetailPage() {
                 </View>
               </View>
               {/* Tags row */}
-              {!isCreate && task && (
-                <TouchableOpacity onPress={() => setShowTagPicker(true)} style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 13, color: '#9ca3af', width: 56 }}>标签</Text>
-                  {task.tags.length > 0 ? (
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
-                      {task.tags.map((t: Tag) => (
-                        <View key={t.uid} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: t.color + '18', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
-                          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.color }} />
-                          <Text style={{ fontSize: 12, color: t.color, fontWeight: '500' }}>{t.name}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  ) : (
+              <TouchableOpacity onPress={() => setShowTagPicker(true)} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={{ fontSize: 13, color: '#9ca3af', width: 56 }}>标签</Text>
+                {!isCreate && task && task.tags.length > 0 ? (
+                  <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+                    {task.tags.map((t: Tag) => (
+                      <View key={t.uid} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: t.color + '18', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
+                        <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.color }} />
+                        <Text style={{ fontSize: 12, color: t.color, fontWeight: '500' }}>{t.name}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : isCreate && createTagUids.length > 0 ? (
+                  <View style={{ flex: 1, alignItems: 'flex-start' }}>
+                    <Text style={{ fontSize: 13, color: '#6b7280' }}>已选择 {createTagUids.length} 个标签</Text>
+                  </View>
+                ) : (
+                  <View style={{ flex: 1, alignItems: 'flex-start' }}>
                     <Text style={{ fontSize: 13, color: '#d1d5db' }}>点击添加</Text>
-                  )}
-                </TouchableOpacity>
-              )}
-              {/* Date row: 开始 [date] — 截止 [date] */}
-              {!isCreate && task && (
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 13, color: '#9ca3af', width: 56 }}>时间</Text>
-                  <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <DatePicker label="开始" value={task.start_date} compact
-                      onChange={(v) => { updateTask.mutateAsync({ uid: task.uid, data: { start_date: v || undefined } }).catch(() => {}); }} />
-                    <Text style={{ fontSize: 13, color: '#d1d5db' }}>—</Text>
-                    <DatePicker label="截止" value={task.due_date} isOverdue={task.is_overdue} compact
-                      onChange={(v) => { updateTask.mutateAsync({ uid: task.uid, data: { due_date: v || undefined } }).catch(() => {}); }} />
+                  </View>
+                )}
+              </TouchableOpacity>
+              {/* Date rows */}
+              {(isCreate || (!!task && !isCreate)) && (
+                <View style={{ gap: 4 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontSize: 13, color: '#9ca3af', width: 56 }}>开始</Text>
+                    <DatePicker label="开始" value={startDateValue} compact
+                      onChange={(v) => {
+                        if (isCreate) { setCreateStartDate(v); return; }
+                        if (!task) return;
+                        updateTask.mutateAsync({ uid: task.uid, data: { start_date: v } }).catch(() => {});
+                      }} />
+                    <View style={{ flexDirection: 'row', gap: 4 }}>
+                      <TouchableOpacity onPress={() => handleQuickTime('start_date', 'today')} style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: '#dbeafe' }}>
+                        <Text style={{ fontSize: 12, color: '#2563eb' }}>今天</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => handleQuickTime('start_date', 'clear')} style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: '#f3f4f6' }}>
+                        <Text style={{ fontSize: 12, color: '#6b7280' }}>清空</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontSize: 13, color: '#9ca3af', width: 56 }}>截止</Text>
+                    <DatePicker label="截止" value={dueDateValue} isOverdue={!!task?.is_overdue} compact
+                      onChange={(v) => {
+                        if (isCreate) { setCreateDueDate(v); return; }
+                        if (!task) return;
+                        updateTask.mutateAsync({ uid: task.uid, data: { due_date: v } }).catch(() => {});
+                      }} />
+                    <View style={{ flexDirection: 'row', gap: 4 }}>
+                      <TouchableOpacity onPress={() => handleQuickTime('due_date', 'today')} style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: '#dbeafe' }}>
+                        <Text style={{ fontSize: 12, color: '#2563eb' }}>今天</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => handleQuickTime('due_date', 'tomorrow')} style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: '#dcfce7' }}>
+                        <Text style={{ fontSize: 12, color: '#16a34a' }}>明天</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => handleQuickTime('due_date', 'clear')} style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: '#f3f4f6' }}>
+                        <Text style={{ fontSize: 12, color: '#6b7280' }}>清空</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               )}
@@ -232,6 +312,7 @@ export default function TaskDetailPage() {
               value={content}
               onChange={setContent}
               placeholder="输入任务内容... (支持 Markdown)"
+              autoFocus={!isCreate}
               footerText={!isCreate && task ? (
                 (task.completed_time ? `完成于 ${new Date(task.completed_time).toLocaleString('zh-CN')} · ` : '') +
                 `创建于 ${new Date(task.created_at).toLocaleString('zh-CN')}`
@@ -258,7 +339,7 @@ export default function TaskDetailPage() {
         else if (o.value === 'abandon' && task) updateTask.mutateAsync({ uid: task.uid, data: { status: TaskStatus.ABANDONED } });
         else if (o.value === 'restore' && task) updateTask.mutateAsync({ uid: task.uid, data: { status: TaskStatus.TODO } });
       }} onCancel={() => setShowMoreMenu(false)} />
-      {!isCreate && task && <TagPicker visible={showTagPicker} selectedTagUids={task.tags.map((t: Tag) => t.uid)} onToggleTag={handleToggleTag} onClose={() => setShowTagPicker(false)} />}
+      <TagPicker visible={showTagPicker} selectedTagUids={selectedTagUids} onToggleTag={handleToggleTag} onClose={() => setShowTagPicker(false)} />
       <ConfirmDialog visible={showDeleteConfirm} title="删除任务"
         message={task?.subtasks_count ? `包含 ${task.subtasks_count} 个子任务，删除后无法恢复` : '确认删除？'}
         confirmText="删除" destructive onConfirm={handleDelete} onCancel={() => setShowDeleteConfirm(false)} />
