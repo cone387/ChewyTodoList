@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TextInput, TouchableOpacity,
   ActivityIndicator, KeyboardAvoidingView, Platform,
+  Animated, Dimensions, PanResponder, StyleSheet,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTask, useUpdateTask, useDeleteTask, useCreateTask } from '../../hooks/useTasks';
@@ -38,6 +39,44 @@ export default function TaskDetailPage() {
   const { uid } = useLocalSearchParams<{ uid: string }>();
   const params = useLocalSearchParams<{ uid: string; project_uid?: string }>();
   const isCreate = uid === 'create';
+  const insets = useSafeAreaInsets();
+  const SCREEN_HEIGHT = Dimensions.get('window').height;
+  const SHEET_TOP = Math.max(insets.top + 10, 20);
+
+  // Sheet animation
+  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const overlayAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, tension: 65, friction: 11 }),
+      Animated.timing(overlayAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  const dismissSheet = () => {
+    Animated.parallel([
+      Animated.timing(slideAnim, { toValue: SCREEN_HEIGHT, duration: 250, useNativeDriver: true }),
+      Animated.timing(overlayAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+    ]).start(() => router.back());
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) => g.dy > 10 && Math.abs(g.dy) > Math.abs(g.dx),
+      onPanResponderMove: (_, g) => {
+        if (g.dy > 0) slideAnim.setValue(g.dy);
+      },
+      onPanResponderRelease: (_, g) => {
+        if (g.dy > 120 || g.vy > 0.5) {
+          dismissSheet();
+        } else {
+          Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, tension: 65, friction: 11 }).start();
+        }
+      },
+    })
+  ).current;
+
   const { data: task, isLoading } = useTask(isCreate ? '' : uid);
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
@@ -104,7 +143,7 @@ export default function TaskDetailPage() {
     const next = cur.includes(tagUid) ? cur.filter((id: string) => id !== tagUid) : [...cur, tagUid];
     try { await updateTask.mutateAsync({ uid: task.uid, data: { tag_uids: next } }); } catch {}
   };
-  const handleDelete = async () => { if (!task) return; try { await deleteTask.mutateAsync(task.uid); router.back(); } catch {} };
+  const handleDelete = async () => { if (!task) return; try { await deleteTask.mutateAsync(task.uid); dismissSheet(); } catch {} };
   const handleCreate = async () => {
     if (!title.trim()) { showToast('error', '请输入标题'); return; }
     try {
@@ -114,7 +153,7 @@ export default function TaskDetailPage() {
       if (createTagUids.length > 0) d.tag_uids = createTagUids;
       if (createStartDate) d.start_date = createStartDate;
       if (createDueDate) d.due_date = createDueDate;
-      await createTask.mutateAsync(d); router.back();
+      await createTask.mutateAsync(d); dismissSheet();
     } catch { showToast('error', '创建失败'); }
   };
 
@@ -146,7 +185,14 @@ export default function TaskDetailPage() {
     if (params.project_uid && !createProjectUid) setCreateProjectUid(params.project_uid);
   }, [isCreate, params.project_uid, createProjectUid]);
 
-  if (isLoading && !isCreate) return <View style={{ flex: 1, backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size="large" color={Colors.primary} /></View>;
+  if (isLoading && !isCreate) return (
+    <View style={{ flex: 1 }}>
+      <Animated.View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)', opacity: overlayAnim }} />
+      <Animated.View style={{ flex: 1, marginTop: SHEET_TOP, backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16, alignItems: 'center', justifyContent: 'center', transform: [{ translateY: slideAnim }] }}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </Animated.View>
+    </View>
+  );
 
   const curPriority = isCreate ? createPriority : (task?.priority ?? TaskPriority.MEDIUM);
   const curProject = isCreate ? projects.find((p) => p.uid === createProjectUid) : task?.project;
@@ -155,17 +201,22 @@ export default function TaskDetailPage() {
   const dueDateValue = isCreate ? createDueDate : (task?.due_date || null);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16, overflow: 'hidden' }}>
-      {/* Drag handle indicator */}
-      <SafeAreaView edges={['top']} style={{ backgroundColor: '#fff' }}>
-        <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 2 }}>
+    <View style={{ flex: 1 }}>
+      {/* Semi-transparent overlay */}
+      <Animated.View
+        style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)', opacity: overlayAnim }}
+        pointerEvents="none"
+      />
+      {/* Sheet content */}
+      <Animated.View style={{ flex: 1, marginTop: SHEET_TOP, borderTopLeftRadius: 16, borderTopRightRadius: 16, backgroundColor: '#fff', overflow: 'hidden', transform: [{ translateY: slideAnim }] }}>
+        {/* Drag handle */}
+        <View {...panResponder.panHandlers} style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 4 }}>
           <View style={{ width: 36, height: 5, borderRadius: 3, backgroundColor: '#d1d5db' }} />
         </View>
-      </SafeAreaView>
 
       {/* Header: back | centered project | activity + more */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 6, borderBottomWidth: 0.5, borderBottomColor: '#f3f4f6' }}>
-        <TouchableOpacity onPress={() => router.back()} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingBottom: 6, borderBottomWidth: 0.5, borderBottomColor: '#f3f4f6' }}>
+        <TouchableOpacity onPress={dismissSheet} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
           <MaterialCommunityIcons name={isCreate ? 'close' : 'chevron-down'} size={24} color={Colors.primary} />
         </TouchableOpacity>
         {/* Centered project selector */}
@@ -257,41 +308,45 @@ export default function TaskDetailPage() {
               {/* Date rows */}
               {(isCreate || (!!task && !isCreate)) && (
                 <View style={{ gap: 8 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={{ fontSize: 15, color: '#9ca3af', width: 64 }}>开始</Text>
-                    <DatePicker label="开始" value={startDateValue} compact
-                      onChange={(v) => {
-                        if (isCreate) { setCreateStartDate(v); return; }
-                        if (!task) return;
-                        updateTask.mutateAsync({ uid: task.uid, data: { start_date: v || undefined } }).catch(() => {});
-                      }} />
-                    <View style={{ flexDirection: 'row', gap: 6 }}>
-                      <TouchableOpacity onPress={() => handleQuickTime('start_date', 'today')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#dbeafe' }}>
-                        <Text style={{ fontSize: 13, color: '#2563eb' }}>今天</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={() => handleQuickTime('start_date', 'clear')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#f3f4f6' }}>
-                        <Text style={{ fontSize: 13, color: '#6b7280' }}>清空</Text>
-                      </TouchableOpacity>
+                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <DatePicker label="开始" value={startDateValue} compact
+                        onChange={(v) => {
+                          if (isCreate) { setCreateStartDate(v); return; }
+                          if (!task) return;
+                          updateTask.mutateAsync({ uid: task.uid, data: { start_date: v || undefined } }).catch(() => {});
+                        }} />
+                      <View style={{ flexDirection: 'row', gap: 6 }}>
+                        <TouchableOpacity onPress={() => handleQuickTime('start_date', 'today')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#dbeafe' }}>
+                          <Text style={{ fontSize: 13, color: '#2563eb' }}>今天</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleQuickTime('start_date', 'clear')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#f3f4f6' }}>
+                          <Text style={{ fontSize: 13, color: '#6b7280' }}>清空</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={{ fontSize: 15, color: '#9ca3af', width: 64 }}>截止</Text>
-                    <DatePicker label="截止" value={dueDateValue} isOverdue={!!task?.is_overdue} compact
-                      onChange={(v) => {
-                        if (isCreate) { setCreateDueDate(v); return; }
-                        if (!task) return;
-                        updateTask.mutateAsync({ uid: task.uid, data: { due_date: v || undefined } }).catch(() => {});
-                      }} />
-                    <View style={{ flexDirection: 'row', gap: 6 }}>
-                      <TouchableOpacity onPress={() => handleQuickTime('due_date', 'today')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#dbeafe' }}>
-                        <Text style={{ fontSize: 13, color: '#2563eb' }}>今天</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={() => handleQuickTime('due_date', 'tomorrow')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#dcfce7' }}>
-                        <Text style={{ fontSize: 13, color: '#16a34a' }}>明天</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={() => handleQuickTime('due_date', 'clear')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#f3f4f6' }}>
-                        <Text style={{ fontSize: 13, color: '#6b7280' }}>清空</Text>
-                      </TouchableOpacity>
+                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <DatePicker label="截止" value={dueDateValue} isOverdue={!!task?.is_overdue} compact
+                        onChange={(v) => {
+                          if (isCreate) { setCreateDueDate(v); return; }
+                          if (!task) return;
+                          updateTask.mutateAsync({ uid: task.uid, data: { due_date: v || undefined } }).catch(() => {});
+                        }} />
+                      <View style={{ flexDirection: 'row', gap: 6 }}>
+                        <TouchableOpacity onPress={() => handleQuickTime('due_date', 'today')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#dbeafe' }}>
+                          <Text style={{ fontSize: 13, color: '#2563eb' }}>今天</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleQuickTime('due_date', 'tomorrow')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#dcfce7' }}>
+                          <Text style={{ fontSize: 13, color: '#16a34a' }}>明天</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleQuickTime('due_date', 'clear')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#f3f4f6' }}>
+                          <Text style={{ fontSize: 13, color: '#6b7280' }}>清空</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   </View>
                 </View>
@@ -350,6 +405,7 @@ export default function TaskDetailPage() {
       <ConfirmDialog visible={showDeleteConfirm} title="删除任务"
         message={task?.subtasks_count ? `包含 ${task.subtasks_count} 个子任务，删除后无法恢复` : '确认删除？'}
         confirmText="删除" destructive onConfirm={handleDelete} onCancel={() => setShowDeleteConfirm(false)} />
+      </Animated.View>
     </View>
   );
 }

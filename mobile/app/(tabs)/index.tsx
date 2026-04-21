@@ -13,6 +13,7 @@ import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavViews, useUpdateView, useViewTasks } from '../../hooks/useViews';
 import { useTasks } from '../../hooks/useTasks';
+import { useQueryClient } from '@tanstack/react-query';
 import { ListView } from '../../components/views/ListView';
 import { BoardView } from '../../components/views/BoardView';
 import { CalendarView } from '../../components/views/CalendarView';
@@ -38,6 +39,7 @@ import { useTheme } from '../../hooks/useTheme';
 export default function HomePage() {
   const { isOnline } = useNetworkStatus();
   const { colors } = useTheme();
+  const queryClient = useQueryClient();
   const { data: views = [], isLoading: viewsLoading } = useNavViews();
   const [selectedViewUid, setSelectedViewUid] = useState<string | null>(null);
   const [selectedProjectUid, setSelectedProjectUid] = useState<string | null>(null);
@@ -65,18 +67,27 @@ export default function HomePage() {
     views.find((v) => v.uid === selectedViewUid) || views[0];
 
   const activeViewIndex = views.findIndex((v) => v.uid === currentView?.uid);
+  const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
   const switchViewByOffset = useCallback((offset: 1 | -1) => {
     if (activeViewIndex < 0) return;
     const nextIndex = activeViewIndex + offset;
     if (nextIndex < 0 || nextIndex >= views.length) return;
-    // Animate fade out, switch, fade in
-    Animated.timing(fadeAnim, { toValue: 0, duration: 120, useNativeDriver: true }).start(() => {
+    // Slide out in direction of swipe + fade
+    Animated.parallel([
+      Animated.timing(slideAnim, { toValue: offset * -30, duration: 150, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
+    ]).start(() => {
       setSelectedViewUid(views[nextIndex].uid);
-      Animated.timing(fadeAnim, { toValue: 1, duration: 180, useNativeDriver: true }).start();
+      // Reset position to opposite side and slide in
+      slideAnim.setValue(offset * 30);
+      Animated.parallel([
+        Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, tension: 80, friction: 12 }),
+        Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+      ]).start();
     });
-  }, [activeViewIndex, views, fadeAnim]);
+  }, [activeViewIndex, views, slideAnim, fadeAnim]);
 
   const swipeResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy),
@@ -155,8 +166,10 @@ export default function HomePage() {
   } : undefined;
 
   const handleTaskPress = useCallback((task: Task) => {
+    // Pre-fill task cache to avoid loading spinner on detail page
+    queryClient.setQueryData(['task', task.uid], task);
     router.push(`/task/${task.uid}`);
-  }, []);
+  }, [queryClient]);
 
   const persistViewPatch = useCallback((patch: Partial<TaskView>) => {
     if (!currentView) return;
@@ -337,7 +350,7 @@ export default function HomePage() {
         />
       </View>
 
-      <Animated.View style={{ flex: 1, opacity: fadeAnim }} {...swipeResponder.panHandlers}>
+      <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ translateX: slideAnim }] }} {...swipeResponder.panHandlers}>
         {debouncedSearch ? (
           <ListView
             tasks={applyClientSideTaskTransforms(searchResults)}
