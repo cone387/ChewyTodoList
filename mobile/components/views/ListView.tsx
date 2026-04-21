@@ -6,10 +6,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Platform,
+  SectionList,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { Task, TaskView } from '../../shared/types/index';
-import { TaskCard } from '../task/TaskCard';
+import type { Task, TaskView, TaskCardConfig, CardFieldConfig } from '../../shared/types/index';
+import { DEFAULT_FIELD_CONFIGS, TaskCard } from '../task/TaskCard';
 import { EmptyState } from '../ui/EmptyState';
 import { useToggleTaskStatus, useDeleteTask } from '../../hooks/useTasks';
 import { useToast } from '../../hooks/useToast';
@@ -26,6 +27,7 @@ if (Platform.OS !== 'web') {
 interface ListViewProps {
   tasks: Task[];
   view?: TaskView | null;
+  groupBy?: string;
   onTaskPress: (task: Task) => void;
   onRefresh?: () => void;
   isRefreshing?: boolean;
@@ -38,6 +40,7 @@ interface ListViewProps {
 export const ListView: React.FC<ListViewProps> = ({
   tasks,
   view,
+  groupBy,
   onTaskPress,
   onRefresh,
   isRefreshing = false,
@@ -50,6 +53,45 @@ export const ListView: React.FC<ListViewProps> = ({
   const deleteTask = useDeleteTask();
   const { showToast } = useToast();
   const swipeableRefs = useRef<Map<string, any>>(new Map());
+  const displaySettings = view?.view_settings || {};
+
+  const effectiveCardConfig = React.useMemo<TaskCardConfig | null | undefined>(() => {
+    if (!view) return undefined;
+
+    const baseConfig = view.card_config;
+    const baseFieldConfigs = baseConfig?.field_configs?.length ? baseConfig.field_configs : DEFAULT_FIELD_CONFIGS;
+    const visibilityMap: Partial<Record<string, boolean>> = {
+      project: displaySettings.show_project,
+      tags: displaySettings.show_tags,
+      due_date: displaySettings.show_due_date,
+      priority: displaySettings.show_priority,
+      status: false,
+    };
+
+    const fieldConfigs: CardFieldConfig[] = baseFieldConfigs.map((fieldConfig) => {
+      const controlledVisibility = visibilityMap[fieldConfig.field];
+      return {
+        ...fieldConfig,
+        visible: controlledVisibility ?? fieldConfig.visible,
+      };
+    });
+
+    return {
+      uid: baseConfig?.uid || '__runtime__',
+      name: baseConfig?.name || 'Runtime Card Config',
+      desc: baseConfig?.desc,
+      is_preset: baseConfig?.is_preset || false,
+      layout: displaySettings.compact_mode ? 'compact' : (baseConfig?.layout || 'comfortable'),
+      style: baseConfig?.style || {},
+      field_configs: fieldConfigs,
+      sort_order: baseConfig?.sort_order || 0,
+      created_at: baseConfig?.created_at || '',
+      updated_at: baseConfig?.updated_at || '',
+    };
+  }, [displaySettings, view]);
+
+  const sections = React.useMemo(() => buildSections(tasks, groupBy), [tasks, groupBy]);
+  const useSections = React.useMemo(() => sections.some((section) => section.title), [sections]);
 
   const closeSwipeable = (uid: string) => {
     swipeableRefs.current.get(uid)?.close();
@@ -118,7 +160,7 @@ export const ListView: React.FC<ListViewProps> = ({
           <View style={{ position: 'relative' }}>
             <TaskCard
               task={item}
-              cardConfig={view?.card_config}
+              cardConfig={effectiveCardConfig}
               onPress={() => onTaskPress(item)}
               style={{ paddingLeft: 44 }}
             />
@@ -173,7 +215,7 @@ export const ListView: React.FC<ListViewProps> = ({
         </Swipeable>
       );
     },
-    [view, onTaskPress, toggleStatus, renderRightActions]
+    [effectiveCardConfig, onTaskPress, toggleStatus, renderRightActions]
   );
 
   const renderFooter = useCallback(() => {
@@ -201,6 +243,34 @@ export const ListView: React.FC<ListViewProps> = ({
     );
   }, [isLoading, emptyMessage]);
 
+  const renderSectionHeader = useCallback(({ section }: { section: { title: string; data: Task[] } }) => {
+    if (!section.title) return null;
+
+    return (
+      <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, backgroundColor: '#f9fafb' }}>
+        <Text style={{ fontSize: 12, fontWeight: '700', color: '#6b7280' }}>{section.title}</Text>
+      </View>
+    );
+  }, []);
+
+  if (useSections) {
+    return (
+      <SectionList
+        sections={sections}
+        keyExtractor={(item) => item.uid}
+        renderItem={renderItem}
+        renderSectionHeader={renderSectionHeader}
+        ListEmptyComponent={renderEmpty}
+        ListFooterComponent={renderFooter}
+        onRefresh={onRefresh}
+        refreshing={isRefreshing}
+        contentContainerStyle={{ paddingVertical: 8, flexGrow: 1 }}
+        stickySectionHeadersEnabled={false}
+        showsVerticalScrollIndicator={false}
+      />
+    );
+  }
+
   return (
     <FlatList
       data={tasks}
@@ -217,3 +287,48 @@ export const ListView: React.FC<ListViewProps> = ({
     />
   );
 };
+
+function buildSections(tasks: Task[], groupBy?: string) {
+  const activeTasks = tasks.filter((task) => !task.is_completed);
+  const completedTasks = tasks.filter((task) => task.is_completed);
+
+  if (!groupBy) {
+    const sections: Array<{ title: string; data: Task[] }> = [];
+    if (activeTasks.length > 0) sections.push({ title: completedTasks.length > 0 ? '进行中' : '', data: activeTasks });
+    if (completedTasks.length > 0) sections.push({ title: '已完成', data: completedTasks });
+    return sections.length > 0 ? sections : [{ title: '', data: [] }];
+  }
+
+  const grouped = new Map<string, Task[]>();
+
+  for (const task of activeTasks) {
+    const title = getGroupTitle(task, groupBy);
+    const existing = grouped.get(title) || [];
+    existing.push(task);
+    grouped.set(title, existing);
+  }
+
+  const sections = Array.from(grouped.entries()).map(([title, data]) => ({ title, data }));
+  if (completedTasks.length > 0) {
+    sections.push({ title: '已完成', data: completedTasks });
+  }
+  return sections;
+}
+
+function getGroupTitle(task: Task, groupBy: string) {
+  switch (groupBy) {
+    case 'status':
+      return task.status_display;
+    case 'priority':
+      return task.priority_display;
+    case 'project':
+      return task.project?.name || '收集箱';
+    case 'due_date': {
+      if (!task.due_date) return '未设置截止日期';
+      const date = new Date(task.due_date);
+      return date.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' });
+    }
+    default:
+      return '未分组';
+  }
+}

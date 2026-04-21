@@ -1,187 +1,287 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  Modal,
-  TouchableWithoutFeedback,
-  ScrollView,
+  Switch,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '../../constants/theme';
 
-export interface FilterState {
-  status?: number | null;
-  priority?: number | null;
+export interface DisplaySettings {
+  show_completed: boolean;
+  show_project: boolean;
+  show_tags: boolean;
+  show_due_date: boolean;
+  show_priority: boolean;
+  compact_mode: boolean;
 }
 
-const STATUS_OPTIONS = [
-  { value: null, label: '全部', icon: 'circle-outline' as const, color: '#6b7280' },
-  { value: 0, label: '待分配', icon: 'circle-outline' as const, color: '#94a3b8' },
-  { value: 1, label: '待办', icon: 'circle-half-full' as const, color: '#3b82f6' },
-  { value: 2, label: '已完成', icon: 'check-circle' as const, color: '#22c55e' },
-  { value: 3, label: '已放弃', icon: 'close-circle' as const, color: '#ef4444' },
+const SORT_OPTIONS = [
+  { value: '', label: '默认排序' },
+  { value: 'created_at', label: '创建时间' },
+  { value: 'updated_at', label: '更新时间' },
+  { value: 'due_date', label: '截止日期' },
+  { value: 'priority', label: '优先级' },
+  { value: 'title', label: '标题' },
 ];
 
-const PRIORITY_OPTIONS = [
-  { value: null, label: '全部', icon: 'flag-outline' as const, color: '#6b7280' },
-  { value: 0, label: '低', icon: 'flag-outline' as const, color: '#94a3b8' },
-  { value: 1, label: '中', icon: 'flag' as const, color: '#f59e0b' },
-  { value: 2, label: '高', icon: 'flag' as const, color: '#f97316' },
-  { value: 3, label: '紧急', icon: 'alert-decagram' as const, color: '#ef4444' },
+const GROUP_OPTIONS = [
+  { value: '', label: '不分组' },
+  { value: 'status', label: '按状态' },
+  { value: 'priority', label: '按优先级' },
+  { value: 'project', label: '按项目' },
+  { value: 'due_date', label: '按截止日期' },
 ];
 
-interface FilterBarProps {
-  filters: FilterState;
-  onChange: (filters: FilterState) => void;
-}
+const DISPLAY_OPTIONS: Array<{ key: keyof DisplaySettings; label: string }> = [
+  { key: 'show_completed', label: '显示已完成' },
+  { key: 'show_project', label: '显示项目' },
+  { key: 'show_tags', label: '显示标签' },
+  { key: 'show_due_date', label: '显示截止日期' },
+  { key: 'show_priority', label: '显示优先级' },
+  { key: 'compact_mode', label: '紧凑模式' },
+];
 
-/** Shows active filter chips with remove buttons */
-export const FilterBar: React.FC<FilterBarProps> = ({ filters, onChange }) => {
-  const statusLabel = STATUS_OPTIONS.find(o => o.value === filters.status)?.label;
-  const priorityLabel = PRIORITY_OPTIONS.find(o => o.value === filters.priority)?.label;
-
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={{ flexGrow: 0 }}
-      contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 6, gap: 8 }}
-    >
-      {filters.status != null && (
-        <View style={{
-          flexDirection: 'row', alignItems: 'center', gap: 4,
-          backgroundColor: '#f3f4f6', borderRadius: 16,
-          paddingHorizontal: 10, paddingVertical: 5,
-        }}>
-          <Text style={{ fontSize: 13, color: '#374151' }}>状态: {statusLabel}</Text>
-          <TouchableOpacity onPress={() => onChange({ ...filters, status: null })}>
-            <MaterialCommunityIcons name="close-circle" size={16} color="#9ca3af" />
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {filters.priority != null && (
-        <View style={{
-          flexDirection: 'row', alignItems: 'center', gap: 4,
-          backgroundColor: '#f3f4f6', borderRadius: 16,
-          paddingHorizontal: 10, paddingVertical: 5,
-        }}>
-          <Text style={{ fontSize: 13, color: '#374151' }}>优先级: {priorityLabel}</Text>
-          <TouchableOpacity onPress={() => onChange({ ...filters, priority: null })}>
-            <MaterialCommunityIcons name="close-circle" size={16} color="#9ca3af" />
-          </TouchableOpacity>
-        </View>
-      )}
-
-      <TouchableOpacity
-        onPress={() => onChange({ status: null, priority: null })}
-        style={{ paddingHorizontal: 8, paddingVertical: 5, justifyContent: 'center' }}
-      >
-        <Text style={{ fontSize: 13, color: '#ef4444' }}>清除</Text>
-      </TouchableOpacity>
-    </ScrollView>
-  );
+export const DEFAULT_DISPLAY_SETTINGS: DisplaySettings = {
+  show_completed: false,
+  show_project: true,
+  show_tags: true,
+  show_due_date: true,
+  show_priority: true,
+  compact_mode: false,
 };
 
-/** Full-screen filter modal — call from parent */
-export const FilterModal: React.FC<{
+export function hasActiveFilterBarSettings(
+  sortField: string,
+  groupBy: string,
+  displaySettings: DisplaySettings,
+) {
+  if (sortField || groupBy) return true;
+
+  return DISPLAY_OPTIONS.some(({ key }) => displaySettings[key] !== DEFAULT_DISPLAY_SETTINGS[key]);
+}
+
+function getSortLabel(field: string) {
+  return SORT_OPTIONS.find((option) => option.value === field)?.label || '默认排序';
+}
+
+function getGroupLabel(field: string) {
+  return GROUP_OPTIONS.find((option) => option.value === field)?.label || '不分组';
+}
+
+interface HomeFilterBarProps {
   visible: boolean;
-  filters: FilterState;
-  onChange: (filters: FilterState) => void;
-  onClose: () => void;
-}> = ({ visible, filters, onChange, onClose }) => {
-  const activeCount = (filters.status != null ? 1 : 0) + (filters.priority != null ? 1 : 0);
+  sortField: string;
+  sortDirection: 'asc' | 'desc';
+  groupBy: string;
+  displaySettings: DisplaySettings;
+  onSortChange: (field: string, direction: 'asc' | 'desc') => void;
+  onGroupByChange: (field: string) => void;
+  onDisplaySettingsChange: (settings: Partial<DisplaySettings>) => void;
+}
+
+export const HomeFilterBar: React.FC<HomeFilterBarProps> = ({
+  visible,
+  sortField,
+  sortDirection,
+  groupBy,
+  displaySettings,
+  onSortChange,
+  onGroupByChange,
+  onDisplaySettingsChange,
+}) => {
+  const [activePanel, setActivePanel] = useState<'sort' | 'group' | 'display' | null>(null);
+
+  useEffect(() => {
+    if (!visible) {
+      setActivePanel(null);
+    }
+  }, [visible]);
+
+  const displayCount = useMemo(
+    () => DISPLAY_OPTIONS.filter(({ key }) => displaySettings[key] !== DEFAULT_DISPLAY_SETTINGS[key]).length,
+    [displaySettings],
+  );
+
+  if (!visible) return null;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}>
-          <TouchableWithoutFeedback>
-            <View style={{
-              backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20,
-              paddingBottom: 34,
-            }}>
-              <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 4 }}>
-                <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: '#d1d5db' }} />
-              </View>
+    <View style={{ borderTopWidth: 1, borderTopColor: '#f3f4f6', backgroundColor: '#fff' }}>
+      <View style={{ flexDirection: 'row', paddingHorizontal: 8, paddingVertical: 6 }}>
+        <TabButton
+          label={`排序：${getSortLabel(sortField)}`}
+          active={activePanel === 'sort'}
+          onPress={() => setActivePanel(activePanel === 'sort' ? null : 'sort')}
+        />
+        <TabButton
+          label={`分组：${getGroupLabel(groupBy)}`}
+          active={activePanel === 'group'}
+          onPress={() => setActivePanel(activePanel === 'group' ? null : 'group')}
+        />
+        <TabButton
+          label={displayCount > 0 ? `显示：${displayCount}` : '显示'}
+          active={activePanel === 'display'}
+          onPress={() => setActivePanel(activePanel === 'display' ? null : 'display')}
+        />
+      </View>
 
-              <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                  <Text style={{ fontSize: 16, fontWeight: '600', color: '#111418' }}>筛选条件</Text>
-                  {activeCount > 0 && (
-                    <TouchableOpacity onPress={() => onChange({ status: null, priority: null })}>
-                      <Text style={{ fontSize: 14, color: '#ef4444' }}>清除全部</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-
-                {/* Status */}
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>状态</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-                  {STATUS_OPTIONS.map((opt) => {
-                    const active = filters.status === opt.value;
-                    return (
-                      <TouchableOpacity
-                        key={String(opt.value)}
-                        onPress={() => onChange({ ...filters, status: opt.value })}
-                        style={{
-                          flexDirection: 'row', alignItems: 'center', gap: 6,
-                          paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
-                          backgroundColor: active ? opt.color + '18' : '#f3f4f6',
-                          borderWidth: 1,
-                          borderColor: active ? opt.color + '40' : 'transparent',
-                        }}
-                      >
-                        <MaterialCommunityIcons name={opt.icon} size={16} color={opt.color} />
-                        <Text style={{ fontSize: 14, color: active ? opt.color : '#374151', fontWeight: active ? '600' : '400' }}>
-                          {opt.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                {/* Priority */}
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>优先级</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-                  {PRIORITY_OPTIONS.map((opt) => {
-                    const active = filters.priority === opt.value;
-                    return (
-                      <TouchableOpacity
-                        key={String(opt.value)}
-                        onPress={() => onChange({ ...filters, priority: opt.value })}
-                        style={{
-                          flexDirection: 'row', alignItems: 'center', gap: 6,
-                          paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
-                          backgroundColor: active ? opt.color + '18' : '#f3f4f6',
-                          borderWidth: 1,
-                          borderColor: active ? opt.color + '40' : 'transparent',
-                        }}
-                      >
-                        <MaterialCommunityIcons name={opt.icon} size={16} color={opt.color} />
-                        <Text style={{ fontSize: 14, color: active ? opt.color : '#374151', fontWeight: active ? '600' : '400' }}>
-                          {opt.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-
-              <TouchableOpacity
+      {activePanel === 'sort' && (
+        <View style={{ borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingVertical: 4 }}>
+          {SORT_OPTIONS.map((option) => {
+            const selected = sortField === option.value;
+            return (
+              <View
+                key={option.value || 'default'}
                 style={{
-                  marginHorizontal: 16, paddingVertical: 14,
-                  backgroundColor: Colors.primary, borderRadius: 12, alignItems: 'center',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
                 }}
-                onPress={onClose}
               >
-                <Text style={{ fontSize: 15, fontWeight: '600', color: '#fff' }}>确定</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableWithoutFeedback>
+                <TouchableOpacity
+                  onPress={() => {
+                    onSortChange(option.value, selected ? sortDirection : 'desc');
+                    setActivePanel(null);
+                  }}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}
+                >
+                  {selected ? (
+                    <MaterialCommunityIcons name="check" size={16} color={Colors.primary} />
+                  ) : (
+                    <View style={{ width: 16 }} />
+                  )}
+                  <Text style={{ fontSize: 14, color: selected ? Colors.primary : '#374151', fontWeight: selected ? '600' : '400' }}>
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+
+                {option.value ? (
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <DirectionButton
+                      label="正序"
+                      selected={selected && sortDirection === 'asc'}
+                      onPress={() => {
+                        onSortChange(option.value, 'asc');
+                        setActivePanel(null);
+                      }}
+                    />
+                    <DirectionButton
+                      label="倒序"
+                      selected={selected && sortDirection === 'desc'}
+                      onPress={() => {
+                        onSortChange(option.value, 'desc');
+                        setActivePanel(null);
+                      }}
+                    />
+                  </View>
+                ) : null}
+              </View>
+            );
+          })}
         </View>
-      </TouchableWithoutFeedback>
-    </Modal>
+      )}
+
+      {activePanel === 'group' && (
+        <View style={{ borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingVertical: 4 }}>
+          {GROUP_OPTIONS.map((option) => {
+            const selected = groupBy === option.value;
+            return (
+              <TouchableOpacity
+                key={option.value || 'default'}
+                onPress={() => {
+                  onGroupByChange(option.value);
+                  setActivePanel(null);
+                }}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                }}
+              >
+                <Text style={{ fontSize: 14, color: selected ? Colors.primary : '#374151', fontWeight: selected ? '600' : '400' }}>
+                  {option.label}
+                </Text>
+                {selected && <MaterialCommunityIcons name="check" size={16} color={Colors.primary} />}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
+
+      {activePanel === 'display' && (
+        <View style={{ borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingVertical: 4 }}>
+          {DISPLAY_OPTIONS.map((option) => (
+            <View
+              key={option.key}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+              }}
+            >
+              <Text style={{ fontSize: 14, color: '#374151' }}>{option.label}</Text>
+              <Switch
+                value={displaySettings[option.key]}
+                onValueChange={(value) => onDisplaySettingsChange({ [option.key]: value })}
+                trackColor={{ false: '#d1d5db', true: Colors.primary + '66' }}
+                thumbColor={displaySettings[option.key] ? Colors.primary : '#fff'}
+              />
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
   );
 };
+
+function TabButton({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={{
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 4,
+        paddingVertical: 8,
+        borderRadius: 12,
+        backgroundColor: active ? Colors.primary + '12' : 'transparent',
+      }}
+    >
+      <Text style={{ fontSize: 13, color: active ? Colors.primary : '#6b7280', fontWeight: active ? '600' : '500' }} numberOfLines={1}>
+        {label}
+      </Text>
+      <MaterialCommunityIcons
+        name={active ? 'chevron-up' : 'chevron-down'}
+        size={16}
+        color={active ? Colors.primary : '#9ca3af'}
+      />
+    </TouchableOpacity>
+  );
+}
+
+function DirectionButton({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={{
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 999,
+        backgroundColor: selected ? Colors.primary + '12' : '#f3f4f6',
+      }}
+    >
+      <Text style={{ fontSize: 12, color: selected ? Colors.primary : '#6b7280', fontWeight: selected ? '600' : '500' }}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+}

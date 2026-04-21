@@ -60,6 +60,11 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   isRefreshing = false,
   emptyMessage = '暂无任务',
 }) => {
+  const displaySettings = view?.view_settings || {};
+  const showProject = displaySettings.show_project ?? true;
+  const showPriority = displaySettings.show_priority ?? true;
+  const showTags = displaySettings.show_tags ?? true;
+
   // Group tasks by date, sorted chronologically
   const groupedTasks = useMemo(() => {
     const groups: Record<string, Task[]> = {};
@@ -174,8 +179,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                     </View>
 
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
-                      {task.project && <Text style={{ fontSize: 11, color: '#9ca3af' }}>📁 {task.project.name}</Text>}
-                      <Text style={{ fontSize: 11, color: PRIORITY_COLORS[task.priority] }}>⚑ {task.priority_display}</Text>
+                      {showProject && task.project && <Text style={{ fontSize: 11, color: '#9ca3af' }}>📁 {task.project.name}</Text>}
+                      {showPriority && <Text style={{ fontSize: 11, color: PRIORITY_COLORS[task.priority] }}>⚑ {task.priority_display}</Text>}
                       {task.start_date && (
                         <Text style={{ fontSize: 11, color: '#9ca3af' }}>
                           开始: {new Date(task.start_date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
@@ -183,7 +188,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                       )}
                     </View>
 
-                    {task.tags.length > 0 && (
+                    {showTags && task.tags.length > 0 && (
                       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
                         {task.tags.slice(0, 3).map((tag) => (
                           <View key={tag.uid} style={{ backgroundColor: tag.color + '20', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 1 }}>

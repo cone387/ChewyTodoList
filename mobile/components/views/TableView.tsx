@@ -45,6 +45,20 @@ export const TableView: React.FC<TableViewProps> = ({
   isRefreshing = false,
   emptyMessage = '暂无任务',
 }) => {
+  const displaySettings = view?.view_settings || {};
+
+  const columns = useMemo(() => {
+    const next = [{ key: 'title', label: '标题', width: COL_WIDTHS.title }];
+
+    if (displaySettings.show_status ?? true) next.push({ key: 'status', label: '状态', width: COL_WIDTHS.status });
+    if (displaySettings.show_priority ?? true) next.push({ key: 'priority', label: '优先级', width: COL_WIDTHS.priority });
+    if (displaySettings.show_project ?? true) next.push({ key: 'project', label: '项目', width: COL_WIDTHS.project });
+    if (displaySettings.show_due_date ?? true) next.push({ key: 'dueDate', label: '截止', width: COL_WIDTHS.dueDate });
+    if (displaySettings.show_tags ?? true) next.push({ key: 'tags', label: '标签', width: COL_WIDTHS.tags });
+
+    return next;
+  }, [displaySettings]);
+
   const renderRow = useCallback(({ item }: { item: Task }) => {
     const status = STATUS_LABELS[item.status] || STATUS_LABELS[TaskStatus.TODO];
     const priority = PRIORITY_LABELS[item.priority] || PRIORITY_LABELS[TaskPriority.MEDIUM];
@@ -61,63 +75,76 @@ export const TableView: React.FC<TableViewProps> = ({
         }}
         onPress={() => onTaskPress(item)}
       >
-        {/* Title */}
-        <View style={{ width: COL_WIDTHS.title, paddingHorizontal: 12, paddingVertical: 12 }}>
-          <Text
-            style={{
-              fontSize: 13,
-              fontWeight: '500',
-              color: '#111418',
-              textDecorationLine: item.is_completed ? 'line-through' : 'none',
-            }}
-            numberOfLines={2}
-          >
-            {item.title}
-          </Text>
-        </View>
-
-        {/* Status */}
-        <View style={{ width: COL_WIDTHS.status, alignItems: 'center', paddingVertical: 12 }}>
-          <View style={{ backgroundColor: status.color + '18', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2 }}>
-            <Text style={{ color: status.color, fontSize: 10, fontWeight: '600' }}>{status.label}</Text>
-          </View>
-        </View>
-
-        {/* Priority */}
-        <View style={{ width: COL_WIDTHS.priority, alignItems: 'center', paddingVertical: 12 }}>
-          <Text style={{ color: priority.color, fontSize: 12, fontWeight: '600' }}>⚑ {priority.label}</Text>
-        </View>
-
-        {/* Project */}
-        <View style={{ width: COL_WIDTHS.project, paddingHorizontal: 8, paddingVertical: 12 }}>
-          <Text style={{ fontSize: 11, color: '#6b7280' }} numberOfLines={1}>
-            {item.project?.name || '收集箱'}
-          </Text>
-        </View>
-
-        {/* Due date */}
-        <View style={{ width: COL_WIDTHS.dueDate, paddingHorizontal: 8, paddingVertical: 12 }}>
-          {item.due_date ? (
-            <Text style={{ fontSize: 11, color: item.is_overdue ? '#ef4444' : '#6b7280' }}>
-              {new Date(item.due_date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
-            </Text>
-          ) : (
-            <Text style={{ fontSize: 11, color: '#d1d5db' }}>-</Text>
-          )}
-        </View>
-
-        {/* Tags */}
-        <View style={{ width: COL_WIDTHS.tags, paddingHorizontal: 8, paddingVertical: 12, flexDirection: 'row', flexWrap: 'wrap', gap: 3 }}>
-          {item.tags.slice(0, 2).map((tag) => (
-            <View key={tag.uid} style={{ backgroundColor: tag.color + '20', borderRadius: 6, paddingHorizontal: 4, paddingVertical: 1 }}>
-              <Text style={{ color: tag.color, fontSize: 9 }}>{tag.name}</Text>
-            </View>
-          ))}
-          {item.tags.length > 2 && <Text style={{ fontSize: 9, color: '#9ca3af' }}>+{item.tags.length - 2}</Text>}
-        </View>
+        {columns.map((column) => {
+          switch (column.key) {
+            case 'title':
+              return (
+                <View key={column.key} style={{ width: column.width, paddingHorizontal: 12, paddingVertical: 12 }}>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: '500',
+                      color: '#111418',
+                      textDecorationLine: item.is_completed ? 'line-through' : 'none',
+                    }}
+                    numberOfLines={2}
+                  >
+                    {item.title}
+                  </Text>
+                </View>
+              );
+            case 'status':
+              return (
+                <View key={column.key} style={{ width: column.width, alignItems: 'center', paddingVertical: 12 }}>
+                  <View style={{ backgroundColor: status.color + '18', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2 }}>
+                    <Text style={{ color: status.color, fontSize: 10, fontWeight: '600' }}>{status.label}</Text>
+                  </View>
+                </View>
+              );
+            case 'priority':
+              return (
+                <View key={column.key} style={{ width: column.width, alignItems: 'center', paddingVertical: 12 }}>
+                  <Text style={{ color: priority.color, fontSize: 12, fontWeight: '600' }}>⚑ {priority.label}</Text>
+                </View>
+              );
+            case 'project':
+              return (
+                <View key={column.key} style={{ width: column.width, paddingHorizontal: 8, paddingVertical: 12 }}>
+                  <Text style={{ fontSize: 11, color: '#6b7280' }} numberOfLines={1}>
+                    {item.project?.name || '收集箱'}
+                  </Text>
+                </View>
+              );
+            case 'dueDate':
+              return (
+                <View key={column.key} style={{ width: column.width, paddingHorizontal: 8, paddingVertical: 12 }}>
+                  {item.due_date ? (
+                    <Text style={{ fontSize: 11, color: item.is_overdue ? '#ef4444' : '#6b7280' }}>
+                      {new Date(item.due_date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
+                    </Text>
+                  ) : (
+                    <Text style={{ fontSize: 11, color: '#d1d5db' }}>-</Text>
+                  )}
+                </View>
+              );
+            case 'tags':
+              return (
+                <View key={column.key} style={{ width: column.width, paddingHorizontal: 8, paddingVertical: 12, flexDirection: 'row', flexWrap: 'wrap', gap: 3 }}>
+                  {item.tags.slice(0, 2).map((tag) => (
+                    <View key={tag.uid} style={{ backgroundColor: tag.color + '20', borderRadius: 6, paddingHorizontal: 4, paddingVertical: 1 }}>
+                      <Text style={{ color: tag.color, fontSize: 9 }}>{tag.name}</Text>
+                    </View>
+                  ))}
+                  {item.tags.length > 2 && <Text style={{ fontSize: 9, color: '#9ca3af' }}>+{item.tags.length - 2}</Text>}
+                </View>
+              );
+            default:
+              return null;
+          }
+        })}
       </TouchableOpacity>
     );
-  }, [onTaskPress]);
+  }, [columns, onTaskPress]);
 
   if (tasks.length === 0) {
     return (
@@ -128,31 +155,26 @@ export const TableView: React.FC<TableViewProps> = ({
     );
   }
 
-  const totalWidth = Object.values(COL_WIDTHS).reduce((a, b) => a + b, 0);
+  const totalWidth = columns.reduce((sum, column) => sum + column.width, 0);
 
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={true} style={{ flex: 1 }}>
       <View style={{ width: totalWidth }}>
         {/* Header */}
         <View style={{ flexDirection: 'row', backgroundColor: '#f9fafb', borderBottomWidth: 2, borderBottomColor: '#e5e7eb' }}>
-          <View style={{ width: COL_WIDTHS.title, paddingHorizontal: 12, paddingVertical: 10 }}>
-            <Text style={{ fontSize: 11, fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>标题</Text>
-          </View>
-          <View style={{ width: COL_WIDTHS.status, alignItems: 'center', paddingVertical: 10 }}>
-            <Text style={{ fontSize: 11, fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>状态</Text>
-          </View>
-          <View style={{ width: COL_WIDTHS.priority, alignItems: 'center', paddingVertical: 10 }}>
-            <Text style={{ fontSize: 11, fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>优先级</Text>
-          </View>
-          <View style={{ width: COL_WIDTHS.project, paddingHorizontal: 8, paddingVertical: 10 }}>
-            <Text style={{ fontSize: 11, fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>项目</Text>
-          </View>
-          <View style={{ width: COL_WIDTHS.dueDate, paddingHorizontal: 8, paddingVertical: 10 }}>
-            <Text style={{ fontSize: 11, fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>截止</Text>
-          </View>
-          <View style={{ width: COL_WIDTHS.tags, paddingHorizontal: 8, paddingVertical: 10 }}>
-            <Text style={{ fontSize: 11, fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>标签</Text>
-          </View>
+          {columns.map((column) => (
+            <View
+              key={column.key}
+              style={{
+                width: column.width,
+                alignItems: column.key === 'title' || column.key === 'project' || column.key === 'dueDate' || column.key === 'tags' ? 'flex-start' : 'center',
+                paddingHorizontal: column.key === 'title' ? 12 : 8,
+                paddingVertical: 10,
+              }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>{column.label}</Text>
+            </View>
+          ))}
         </View>
 
         {/* Rows */}

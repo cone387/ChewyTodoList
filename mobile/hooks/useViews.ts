@@ -64,8 +64,10 @@ export function useUpdateView() {
   return useMutation({
     mutationFn: ({ uid, data }: { uid: string; data: Partial<TaskView> & { project_uid?: string } }) =>
       viewApi.updateView(uid, data),
-    onSuccess: () => {
+    onSuccess: (_, { uid }) => {
       queryClient.invalidateQueries({ queryKey: ['views'] });
+      queryClient.invalidateQueries({ queryKey: ['view', uid] });
+      queryClient.invalidateQueries({ queryKey: ['view-tasks', uid] });
     },
   });
 }

@@ -11,10 +11,9 @@ import { FieldRenderer, groupFieldsByPosition } from './TaskCardRenderer';
 import { CardLayout, Shadows } from '../../constants/theme';
 
 // 默认字段配置（当视图没有绑定 card_config 时使用）
-const DEFAULT_FIELD_CONFIGS: CardFieldConfig[] = [
+export const DEFAULT_FIELD_CONFIGS: CardFieldConfig[] = [
   { field: 'priority', visible: true, position: 'header_left', style: { variant: 'flag' } },
   { field: 'title', visible: true, position: 'header', style: { fontSize: 'medium', fontWeight: 'medium', showStrikethrough: true } },
-  { field: 'status', visible: true, position: 'header_right', style: { variant: 'badge' } },
   { field: 'tags', visible: true, position: 'body', style: { variant: 'pill', maxCount: 3 } },
   { field: 'project', visible: true, position: 'footer', style: {} },
   { field: 'due_date', visible: true, position: 'footer', style: { showRelative: true } },

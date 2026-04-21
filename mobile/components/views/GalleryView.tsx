@@ -55,6 +55,12 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
   isRefreshing = false,
   emptyMessage = '暂无任务',
 }) => {
+  const displaySettings = view?.view_settings || {};
+  const showPriority = displaySettings.show_priority ?? true;
+  const showDueDate = displaySettings.show_due_date ?? true;
+  const showTags = displaySettings.show_tags ?? true;
+  const showProject = displaySettings.show_project ?? true;
+
   const renderCard = useCallback(({ item, index }: { item: Task; index: number }) => {
     const colors = getTaskColor(item.title);
     const isLeft = index % 2 === 0;
@@ -90,7 +96,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
                 </View>
               )}
             </View>
-            {item.priority > TaskPriority.LOW && (
+            {showPriority && item.priority > TaskPriority.LOW && (
               <View style={{ backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2 }}>
                 <Text style={{ color: '#fff', fontSize: 10, fontWeight: '600' }}>{PRIORITY_LABELS[item.priority]}</Text>
               </View>
@@ -113,12 +119,12 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
             </Text>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
-              {item.project && (
+              {showProject && item.project && (
                 <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 10 }} numberOfLines={1}>
                   📁 {item.project.name}
                 </Text>
               )}
-              {item.due_date && (
+              {showDueDate && item.due_date && (
                 <Text style={{ color: item.is_overdue ? '#fca5a5' : 'rgba(255,255,255,0.8)', fontSize: 10 }}>
                   📅 {new Date(item.due_date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
                 </Text>
@@ -126,7 +132,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
             </View>
 
             {/* Tags */}
-            {item.tags.length > 0 && (
+            {showTags && item.tags.length > 0 && (
               <View style={{ flexDirection: 'row', gap: 4, marginTop: 4 }}>
                 {item.tags.slice(0, 2).map((tag) => (
                   <View key={tag.uid} style={{ backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 1 }}>
@@ -154,7 +160,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
         </View>
       </TouchableOpacity>
     );
-  }, [onTaskPress]);
+  }, [onTaskPress, showDueDate, showPriority, showProject, showTags]);
 
   if (tasks.length === 0) {
     return (

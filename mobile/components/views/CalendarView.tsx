@@ -35,6 +35,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   onTaskPress,
   emptyMessage = '暂无任务',
 }) => {
+  const displaySettings = view?.view_settings || {};
+  const showProject = displaySettings.show_project ?? true;
+  const showPriority = displaySettings.show_priority ?? true;
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
@@ -124,10 +127,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         >
           {item.title}
         </Text>
-        <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-          {item.project && <Text style={{ fontSize: 11, color: '#9ca3af' }}>📁 {item.project.name}</Text>}
-          <Text style={{ fontSize: 11, color: '#9ca3af' }}>{item.priority_display}</Text>
-        </View>
+        {(showProject || showPriority) && (
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+            {showProject && item.project && <Text style={{ fontSize: 11, color: '#9ca3af' }}>📁 {item.project.name}</Text>}
+            {showPriority && <Text style={{ fontSize: 11, color: '#9ca3af' }}>{item.priority_display}</Text>}
+          </View>
+        )}
       </View>
       {item.is_overdue && !item.is_completed && (
         <View style={{ backgroundColor: '#fef2f2', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
@@ -135,7 +140,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         </View>
       )}
     </TouchableOpacity>
-  ), [onTaskPress]);
+  ), [onTaskPress, showPriority, showProject]);
 
   return (
     <View style={{ flex: 1 }}>
