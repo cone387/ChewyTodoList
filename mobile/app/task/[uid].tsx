@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, ScrollView, TextInput, TouchableOpacity,
-  ActivityIndicator, KeyboardAvoidingView, Platform,
-  Animated, Dimensions, PanResponder, StyleSheet,
+  ActivityIndicator, KeyboardAvoidingView, Platform, Modal,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTask, useUpdateTask, useDeleteTask, useCreateTask } from '../../hooks/useTasks';
@@ -39,43 +37,17 @@ export default function TaskDetailPage() {
   const { uid } = useLocalSearchParams<{ uid: string }>();
   const params = useLocalSearchParams<{ uid: string; project_uid?: string }>();
   const isCreate = uid === 'create';
-  const insets = useSafeAreaInsets();
-  const SCREEN_HEIGHT = Dimensions.get('window').height;
-  const SHEET_TOP = Math.max(insets.top + 10, 20);
+  const [modalVisible, setModalVisible] = useState(true);
 
-  // Sheet animation
-  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-  const overlayAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, tension: 65, friction: 11 }),
-      Animated.timing(overlayAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
-    ]).start();
+  const handleDismiss = useCallback(() => {
+    router.back();
   }, []);
 
-  const dismissSheet = () => {
-    Animated.parallel([
-      Animated.timing(slideAnim, { toValue: SCREEN_HEIGHT, duration: 250, useNativeDriver: true }),
-      Animated.timing(overlayAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
-    ]).start(() => router.back());
-  };
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, g) => g.dy > 10 && Math.abs(g.dy) > Math.abs(g.dx),
-      onPanResponderMove: (_, g) => {
-        if (g.dy > 0) slideAnim.setValue(g.dy);
-      },
-      onPanResponderRelease: (_, g) => {
-        if (g.dy > 120 || g.vy > 0.5) {
-          dismissSheet();
-        } else {
-          Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, tension: 65, friction: 11 }).start();
-        }
-      },
-    })
-  ).current;
+  const handleClose = useCallback(() => {
+    setModalVisible(false);
+    // Small delay to let the native dismiss animation complete
+    setTimeout(() => router.back(), 100);
+  }, []);
 
   const { data: task, isLoading } = useTask(isCreate ? '' : uid);
   const updateTask = useUpdateTask();
@@ -143,7 +115,7 @@ export default function TaskDetailPage() {
     const next = cur.includes(tagUid) ? cur.filter((id: string) => id !== tagUid) : [...cur, tagUid];
     try { await updateTask.mutateAsync({ uid: task.uid, data: { tag_uids: next } }); } catch {}
   };
-  const handleDelete = async () => { if (!task) return; try { await deleteTask.mutateAsync(task.uid); dismissSheet(); } catch {} };
+  const handleDelete = async () => { if (!task) return; try { await deleteTask.mutateAsync(task.uid); handleClose(); } catch {} };
   const handleCreate = async () => {
     if (!title.trim()) { showToast('error', '请输入标题'); return; }
     try {
@@ -153,7 +125,7 @@ export default function TaskDetailPage() {
       if (createTagUids.length > 0) d.tag_uids = createTagUids;
       if (createStartDate) d.start_date = createStartDate;
       if (createDueDate) d.due_date = createDueDate;
-      await createTask.mutateAsync(d); dismissSheet();
+      await createTask.mutateAsync(d); handleClose();
     } catch { showToast('error', '创建失败'); }
   };
 
@@ -186,12 +158,11 @@ export default function TaskDetailPage() {
   }, [isCreate, params.project_uid, createProjectUid]);
 
   if (isLoading && !isCreate) return (
-    <View style={{ flex: 1 }}>
-      <Animated.View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)', opacity: overlayAnim }} />
-      <Animated.View style={{ flex: 1, marginTop: SHEET_TOP, backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16, alignItems: 'center', justifyContent: 'center', transform: [{ translateY: slideAnim }] }}>
+    <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose} onDismiss={handleDismiss}>
+      <View style={{ flex: 1, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator size="large" color={Colors.primary} />
-      </Animated.View>
-    </View>
+      </View>
+    </Modal>
   );
 
   const curPriority = isCreate ? createPriority : (task?.priority ?? TaskPriority.MEDIUM);
@@ -201,22 +172,11 @@ export default function TaskDetailPage() {
   const dueDateValue = isCreate ? createDueDate : (task?.due_date || null);
 
   return (
-    <View style={{ flex: 1 }}>
-      {/* Semi-transparent overlay */}
-      <Animated.View
-        style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)', opacity: overlayAnim }}
-        pointerEvents="none"
-      />
-      {/* Sheet content */}
-      <Animated.View style={{ flex: 1, marginTop: SHEET_TOP, borderTopLeftRadius: 16, borderTopRightRadius: 16, backgroundColor: '#fff', overflow: 'hidden', transform: [{ translateY: slideAnim }] }}>
-        {/* Drag handle */}
-        <View {...panResponder.panHandlers} style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 4 }}>
-          <View style={{ width: 36, height: 5, borderRadius: 3, backgroundColor: '#d1d5db' }} />
-        </View>
-
+    <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose} onDismiss={handleDismiss}>
+      <View style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* Header: back | centered project | activity + more */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingBottom: 6, borderBottomWidth: 0.5, borderBottomColor: '#f3f4f6' }}>
-        <TouchableOpacity onPress={dismissSheet} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingTop: 8, paddingBottom: 6, borderBottomWidth: 0.5, borderBottomColor: '#f3f4f6' }}>
+        <TouchableOpacity onPress={handleClose} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
           <MaterialCommunityIcons name={isCreate ? 'close' : 'chevron-down'} size={24} color={Colors.primary} />
         </TouchableOpacity>
         {/* Centered project selector */}
@@ -405,8 +365,8 @@ export default function TaskDetailPage() {
       <ConfirmDialog visible={showDeleteConfirm} title="删除任务"
         message={task?.subtasks_count ? `包含 ${task.subtasks_count} 个子任务，删除后无法恢复` : '确认删除？'}
         confirmText="删除" destructive onConfirm={handleDelete} onCancel={() => setShowDeleteConfirm(false)} />
-      </Animated.View>
-    </View>
+      </View>
+    </Modal>
   );
 }
 
