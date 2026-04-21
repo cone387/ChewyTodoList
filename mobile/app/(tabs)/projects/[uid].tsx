@@ -9,7 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useProject, useUpdateProject, useDeleteProject } from '../../../hooks/useProjects';
-import { useViewTasks } from '../../../hooks/useViews';
+import { useTasks } from '../../../hooks/useTasks';
 import { ListView } from '../../../components/views/ListView';
 import { FAB } from '../../../components/ui/FAB';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
@@ -25,11 +25,7 @@ export default function ProjectDetailPage() {
   const deleteProject = useDeleteProject();
   const { showToast } = useToast();
 
-  // Use a simple tasks query for this project
-  const { data: taskData, isLoading: tasksLoading, refetch, isRefetching } = useViewTasks(
-    '', // no specific view
-    { project: uid }
-  );
+  const { data: taskData, isLoading: tasksLoading, refetch, isRefetching } = useTasks({ project: uid });
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState('');

@@ -111,10 +111,21 @@ export default function ProjectsPage() {
       <View style={{ backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <Text style={{ fontSize: 20, fontWeight: '700', color: '#111418' }}>项目</Text>
         <View style={{ flexDirection: 'row', gap: 12 }}>
-          <TouchableOpacity onPress={() => setShowCreateGroup(true)}>
+          <TouchableOpacity
+            onPress={() => {
+              setShowCreateProject(false);
+              setShowCreateGroup(true);
+            }}
+          >
             <Text style={{ color: Colors.primary, fontSize: 14 }}>+ 分组</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { setShowCreateProject(true); if (groups.length > 0 && !newProjectGroupUid) setNewProjectGroupUid(groups[0].uid); }}>
+          <TouchableOpacity
+            onPress={() => {
+              setShowCreateGroup(false);
+              setShowCreateProject(true);
+              if (groups.length > 0 && !newProjectGroupUid) setNewProjectGroupUid(groups[0].uid);
+            }}
+          >
             <Text style={{ color: Colors.primary, fontSize: 14, fontWeight: '600' }}>+ 项目</Text>
           </TouchableOpacity>
         </View>

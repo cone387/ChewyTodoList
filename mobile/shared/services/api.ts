@@ -128,7 +128,7 @@ export const authApi = {
   refresh: (refresh: string) =>
     api.post<{ access: string }>('/auth/refresh/', { refresh }),
 
-  logout: () => api.post('/auth/logout/'),
+  logout: (refresh?: string) => api.post('/auth/logout/', refresh ? { refresh } : {}),
 
   getProfile: () => api.get('/auth/me/'),
 

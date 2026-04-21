@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.db import transaction
 from django.http import JsonResponse
+from copy import deepcopy
 
 from .models import Tag, Group, Project, Task, ActivityLog, TaskView, TaskCardConfig
 from .serializers import (
@@ -205,27 +206,20 @@ class CustomTokenRefreshView(TokenRefreshView):
 @permission_classes([IsAuthenticated])
 def logout_view(request):
     """用户登出"""
-    try:
-        refresh_token = request.data.get('refresh')
-        if refresh_token:
+    refresh_token = request.data.get('refresh')
+    if refresh_token:
+        try:
             token = RefreshToken(refresh_token)
             token.blacklist()
-        
-        return Response({
-            'success': True,
-            'data': {},
-            'message': '登出成功'
-        }, status=status.HTTP_200_OK)
-    
-    except Exception:
-        return Response({
-            'success': False,
-            'error': {
-                'code': 'AUTH_001',
-                'message': 'Token无效',
-                'details': {}
-            }
-        }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            # 登出应幂等；refresh 无效或黑名单未启用时直接忽略
+            pass
+
+    return Response({
+        'success': True,
+        'data': {},
+        'message': '登出成功'
+    }, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -1332,14 +1326,26 @@ class TaskCardConfigViewSet(viewsets.ModelViewSet):
     def duplicate(self, request, uid=None):
         """复制配置（通常用于从预设创建自定义版本）"""
         source = self.get_object()
+        source_style = source.style if isinstance(source.style, dict) else {}
+        source_fields = source.field_configs if isinstance(source.field_configs, list) else []
+        normalized_fields = [fc for fc in source_fields if isinstance(fc, dict)]
+        if not normalized_fields:
+            normalized_fields = TaskCardConfig.get_default_field_configs()
+        base_name = f"{source.name} 副本"
+        new_name = base_name
+        suffix = 2
+        while TaskCardConfig.objects.filter(user=request.user, name=new_name).exists():
+            new_name = f"{base_name} {suffix}"
+            suffix += 1
+
         new_config = TaskCardConfig.objects.create(
             user=request.user,
-            name=f"{source.name} 副本",
+            name=new_name,
             desc=source.desc,
             is_preset=False,
             layout=source.layout,
-            style=source.style.copy() if source.style else {},
-            field_configs=[fc.copy() for fc in source.field_configs] if source.field_configs else [],
+            style=deepcopy(source_style),
+            field_configs=deepcopy(normalized_fields),
         )
         serializer = self.get_serializer(new_config)
         return Response({

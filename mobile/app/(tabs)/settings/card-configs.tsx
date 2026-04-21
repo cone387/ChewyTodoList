@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useCardConfigs, useUpdateCardConfig, useDuplicateCardConfig, useDeleteCardConfig } from '../../../hooks/useCardConfigs';
-import { TaskCard } from '../../../components/task/TaskCard';
+import { TaskCard, DEFAULT_FIELD_CONFIGS } from '../../../components/task/TaskCard';
 import { ActionSheet } from '../../../components/ui/ActionSheet';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { useToast } from '../../../hooks/useToast';
@@ -66,6 +66,14 @@ export default function CardConfigsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showLayoutPicker, setShowLayoutPicker] = useState(false);
 
+  const getFieldConfigs = (config: TaskCardConfig): CardFieldConfig[] => {
+    const candidates = (config as any)?.field_configs ?? (config as any)?.fieldConfigs;
+    if (Array.isArray(candidates) && candidates.length > 0) {
+      return candidates as CardFieldConfig[];
+    }
+    return DEFAULT_FIELD_CONFIGS;
+  };
+
   const handleDuplicate = async (config: TaskCardConfig) => {
     try {
       await duplicateConfig.mutateAsync(config.uid);
@@ -88,7 +96,7 @@ export default function CardConfigsPage() {
   };
 
   const handleToggleField = async (config: TaskCardConfig, fieldName: string) => {
-    const newFieldConfigs = config.field_configs.map((fc) =>
+    const newFieldConfigs = getFieldConfigs(config).map((fc) =>
       fc.field === fieldName ? { ...fc, visible: !fc.visible } : fc
     );
     try {
@@ -136,7 +144,9 @@ export default function CardConfigsPage() {
               <Text style={{ fontSize: 13, fontWeight: '600', color: '#9ca3af', paddingHorizontal: 16, marginBottom: 8, textTransform: 'uppercase' }}>
                 自定义配置
               </Text>
-              {userConfigs.map((config) => (
+              {userConfigs.map((config) => {
+                const fieldConfigs = getFieldConfigs(config);
+                return (
                 <View key={config.uid} style={{ marginHorizontal: 16, marginBottom: 12, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
                   {/* Preview */}
                   <View style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
@@ -153,12 +163,12 @@ export default function CardConfigsPage() {
                     <Text style={{ fontSize: 12, color: '#9ca3af' }}>
                       布局: {LAYOUT_OPTIONS.find((l) => l.value === config.layout)?.label || config.layout}
                       {' · '}
-                      {config.field_configs.filter((f) => f.visible).length}/{config.field_configs.length} 字段可见
+                      {fieldConfigs.filter((f) => f.visible).length}/{fieldConfigs.length} 字段可见
                     </Text>
 
                     {/* Field toggles */}
                     <View style={{ marginTop: 10, gap: 6 }}>
-                      {config.field_configs.map((fc) => (
+                      {fieldConfigs.map((fc) => (
                         <View key={fc.field} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                           <Text style={{ fontSize: 13, color: '#6b7280' }}>{fc.field}</Text>
                           <Switch
@@ -173,7 +183,8 @@ export default function CardConfigsPage() {
                     </View>
                   </View>
                 </View>
-              ))}
+                );
+              })}
             </View>
           )}
 

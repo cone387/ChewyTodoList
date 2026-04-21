@@ -61,9 +61,12 @@ export function useAuthProvider(): AuthContextValue {
   );
 
   const logout = useCallback(async () => {
+    const refreshToken = await storage.getItem(TOKEN_KEYS.refresh);
+    try {
+      await authApi.logout(refreshToken || undefined);
+    } catch {}
     await storage.removeItem(TOKEN_KEYS.access);
     await storage.removeItem(TOKEN_KEYS.refresh);
-    try { await authApi.logout(); } catch {}
     setIsAuthenticated(false);
   }, []);
 
