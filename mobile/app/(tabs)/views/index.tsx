@@ -65,13 +65,20 @@ function ViewMeta({ view }: { view: TaskView }) {
     tags.push({ label: `按${SORT_LABELS[view.group_by] || view.group_by}分组`, color: '#065f46', bg: '#d1fae5' });
   }
   if (tags.length === 0) return null;
+  const visibleTags = tags.slice(0, 3);
+  const hiddenCount = tags.length - visibleTags.length;
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-      {tags.map((t, i) => (
+      {visibleTags.map((t, i) => (
         <View key={i} style={{ backgroundColor: t.bg, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 }}>
           <Text style={{ fontSize: 10, color: t.color, fontWeight: '500' }}>{t.label}</Text>
         </View>
       ))}
+      {hiddenCount > 0 && (
+        <View style={{ backgroundColor: '#f3f4f6', borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 }}>
+          <Text style={{ fontSize: 10, color: '#6b7280', fontWeight: '500' }}>+{hiddenCount} 条规则</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -89,9 +96,16 @@ function TemplateMeta({ filters, sorts, group_by }: { filters: ViewFilter[]; sor
   });
   if (group_by) tags.push({ label: `按${SORT_LABELS[group_by] || group_by}分组`, color: '#065f46', bg: '#d1fae5' });
   if (tags.length === 0) return null;
+  const visibleTags = tags.slice(0, 3);
+  const hiddenCount = tags.length - visibleTags.length;
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-      {tags.map((t, i) => <View key={i} style={{ backgroundColor: t.bg, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 }}><Text style={{ fontSize: 10, color: t.color, fontWeight: '500' }}>{t.label}</Text></View>)}
+      {visibleTags.map((t, i) => <View key={i} style={{ backgroundColor: t.bg, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 }}><Text style={{ fontSize: 10, color: t.color, fontWeight: '500' }}>{t.label}</Text></View>)}
+      {hiddenCount > 0 && (
+        <View style={{ backgroundColor: '#f3f4f6', borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 }}>
+          <Text style={{ fontSize: 10, color: '#6b7280', fontWeight: '500' }}>+{hiddenCount} 条规则</Text>
+        </View>
+      )}
     </View>
   );
 }

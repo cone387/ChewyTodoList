@@ -51,6 +51,19 @@ const LAYOUT_OPTIONS = [
   { label: '宽松', value: 'spacious' },
 ];
 
+const FIELD_LABELS: Record<string, string> = {
+  title: '标题',
+  priority: '优先级',
+  status: '状态',
+  tags: '标签',
+  project: '项目',
+  due_date: '截止日期',
+  start_date: '开始日期',
+  content: '内容',
+  subtasks_count: '子任务进度',
+  custom_group: '自定义分组',
+};
+
 export default function CardConfigsPage() {
   const { data: configs, isLoading } = useCardConfigs();
   const updateConfig = useUpdateCardConfig();
@@ -170,7 +183,7 @@ export default function CardConfigsPage() {
                     <View style={{ marginTop: 10, gap: 6 }}>
                       {fieldConfigs.map((fc) => (
                         <View key={fc.field} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <Text style={{ fontSize: 13, color: '#6b7280' }}>{fc.field}</Text>
+                          <Text style={{ fontSize: 13, color: '#6b7280' }}>{FIELD_LABELS[fc.field] || fc.field}</Text>
                           <Switch
                             value={fc.visible}
                             onValueChange={() => handleToggleField(config, fc.field)}

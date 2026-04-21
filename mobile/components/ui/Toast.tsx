@@ -92,8 +92,8 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismis
         left: 16,
         right: 16,
         zIndex: 9999,
+        pointerEvents: 'box-none',
       }}
-      pointerEvents="box-none"
     >
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />
