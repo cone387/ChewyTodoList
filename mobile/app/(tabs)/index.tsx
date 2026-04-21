@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   TextInput,
   PanResponder,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -32,9 +33,11 @@ import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import type { Task, TaskView, ViewSort } from '../../shared/types/index';
 import { Colors } from '../../constants/theme';
 import { ViewTypeIcons } from '../../constants/icons';
+import { useTheme } from '../../hooks/useTheme';
 
 export default function HomePage() {
   const { isOnline } = useNetworkStatus();
+  const { colors } = useTheme();
   const { data: views = [], isLoading: viewsLoading } = useNavViews();
   const [selectedViewUid, setSelectedViewUid] = useState<string | null>(null);
   const [selectedProjectUid, setSelectedProjectUid] = useState<string | null>(null);
@@ -62,13 +65,18 @@ export default function HomePage() {
     views.find((v) => v.uid === selectedViewUid) || views[0];
 
   const activeViewIndex = views.findIndex((v) => v.uid === currentView?.uid);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
 
   const switchViewByOffset = useCallback((offset: 1 | -1) => {
     if (activeViewIndex < 0) return;
     const nextIndex = activeViewIndex + offset;
     if (nextIndex < 0 || nextIndex >= views.length) return;
-    setSelectedViewUid(views[nextIndex].uid);
-  }, [activeViewIndex, views]);
+    // Animate fade out, switch, fade in
+    Animated.timing(fadeAnim, { toValue: 0, duration: 120, useNativeDriver: true }).start(() => {
+      setSelectedViewUid(views[nextIndex].uid);
+      Animated.timing(fadeAnim, { toValue: 1, duration: 180, useNativeDriver: true }).start();
+    });
+  }, [activeViewIndex, views, fadeAnim]);
 
   const swipeResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy),
@@ -205,7 +213,7 @@ export default function HomePage() {
 
   if (viewsLoading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+      <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background.secondary }}>
         <View style={{ paddingTop: 60 }}>
           <SkeletonCard />
           <SkeletonCard />
@@ -217,10 +225,10 @@ export default function HomePage() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background.secondary }}>
       <OfflineBanner visible={!isOnline} />
 
-      <View style={{ backgroundColor: '#fff', paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+      <View style={{ backgroundColor: colors.background.primary, paddingBottom: 8, borderBottomWidth: 0.5, borderBottomColor: colors.borderLight }}>
         {/* Row 1: Project dropdown centered */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, paddingTop: 12, marginBottom: 10, position: 'relative' }}>
           <ProjectSelector selectedProjectUid={selectedProjectUid} onSelect={setSelectedProjectUid} />
@@ -329,7 +337,7 @@ export default function HomePage() {
         />
       </View>
 
-      <View style={{ flex: 1 }} {...swipeResponder.panHandlers}>
+      <Animated.View style={{ flex: 1, opacity: fadeAnim }} {...swipeResponder.panHandlers}>
         {debouncedSearch ? (
           <ListView
             tasks={applyClientSideTaskTransforms(searchResults)}
@@ -346,7 +354,7 @@ export default function HomePage() {
             <Text style={{ color: '#9ca3af', fontSize: 16 }}>暂无视图</Text>
           </View>
         )}
-      </View>
+      </Animated.View>
 
       <FAB
         onPress={() => {

@@ -124,7 +124,7 @@ export default function ProjectsPage() {
   const selectedGroup = groups.find((g) => g.uid === newProjectGroupUid);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#f9fafb' }}>
       {/* Header */}
       <View style={{ backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', flexDirection: 'row', alignItems: 'center', zIndex: 10 }}>
         <View style={{ width: 32 }} />

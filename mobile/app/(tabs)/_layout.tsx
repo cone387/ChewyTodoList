@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { TabIcons } from '../../constants/icons';
-import { Colors } from '../../constants/theme';
+import { useTheme } from '../../hooks/useTheme';
 
 const TABS = [
   { name: 'index', path: '/(tabs)', title: '主页', icon: TabIcons.home },
@@ -15,6 +15,7 @@ const TABS = [
 export default function TabsLayout() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   const getIsActive = (tab: typeof TABS[number]) => {
     if (tab.name === 'index') {
@@ -24,14 +25,14 @@ export default function TabsLayout() {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background.primary }}>
       <Slot />
       <View
         style={{
           flexDirection: 'row',
-          borderTopWidth: 1,
-          borderTopColor: '#e5e7eb',
-          backgroundColor: '#ffffff',
+          borderTopWidth: 0.5,
+          borderTopColor: colors.border,
+          backgroundColor: colors.background.primary,
           paddingBottom: Platform.OS === 'ios' ? insets.bottom : 8,
           paddingTop: 8,
         }}
@@ -48,13 +49,13 @@ export default function TabsLayout() {
               <MaterialCommunityIcons
                 name={tab.icon}
                 size={24}
-                color={active ? Colors.primary : '#9ca3af'}
+                color={active ? colors.primary : colors.text.muted}
               />
               <Text
                 style={{
                   fontSize: 11,
                   marginTop: 2,
-                  color: active ? Colors.primary : '#9ca3af',
+                  color: active ? colors.primary : colors.text.muted,
                   fontWeight: active ? '600' : '400',
                 }}
               >

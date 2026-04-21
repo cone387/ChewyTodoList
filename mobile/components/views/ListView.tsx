@@ -1,28 +1,18 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback } from 'react';
 import {
   FlatList,
   View,
   Text,
   TouchableOpacity,
   ActivityIndicator,
-  Platform,
   SectionList,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { Task, TaskView, TaskCardConfig, CardFieldConfig } from '../../shared/types/index';
 import { DEFAULT_FIELD_CONFIGS, TaskCard } from '../task/TaskCard';
 import { EmptyState } from '../ui/EmptyState';
-import { useToggleTaskStatus, useDeleteTask } from '../../hooks/useTasks';
-import { useToast } from '../../hooks/useToast';
+import { useToggleTaskStatus } from '../../hooks/useTasks';
 import { Colors } from '../../constants/theme';
-
-// Conditionally import Swipeable only on native
-let Swipeable: any = null;
-if (Platform.OS !== 'web') {
-  try {
-    Swipeable = require('react-native-gesture-handler').Swipeable;
-  } catch {}
-}
 
 interface ListViewProps {
   tasks: Task[];
@@ -50,9 +40,6 @@ export const ListView: React.FC<ListViewProps> = ({
   emptyMessage = '暂无任务',
 }) => {
   const toggleStatus = useToggleTaskStatus();
-  const deleteTask = useDeleteTask();
-  const { showToast } = useToast();
-  const swipeableRefs = useRef<Map<string, any>>(new Map());
   const displaySettings = view?.view_settings || {};
 
   const effectiveCardConfig = React.useMemo<TaskCardConfig | null | undefined>(() => {
@@ -91,71 +78,10 @@ export const ListView: React.FC<ListViewProps> = ({
   }, [displaySettings, view]);
 
   const sections = React.useMemo(() => buildSections(tasks, groupBy), [tasks, groupBy]);
-  const useSections = React.useMemo(() => sections.some((section) => section.title), [sections]);
-
-  const closeSwipeable = (uid: string) => {
-    swipeableRefs.current.get(uid)?.close();
-  };
-
-  const handleComplete = (task: Task) => {
-    closeSwipeable(task.uid);
-    toggleStatus.mutate({ task });
-    showToast('success', task.is_completed ? '已取消完成' : '已标记完成');
-  };
-
-  const handleDelete = async (task: Task) => {
-    closeSwipeable(task.uid);
-    try {
-      await deleteTask.mutateAsync(task.uid);
-      showToast('success', '任务已删除');
-    } catch {
-      showToast('error', '删除失败');
-    }
-  };
-
-  const renderRightActions = useCallback((task: Task) => {
-    return (
-      <View style={{ flexDirection: 'row', alignItems: 'stretch' }}>
-        {/* Complete button */}
-        <TouchableOpacity
-          style={{
-            backgroundColor: task.is_completed ? '#f59e0b' : Colors.success,
-            justifyContent: 'center',
-            alignItems: 'center',
-            width: 72,
-          }}
-          onPress={() => handleComplete(task)}
-        >
-          <MaterialCommunityIcons
-            name={task.is_completed ? 'undo' : 'check'}
-            size={20}
-            color="#fff"
-          />
-          <Text style={{ color: '#fff', fontSize: 10, marginTop: 2 }}>
-            {task.is_completed ? '取消' : '完成'}
-          </Text>
-        </TouchableOpacity>
-
-        {/* Delete button */}
-        <TouchableOpacity
-          style={{
-            backgroundColor: '#ef4444',
-            justifyContent: 'center',
-            alignItems: 'center',
-            width: 72,
-          }}
-          onPress={() => handleDelete(task)}
-        >
-          <MaterialCommunityIcons name="delete" size={20} color="#fff" />
-          <Text style={{ color: '#fff', fontSize: 10, marginTop: 2 }}>删除</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }, []);
 
   const renderItem = useCallback(
     ({ item }: { item: Task }) => {
-      const cardContent = (
+      return (
         <View style={{ backgroundColor: '#fff' }}>
           <View style={{ position: 'relative' }}>
             <TaskCard
@@ -198,24 +124,8 @@ export const ListView: React.FC<ListViewProps> = ({
           </View>
         </View>
       );
-
-      // On web, skip Swipeable wrapper
-      if (Platform.OS === 'web' || !Swipeable) {
-        return cardContent;
-      }
-
-      return (
-        <Swipeable
-          ref={(ref: any) => { if (ref) swipeableRefs.current.set(item.uid, ref); }}
-          renderRightActions={() => renderRightActions(item)}
-          overshootRight={false}
-          friction={2}
-        >
-          {cardContent}
-        </Swipeable>
-      );
     },
-    [effectiveCardConfig, onTaskPress, toggleStatus, renderRightActions]
+    [effectiveCardConfig, onTaskPress, toggleStatus]
   );
 
   const renderFooter = useCallback(() => {
@@ -253,7 +163,7 @@ export const ListView: React.FC<ListViewProps> = ({
     );
   }, []);
 
-  if (useSections) {
+  if (sections.some((section) => section.title)) {
     return (
       <SectionList
         sections={sections}
@@ -264,7 +174,7 @@ export const ListView: React.FC<ListViewProps> = ({
         ListFooterComponent={renderFooter}
         onRefresh={onRefresh}
         refreshing={isRefreshing}
-        contentContainerStyle={{ paddingVertical: 8, flexGrow: 1 }}
+        contentContainerStyle={{ paddingTop: 4, paddingBottom: 0, flexGrow: 1 }}
         stickySectionHeadersEnabled={false}
         showsVerticalScrollIndicator={false}
       />
@@ -282,7 +192,7 @@ export const ListView: React.FC<ListViewProps> = ({
       refreshing={isRefreshing}
       onEndReached={hasMore ? onLoadMore : undefined}
       onEndReachedThreshold={0.3}
-      contentContainerStyle={{ paddingVertical: 8, flexGrow: 1 }}
+      contentContainerStyle={{ paddingTop: 4, paddingBottom: 0, flexGrow: 1 }}
       showsVerticalScrollIndicator={false}
     />
   );
