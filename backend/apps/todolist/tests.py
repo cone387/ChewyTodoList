@@ -10,7 +10,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from datetime import timedelta
 
-from .models import Tag, Group, Project, Task, ActivityLog
+from .models import Tag, Group, Project, Task, ActivityLog, TaskView
 
 User = get_user_model()
 
@@ -470,6 +470,34 @@ class TaskAPITestCase(BaseAPITestCase):
         self.assertTrue(response.data['success'])
         self.assertEqual(len(response.data['data']['results']), 5)
 
+    def test_list_tasks_excludes_subtasks_by_default(self):
+        """测试任务列表默认不返回子任务"""
+        parent_task = create_task(self.user, self.project, title="父任务")
+        subtask = create_task(self.user, self.project, title="子任务")
+        subtask.parent = parent_task
+        subtask.save(update_fields=['parent'])
+
+        response = self.client.get(self.list_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result_uids = [item['uid'] for item in response.data['data']['results']]
+        self.assertIn(parent_task.uid, result_uids)
+        self.assertNotIn(subtask.uid, result_uids)
+
+    def test_list_tasks_can_query_subtasks_by_parent(self):
+        """测试显式按父任务查询时仍可获取子任务"""
+        parent_task = create_task(self.user, self.project, title="父任务")
+        subtask = create_task(self.user, self.project, title="子任务")
+        subtask.parent = parent_task
+        subtask.save(update_fields=['parent'])
+
+        response = self.client.get(self.list_url, {'parent': parent_task.uid})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = response.data['data']['results']
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]['uid'], subtask.uid)
+
     def test_filter_tasks_by_status(self):
         """测试按状态过滤任务"""
         create_task(self.user, self.project, title="待办1", status=Task.TaskStatus.TODO)
@@ -564,6 +592,49 @@ class TaskWorkflowIntegrationTestCase(BaseAPITestCase):
         task = Task.objects.get(uid=task_uid)
         self.assertTrue(task.is_completed)
         self.assertIsNotNone(task.completed_time)
+
+
+class TaskViewTasksAPITestCase(BaseAPITestCase):
+    """视图任务接口测试"""
+
+    def setUp(self):
+        super().setUp()
+        self.project = create_project(self.user)
+        self.view = TaskView.objects.create(
+            user=self.user,
+            name="全部任务",
+            view_type=TaskView.ViewType.LIST,
+            filters=[],
+            sorts=[],
+        )
+        self.tasks_url = reverse('task-view-tasks', kwargs={'uid': self.view.uid})
+
+    def test_view_tasks_excludes_subtasks_by_default(self):
+        """测试视图任务接口默认不返回子任务"""
+        parent_task = create_task(self.user, self.project, title="父任务")
+        subtask = create_task(self.user, self.project, title="子任务")
+        subtask.parent = parent_task
+        subtask.save(update_fields=['parent'])
+
+        response = self.client.get(self.tasks_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result_uids = [item['uid'] for item in response.data['data']['results']]
+        self.assertIn(parent_task.uid, result_uids)
+        self.assertNotIn(subtask.uid, result_uids)
+
+    def test_view_tasks_applies_request_filters(self):
+        """测试视图任务接口支持额外查询参数"""
+        todo_task = create_task(self.user, self.project, title="待办任务", status=Task.TaskStatus.TODO)
+        completed_task = create_task(self.user, self.project, title="已完成任务", status=Task.TaskStatus.COMPLETED)
+
+        response = self.client.get(self.tasks_url, {'status': Task.TaskStatus.COMPLETED})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = response.data['data']['results']
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]['uid'], completed_task.uid)
+        self.assertNotEqual(results[0]['uid'], todo_task.uid)
 
 
 # =========================

@@ -35,6 +35,33 @@ from .filters import TagFilter, GroupFilter, ProjectFilter, TaskFilter, Activity
 User = get_user_model()
 
 
+def _view_filters_include_parent_scope(view_filters):
+    """Whether a saved view explicitly filters on parent/subtask scope."""
+    if not view_filters:
+        return False
+
+    for filter_rule in view_filters:
+        if not isinstance(filter_rule, dict):
+            continue
+
+        field = str(filter_rule.get('field', ''))
+        if field.startswith('parent'):
+            return True
+
+    return False
+
+
+def _should_limit_to_root_tasks(query_params, view_filters=None):
+    """Default task collections to root tasks unless subtask scope is explicit."""
+    if 'parent' in query_params or 'is_root_task' in query_params:
+        return False
+
+    if _view_filters_include_parent_scope(view_filters):
+        return False
+
+    return True
+
+
 # =========================
 # 健康检查
 # =========================
@@ -668,6 +695,15 @@ class TaskViewSet(viewsets.ModelViewSet):
             'project', 'project__group', 'parent'
         ).prefetch_related('tags', 'subtasks')
 
+    def filter_queryset(self, queryset):
+        """默认只返回根任务，除非显式查询子任务。"""
+        queryset = super().filter_queryset(queryset)
+
+        if _should_limit_to_root_tasks(self.request.query_params):
+            queryset = queryset.filter(parent__isnull=True)
+
+        return queryset
+
     def get_serializer_class(self):
         """根据动作选择序列化器"""
         if self.action == 'list':
@@ -1099,6 +1135,13 @@ class TaskViewViewSet(viewsets.ModelViewSet):
         
         # 应用筛选条件
         queryset = view.apply_filters(queryset)
+
+        # 应用请求中的额外筛选参数（项目、状态、优先级等）
+        queryset = TaskFilter(data=request.query_params, queryset=queryset).qs
+
+        # 视图页默认只展示根任务，显式查询子任务时放开限制
+        if _should_limit_to_root_tasks(request.query_params, view.filters):
+            queryset = queryset.filter(parent__isnull=True)
         
         # 应用排序规则
         queryset = view.apply_sorts(queryset)
