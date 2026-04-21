@@ -145,7 +145,7 @@ export default function ProjectDetailPage() {
       <ConfirmDialog
         visible={showDeleteConfirm}
         title="删除项目"
-        message={`确认删除项目「${project.name}」？项目下的任务不会被删除。`}
+        message={`确认删除项目「${project.name}」？若项目下仍有任务将无法删除，请先清空任务。`}
         confirmText="删除"
         destructive
         onConfirm={handleDelete}
