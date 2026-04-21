@@ -75,7 +75,8 @@ export default function HomePage() {
       show_priority: currentView.view_settings?.show_priority ?? DEFAULT_DISPLAY_SETTINGS.show_priority,
       compact_mode: currentView.view_settings?.compact_mode ?? DEFAULT_DISPLAY_SETTINGS.compact_mode,
     });
-  }, [currentView]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentView?.uid]);
 
   const projectParam =
     currentView?.follow_selected_project !== false ? selectedProjectUid : currentView?.project?.uid || null;
@@ -121,7 +122,7 @@ export default function HomePage() {
   const effectiveView = currentView ? {
     ...currentView,
     sorts: localSorts,
-    group_by: localGroupBy || undefined,
+    group_by: localGroupBy,
     view_settings: {
       ...currentView.view_settings,
       ...displaySettings,
@@ -145,7 +146,7 @@ export default function HomePage() {
 
   const handleGroupByChange = useCallback((field: string) => {
     setLocalGroupBy(field);
-    persistViewPatch({ group_by: field || undefined });
+    persistViewPatch({ group_by: field });
   }, [persistViewPatch]);
 
   const handleDisplaySettingsChange = useCallback((patch: Partial<DisplaySettings>) => {
