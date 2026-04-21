@@ -74,8 +74,16 @@ export default function RegisterPage() {
               width: 72, height: 72, borderRadius: 22,
               backgroundColor: Colors.primary,
               alignItems: 'center', justifyContent: 'center',
-              shadowColor: Colors.primary, shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.35, shadowRadius: 16, elevation: 12,
+              ...Platform.select({
+                web: { boxShadow: `0px 8px 16px ${Colors.primary}59` },
+                default: {
+                  shadowColor: Colors.primary,
+                  shadowOffset: { width: 0, height: 8 },
+                  shadowOpacity: 0.35,
+                  shadowRadius: 16,
+                  elevation: 12,
+                },
+              }),
               marginBottom: 16,
             }}>
               <Text style={{ color: '#fff', fontSize: 32, fontWeight: '700' }}>+</Text>
@@ -87,8 +95,16 @@ export default function RegisterPage() {
           {/* Form card */}
           <View style={{
             backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: 24, padding: 24,
-            shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.08, shadowRadius: 20, elevation: 8,
+            ...Platform.select({
+              web: { boxShadow: '0px 4px 20px rgba(0,0,0,0.08)' },
+              default: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 20,
+                elevation: 8,
+              },
+            }),
             borderWidth: 1, borderColor: 'rgba(255,255,255,0.5)',
           }}>
             {error ? (
@@ -178,8 +194,16 @@ export default function RegisterPage() {
                 backgroundColor: Colors.primary, borderRadius: 16, paddingVertical: 16,
                 alignItems: 'center', justifyContent: 'center',
                 flexDirection: 'row', gap: 8,
-                shadowColor: Colors.primary, shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.35, shadowRadius: 12, elevation: 8,
+                ...Platform.select({
+                  web: { boxShadow: `0px 6px 12px ${Colors.primary}59` },
+                  default: {
+                    shadowColor: Colors.primary,
+                    shadowOffset: { width: 0, height: 6 },
+                    shadowOpacity: 0.35,
+                    shadowRadius: 12,
+                    elevation: 8,
+                  },
+                }),
                 opacity: loading ? 0.7 : 1,
               }}
             >

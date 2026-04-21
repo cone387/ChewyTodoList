@@ -76,8 +76,16 @@ export default function LoginPage() {
               width: 72, height: 72, borderRadius: 22,
               backgroundColor: Colors.primary,
               alignItems: 'center', justifyContent: 'center',
-              shadowColor: Colors.primary, shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.35, shadowRadius: 16, elevation: 12,
+              ...Platform.select({
+                web: { boxShadow: `0px 8px 16px ${Colors.primary}59` },
+                default: {
+                  shadowColor: Colors.primary,
+                  shadowOffset: { width: 0, height: 8 },
+                  shadowOpacity: 0.35,
+                  shadowRadius: 16,
+                  elevation: 12,
+                },
+              }),
               marginBottom: 16,
             }}>
               <MaterialCommunityIcons name="check-bold" size={36} color="#fff" />
@@ -94,8 +102,16 @@ export default function LoginPage() {
           <View style={{
             backgroundColor: 'rgba(255,255,255,0.75)',
             borderRadius: 24, padding: 24,
-            shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.08, shadowRadius: 20, elevation: 8,
+            ...Platform.select({
+              web: { boxShadow: '0px 4px 20px rgba(0,0,0,0.08)' },
+              default: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 20,
+                elevation: 8,
+              },
+            }),
             borderWidth: 1, borderColor: 'rgba(255,255,255,0.6)',
           }}>
             {error ? (

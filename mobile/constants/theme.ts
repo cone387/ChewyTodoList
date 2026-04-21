@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 // 全局主题常量
 
 export type ThemeMode = 'light' | 'dark';
@@ -124,25 +126,34 @@ export const CardLayout = {
 };
 
 export const Shadows = {
-  low: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  medium: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  primaryMedium: {
-    shadowColor: '#8b5cf6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 8,
-  },
+  low: Platform.select({
+    web: { boxShadow: '0px 1px 4px rgba(0,0,0,0.08)' },
+    default: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.08,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+  })!,
+  medium: Platform.select({
+    web: { boxShadow: '0px 4px 12px rgba(0,0,0,0.15)' },
+    default: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 6,
+    },
+  })!,
+  primaryMedium: Platform.select({
+    web: { boxShadow: '0px 4px 12px rgba(139,92,246,0.35)' },
+    default: {
+      shadowColor: '#8b5cf6',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.35,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+  })!,
 };
