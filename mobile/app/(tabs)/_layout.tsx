@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { TabIcons } from '../../constants/icons';
 import { useTheme } from '../../hooks/useTheme';
+import { TaskModalProvider, useTaskModal } from '../../hooks/useTaskModal';
+import { TaskDetailModal } from '../../components/task/TaskDetailModal';
 
 const TABS = [
   { name: 'index', path: '/(tabs)', title: '主页', icon: TabIcons.home },
@@ -13,9 +15,18 @@ const TABS = [
 ] as const;
 
 export default function TabsLayout() {
+  return (
+    <TaskModalProvider>
+      <TabsContent />
+    </TaskModalProvider>
+  );
+}
+
+function TabsContent() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+  const { state: taskModal, closeTask } = useTaskModal();
 
   const getIsActive = (tab: typeof TABS[number]) => {
     if (tab.name === 'index') {
@@ -65,6 +76,13 @@ export default function TabsLayout() {
           );
         })}
       </View>
+
+      <TaskDetailModal
+        visible={taskModal.visible}
+        taskUid={taskModal.taskUid}
+        projectUid={taskModal.projectUid}
+        onClose={closeTask}
+      />
     </View>
   );
 }

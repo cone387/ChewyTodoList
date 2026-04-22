@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { viewApi } from '../shared/services/api';
 import type { TaskView } from '../shared/types/index';
 
@@ -45,6 +45,7 @@ export function useViewTasks(uid: string, params?: Record<string, any>) {
     },
     enabled: !!uid,
     staleTime: 1000 * 60,
+    placeholderData: keepPreviousData,
   });
 }
 

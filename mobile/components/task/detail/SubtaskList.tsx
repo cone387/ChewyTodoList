@@ -3,8 +3,8 @@ import {
   View, Text, TouchableOpacity, TextInput, Modal, TouchableWithoutFeedback,
   KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { router } from 'expo-router';
 import { useCreateTask, useToggleTaskStatus, useDeleteTask, useUpdateTask } from '../../../hooks/useTasks';
+import { useTaskModal } from '../../../hooks/useTaskModal';
 import { ProgressBar } from '../../ui/ProgressBar';
 import { ActionSheet } from '../../ui/ActionSheet';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
@@ -22,6 +22,7 @@ interface Props {
 }
 
 export const SubtaskList: React.FC<Props> = ({ parentTask, subtasks, onRefresh }) => {
+  const { openTask: openSubtask } = useTaskModal();
   const createTask = useCreateTask();
   const toggleStatus = useToggleTaskStatus();
   const deleteTask = useDeleteTask();
@@ -173,7 +174,7 @@ export const SubtaskList: React.FC<Props> = ({ parentTask, subtasks, onRefresh }
         { label: '快速编辑', value: 'edit', icon: '✏️' },
         { label: '删除', value: 'del', icon: '🗑', color: '#ef4444', destructive: true },
       ]} onSelect={(o) => {
-        if (o.value === 'view' && selTask) router.push(`/task/${selTask.uid}`);
+        if (o.value === 'view' && selTask) openSubtask(selTask.uid);
         else if (o.value === 'edit' && selTask) openQuickEdit(selTask);
         else if (o.value === 'del') setShowDel(true);
         setShowAct(false);

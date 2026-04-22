@@ -15,6 +15,7 @@ import { FAB } from '../../../components/ui/FAB';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { useToast } from '../../../hooks/useToast';
 import { Colors } from '../../../constants/theme';
+import { useTaskModal } from '../../../hooks/useTaskModal';
 import type { Task } from '../../../shared/types/index';
 
 export default function ProjectDetailPage() {
@@ -23,6 +24,7 @@ export default function ProjectDetailPage() {
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
   const { showToast } = useToast();
+  const { openTask, openCreateTask } = useTaskModal();
 
   const { data: taskData, isLoading: tasksLoading, refetch, isRefetching } = useTasks({ project: uid });
 
@@ -33,8 +35,8 @@ export default function ProjectDetailPage() {
   const tasks = taskData?.results || [];
 
   const handleTaskPress = useCallback((task: Task) => {
-    router.push(`/task/${task.uid}`);
-  }, []);
+    openTask(task.uid);
+  }, [openTask]);
 
   const handleSaveName = async () => {
     if (!project || !editName.trim()) return;
@@ -133,7 +135,7 @@ export default function ProjectDetailPage() {
         />
       </View>
 
-      <FAB onPress={() => router.push(`/task/create?project_uid=${uid}` as any)} />
+      <FAB onPress={() => openCreateTask(uid)} />
 
       <ConfirmDialog
         visible={showDeleteConfirm}

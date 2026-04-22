@@ -35,10 +35,12 @@ import type { Task, TaskView, ViewSort } from '../../shared/types/index';
 import { Colors } from '../../constants/theme';
 import { ViewTypeIcons } from '../../constants/icons';
 import { useTheme } from '../../hooks/useTheme';
+import { useTaskModal } from '../../hooks/useTaskModal';
 
 export default function HomePage() {
   const { isOnline } = useNetworkStatus();
   const { colors } = useTheme();
+  const { openTask, openCreateTask } = useTaskModal();
   const queryClient = useQueryClient();
   const { data: views = [], isLoading: viewsLoading } = useNavViews();
   const [selectedViewUid, setSelectedViewUid] = useState<string | null>(null);
@@ -67,27 +69,19 @@ export default function HomePage() {
     views.find((v) => v.uid === selectedViewUid) || views[0];
 
   const activeViewIndex = views.findIndex((v) => v.uid === currentView?.uid);
-  const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
   const switchViewByOffset = useCallback((offset: 1 | -1) => {
     if (activeViewIndex < 0) return;
     const nextIndex = activeViewIndex + offset;
     if (nextIndex < 0 || nextIndex >= views.length) return;
-    // Slide out in direction of swipe + fade
-    Animated.parallel([
-      Animated.timing(slideAnim, { toValue: offset * -30, duration: 150, useNativeDriver: true }),
-      Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
-    ]).start(() => {
+    // Quick fade out
+    Animated.timing(fadeAnim, { toValue: 0, duration: 120, useNativeDriver: true }).start(() => {
       setSelectedViewUid(views[nextIndex].uid);
-      // Reset position to opposite side and slide in
-      slideAnim.setValue(offset * 30);
-      Animated.parallel([
-        Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, tension: 80, friction: 12 }),
-        Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
-      ]).start();
+      // Fade in
+      Animated.timing(fadeAnim, { toValue: 1, duration: 180, useNativeDriver: true }).start();
     });
-  }, [activeViewIndex, views, slideAnim, fadeAnim]);
+  }, [activeViewIndex, views, fadeAnim]);
 
   const swipeResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy),
@@ -121,10 +115,16 @@ export default function HomePage() {
   const viewQueryParams: Record<string, any> = {};
   if (projectParam) viewQueryParams.project = projectParam;
 
-  const { data: taskData, isLoading: tasksLoading, refetch, isRefetching } = useViewTasks(
+  const { data: taskData, isLoading: tasksLoading, refetch } = useViewTasks(
     currentView?.uid || '',
     Object.keys(viewQueryParams).length > 0 ? viewQueryParams : undefined
   );
+  // Track manual pull-to-refresh separately so background refetches don't flash the spinner
+  const [manualRefreshing, setManualRefreshing] = useState(false);
+  const handleManualRefresh = useCallback(() => {
+    setManualRefreshing(true);
+    refetch().finally(() => setManualRefreshing(false));
+  }, [refetch]);
 
   const sortField = localSorts[0]?.field || '';
   const sortDirection = localSorts[0]?.direction || 'desc';
@@ -168,8 +168,8 @@ export default function HomePage() {
   const handleTaskPress = useCallback((task: Task) => {
     // Pre-fill task cache to avoid loading spinner on detail page
     queryClient.setQueryData(['task', task.uid], task);
-    router.push(`/task/${task.uid}`);
-  }, [queryClient]);
+    openTask(task.uid);
+  }, [queryClient, openTask]);
 
   const persistViewPatch = useCallback((patch: Partial<TaskView>) => {
     if (!currentView) return;
@@ -195,12 +195,20 @@ export default function HomePage() {
     });
   }, [currentView, persistViewPatch]);
 
+  const handleViewTabPress = useCallback((viewUid: string) => {
+    if (viewUid === currentView?.uid) return;
+    Animated.timing(fadeAnim, { toValue: 0, duration: 120, useNativeDriver: true }).start(() => {
+      setSelectedViewUid(viewUid);
+      Animated.timing(fadeAnim, { toValue: 1, duration: 180, useNativeDriver: true }).start();
+    });
+  }, [currentView?.uid, fadeAnim]);
+
   const viewProps = {
     tasks,
     view: effectiveView,
     onTaskPress: handleTaskPress,
-    onRefresh: () => refetch(),
-    isRefreshing: isRefetching,
+    onRefresh: handleManualRefresh,
+    isRefreshing: manualRefreshing,
     isLoading: tasksLoading,
     emptyMessage: '这个视图暂无任务',
   };
@@ -297,7 +305,7 @@ export default function HomePage() {
                       flexDirection: 'row', alignItems: 'center', gap: 4,
                       backgroundColor: isActive ? Colors.primary : '#f3f4f6',
                     }}
-                    onPress={() => setSelectedViewUid(view.uid)}
+                    onPress={() => handleViewTabPress(view.uid)}
                   >
                     <MaterialCommunityIcons name={iconName} size={14} color={isActive ? '#fff' : '#6b7280'} />
                     <Text style={{
@@ -350,7 +358,7 @@ export default function HomePage() {
         />
       </View>
 
-      <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ translateX: slideAnim }] }} {...swipeResponder.panHandlers}>
+      <Animated.View style={{ flex: 1, opacity: fadeAnim }} {...swipeResponder.panHandlers}>
         {debouncedSearch ? (
           <ListView
             tasks={applyClientSideTaskTransforms(searchResults)}
@@ -371,8 +379,7 @@ export default function HomePage() {
 
       <FAB
         onPress={() => {
-          const query = selectedProjectUid ? `?project_uid=${selectedProjectUid}` : '';
-          router.push(`/task/create${query}` as any);
+          openCreateTask(selectedProjectUid || undefined);
         }}
       />
     </SafeAreaView>
