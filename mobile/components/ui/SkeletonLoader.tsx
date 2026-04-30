@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Animated, ViewStyle, Platform } from 'react-native';
+import { useTheme } from '../../hooks/useTheme';
 
 interface SkeletonLoaderProps {
   width?: number | string;
@@ -42,7 +43,7 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
           width: width as any,
           height,
           borderRadius,
-          backgroundColor: '#e5e7eb',
+          backgroundColor: '#d1d5db',
           opacity,
         },
         style,
@@ -53,11 +54,12 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
 
 /** Approximates a TaskCard skeleton */
 export const SkeletonCard: React.FC<{ style?: ViewStyle }> = ({ style }) => {
+  const { colors } = useTheme();
   return (
     <View
       style={[
         {
-          backgroundColor: '#fff',
+          backgroundColor: colors.card,
           borderRadius: 10,
           padding: 12,
           marginHorizontal: 16,
@@ -80,6 +82,7 @@ export const SkeletonCard: React.FC<{ style?: ViewStyle }> = ({ style }) => {
 
 /** Approximates a list item skeleton (icon circle + two text bars) */
 export const SkeletonListItem: React.FC<{ style?: ViewStyle }> = ({ style }) => {
+  const { colors } = useTheme();
   return (
     <View
       style={[
@@ -88,7 +91,7 @@ export const SkeletonListItem: React.FC<{ style?: ViewStyle }> = ({ style }) => 
           alignItems: 'center',
           paddingHorizontal: 16,
           paddingVertical: 14,
-          backgroundColor: '#fff',
+          backgroundColor: colors.card,
           gap: 12,
         },
         style,

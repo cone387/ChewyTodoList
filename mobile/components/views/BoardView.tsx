@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import type { Task, TaskView } from '../../shared/types/index';
 import { TaskStatus, TaskPriority } from '../../shared/types/index';
+import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
 
 interface BoardViewProps {
@@ -31,7 +32,7 @@ const PRIORITY_COLUMNS = [
   { priority: TaskPriority.LOW, label: '低', color: '#94a3b8', bg: '#f8fafc' },
   { priority: TaskPriority.MEDIUM, label: '中', color: '#f59e0b', bg: '#fffbeb' },
   { priority: TaskPriority.HIGH, label: '高', color: '#f97316', bg: '#fff7ed' },
-  { priority: TaskPriority.URGENT, label: '紧急', color: '#ef4444', bg: '#fef2f2' },
+  { priority: TaskPriority.URGENT, label: '紧急', color: colors.error, bg: '#fef2f2' },
 ];
 
 const PRIORITY_COLORS: Record<number, string> = {
@@ -50,6 +51,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
   isLoading = false,
   emptyMessage = '暂无任务',
 }) => {
+  const { colors } = useTheme();
   const displaySettings = view?.view_settings || {};
   const showPriority = displaySettings.show_priority ?? true;
   const showDueDate = displaySettings.show_due_date ?? true;
@@ -174,12 +176,12 @@ export const BoardView: React.FC<BoardViewProps> = ({
     <TouchableOpacity
       key={task.uid}
       style={{
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         borderRadius: 10,
         padding: 12,
         marginBottom: 8,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         opacity: task.is_completed ? 0.6 : 1,
       }}
       onPress={() => onTaskPress(task)}
@@ -189,7 +191,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
         style={{
           fontSize: 14,
           fontWeight: '500',
-          color: '#111418',
+          color: colors.text.primary,
           textDecorationLine: task.is_completed ? 'line-through' : 'none',
           marginBottom: 6,
         }}
@@ -226,7 +228,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
             </View>
           ))}
           {task.tags.length > 2 && (
-            <Text style={{ fontSize: 10, color: '#9ca3af' }}>+{task.tags.length - 2}</Text>
+            <Text style={{ fontSize: 10, color: colors.text.muted }}>+{task.tags.length - 2}</Text>
           )}
         </View>
       )}
@@ -237,13 +239,13 @@ export const BoardView: React.FC<BoardViewProps> = ({
           <View style={{ flex: 1, height: 3, backgroundColor: '#e5e7eb', borderRadius: 2 }}>
             <View style={{ width: `${(task.completed_subtasks_count / task.subtasks_count) * 100}%`, height: 3, backgroundColor: Colors.primary, borderRadius: 2 }} />
           </View>
-          <Text style={{ fontSize: 10, color: '#9ca3af' }}>{task.completed_subtasks_count}/{task.subtasks_count}</Text>
+          <Text style={{ fontSize: 10, color: colors.text.muted }}>{task.completed_subtasks_count}/{task.subtasks_count}</Text>
         </View>
       )}
 
       {/* Project */}
       {showProject && task.project && (
-        <Text style={{ fontSize: 10, color: '#9ca3af', marginTop: 4 }}>📁 {task.project.name}</Text>
+        <Text style={{ fontSize: 10, color: colors.text.muted, marginTop: 4 }}>📁 {task.project.name}</Text>
       )}
     </TouchableOpacity>
   ), [onTaskPress]);
@@ -252,7 +254,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 60 }}>
         <Text style={{ fontSize: 36, marginBottom: 8 }}>⊞</Text>
-        <Text style={{ color: '#9ca3af', fontSize: 14 }}>{emptyMessage}</Text>
+        <Text style={{ color: colors.text.muted, fontSize: 14 }}>{emptyMessage}</Text>
       </View>
     );
   }
@@ -273,7 +275,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: col.color }} />
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151' }}>{col.label}</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>{col.label}</Text>
                 </View>
                 <View style={{ backgroundColor: col.color, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
                   <Text style={{ color: '#fff', fontSize: 11, fontWeight: '600' }}>{colTasks.length}</Text>
@@ -285,7 +287,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
             <ScrollView style={{ maxHeight: 500 }} contentContainerStyle={{ padding: 10 }} nestedScrollEnabled>
               {colTasks.length === 0 ? (
                 <View style={{ alignItems: 'center', paddingVertical: 24 }}>
-                  <Text style={{ color: '#d1d5db', fontSize: 12 }}>暂无任务</Text>
+                  <Text style={{ color: colors.text.muted, fontSize: 12 }}>暂无任务</Text>
                 </View>
               ) : (
                 colTasks.map(renderCard)

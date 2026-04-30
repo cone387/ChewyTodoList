@@ -14,6 +14,7 @@ import { viewApi } from '../../../shared/services/api';
 import { useProjects } from '../../../hooks/useProjects';
 import { ActionSheet } from '../../../components/ui/ActionSheet';
 import { useToast } from '../../../hooks/useToast';
+import { useTheme } from '../../../hooks/useTheme';
 import { Colors } from '../../../constants/theme';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Project, ViewFilter, ViewSort } from '../../../shared/types/index';
@@ -29,6 +30,7 @@ const VIEW_TYPES = [
 ];
 
 export default function CreateViewPage() {
+  const { colors } = useTheme();
   const { data: projectsData } = useProjects();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
@@ -75,14 +77,14 @@ export default function CreateViewPage() {
   };
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background.secondary }}>
       {/* Header */}
-      <View style={{ backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', flexDirection: 'row', alignItems: 'center' }}>
+      <View style={{ backgroundColor: colors.card, paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', alignItems: 'center' }}>
         <TouchableOpacity onPress={() => router.back()} style={{ padding: 6 }}>
           <Text style={{ color: Colors.primary, fontSize: 16 }}>取消</Text>
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ fontSize: 17, fontWeight: '600', color: '#111418' }}>新建视图</Text>
+          <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text.primary }}>新建视图</Text>
         </View>
         <TouchableOpacity
           onPress={handleCreate}
@@ -100,11 +102,11 @@ export default function CreateViewPage() {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 }}>
         {/* Name */}
         <View style={{ marginTop: 16, marginHorizontal: 16 }}>
-          <Text style={{ fontSize: 13, fontWeight: '600', color: '#9ca3af', marginBottom: 8 }}>视图名称</Text>
+          <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text.muted, marginBottom: 8 }}>视图名称</Text>
           <TextInput
-            style={{ backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: '#111418', borderWidth: 1, borderColor: '#e5e7eb' }}
+            style={{ backgroundColor: colors.card, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: colors.text.primary, borderWidth: 1, borderColor: colors.border }}
             placeholder="输入视图名称"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={colors.text.muted}
             value={name}
             onChangeText={setName}
             autoFocus
@@ -113,7 +115,7 @@ export default function CreateViewPage() {
 
         {/* View type */}
         <View style={{ marginTop: 20, marginHorizontal: 16 }}>
-          <Text style={{ fontSize: 13, fontWeight: '600', color: '#9ca3af', marginBottom: 8 }}>视图类型</Text>
+          <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text.muted, marginBottom: 8 }}>视图类型</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {VIEW_TYPES.map((vt) => (
               <TouchableOpacity
@@ -138,32 +140,32 @@ export default function CreateViewPage() {
 
         {/* Project */}
         <View style={{ marginTop: 20, marginHorizontal: 16 }}>
-          <Text style={{ fontSize: 13, fontWeight: '600', color: '#9ca3af', marginBottom: 8 }}>关联项目（可选）</Text>
+          <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text.muted, marginBottom: 8 }}>关联项目（可选）</Text>
           <TouchableOpacity
-            style={{ backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: '#e5e7eb', flexDirection: 'row', alignItems: 'center' }}
+            style={{ backgroundColor: colors.card, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center' }}
             onPress={() => setShowProjectPicker(true)}
           >
             <Text style={{ flex: 1, fontSize: 14, color: followSelectedProject ? Colors.primary : (selectedProject ? '#374151' : '#9ca3af') }}>
               {followSelectedProject ? '跟随主页选择（默认）' : (selectedProject ? selectedProject.name : '不关联项目')}
             </Text>
-            <Text style={{ color: '#9ca3af' }}>▼</Text>
+            <Text style={{ color: colors.text.muted }}>▼</Text>
           </TouchableOpacity>
         </View>
 
         {/* Filters */}
         <View style={{ marginTop: 20, marginHorizontal: 16 }}>
-          <Text style={{ fontSize: 13, fontWeight: '600', color: '#9ca3af', marginBottom: 8 }}>筛选条件</Text>
-          <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e5e7eb' }}>
+          <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text.muted, marginBottom: 8 }}>筛选条件</Text>
+          <View style={{ backgroundColor: colors.card, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: colors.border }}>
             <FilterBuilder filters={filters} onChange={setFilters} />
           </View>
         </View>
 
         {/* Settings */}
-        <View style={{ marginTop: 20, marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+        <View style={{ marginTop: 20, marginHorizontal: 16, backgroundColor: colors.card, borderRadius: 12, overflow: 'hidden' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 15, color: '#374151' }}>显示在导航栏</Text>
-              <Text style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>在主页视图切换栏中显示</Text>
+              <Text style={{ fontSize: 15, color: colors.text.secondary }}>显示在导航栏</Text>
+              <Text style={{ fontSize: 12, color: colors.text.muted, marginTop: 2 }}>在主页视图切换栏中显示</Text>
             </View>
             <Switch
               value={isVisibleInNav}

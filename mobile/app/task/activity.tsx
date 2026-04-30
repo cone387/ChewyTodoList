@@ -5,15 +5,16 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { activityApi } from '../../shared/services/api';
+import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
 import type { ActivityLog } from '../../shared/types/index';
 
 const ICONS: Record<string, { icon: string; color: string; bg: string }> = {
-  created: { icon: 'plus-circle', color: '#6b7280', bg: '#f3f4f6' },
+  created: { icon: 'plus-circle', color: colors.text.secondary, bg: '#f3f4f6' },
   updated: { icon: 'pencil', color: '#3b82f6', bg: '#eff6ff' },
   status_changed: { icon: 'swap-horizontal', color: '#8b5cf6', bg: '#f3f0ff' },
   completed: { icon: 'check-circle', color: '#22c55e', bg: '#f0fdf4' },
-  deleted: { icon: 'delete', color: '#ef4444', bg: '#fef2f2' },
+  deleted: { icon: 'delete', color: colors.error, bg: '#fef2f2' },
 };
 
 function fmtTime(s: string): string {
@@ -31,6 +32,7 @@ function fmtTime(s: string): string {
 }
 
 export default function ActivityLogPage() {
+  const { colors } = useTheme();
   const params = useLocalSearchParams<{ uid: string }>();
   const uid = params.uid;
 
@@ -46,13 +48,13 @@ export default function ActivityLogPage() {
   const logs: ActivityLog[] = data || [];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb' }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 8, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background.secondary }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 8, backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
         <TouchableOpacity onPress={() => router.back()} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
           <MaterialCommunityIcons name="arrow-left" size={22} color={Colors.primary} />
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ fontSize: 16, fontWeight: '600', color: '#111418' }}>活动日志</Text>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary }}>活动日志</Text>
         </View>
         <View style={{ width: 40 }} />
       </View>
@@ -69,7 +71,7 @@ export default function ActivityLogPage() {
           ListEmptyComponent={
             <View style={{ alignItems: 'center', paddingVertical: 40 }}>
               <MaterialCommunityIcons name="history" size={48} color="#d1d5db" />
-              <Text style={{ color: '#9ca3af', fontSize: 14, marginTop: 12 }}>暂无活动记录</Text>
+              <Text style={{ color: colors.text.muted, fontSize: 14, marginTop: 12 }}>暂无活动记录</Text>
             </View>
           }
           renderItem={({ item, index }) => {
@@ -85,9 +87,9 @@ export default function ActivityLogPage() {
                 </View>
                 {/* Content */}
                 <View style={{ flex: 1, paddingTop: 4 }}>
-                  <Text style={{ fontSize: 14, color: '#374151', fontWeight: '500' }}>{item.action_display}</Text>
-                  {item.detail ? <Text style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>{item.detail}</Text> : null}
-                  <Text style={{ fontSize: 12, color: '#9ca3af', marginTop: 4 }}>{fmtTime(item.created_at)}</Text>
+                  <Text style={{ fontSize: 14, color: colors.text.secondary, fontWeight: '500' }}>{item.action_display}</Text>
+                  {item.detail ? <Text style={{ fontSize: 13, color: colors.text.secondary, marginTop: 2 }}>{item.detail}</Text> : null}
+                  <Text style={{ fontSize: 12, color: colors.text.muted, marginTop: 4 }}>{fmtTime(item.created_at)}</Text>
                 </View>
               </View>
             );

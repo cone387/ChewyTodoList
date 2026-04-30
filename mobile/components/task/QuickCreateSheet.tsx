@@ -15,6 +15,7 @@ import {
 import { useCreateTask } from '../../hooks/useTasks';
 import { useProjects } from '../../hooks/useProjects';
 import { useToast } from '../../hooks/useToast';
+import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
 import { TaskPriority } from '../../shared/types/index';
 import type { Project } from '../../shared/types/index';
@@ -37,6 +38,7 @@ export const QuickCreateSheet: React.FC<QuickCreateSheetProps> = ({
   onClose,
   defaultProjectUid,
 }) => {
+  const { colors } = useTheme();
   const slideAnim = useRef(new Animated.Value(400)).current;
   const titleRef = useRef<TextInput>(null);
   const createTask = useCreateTask();
@@ -107,7 +109,7 @@ export const QuickCreateSheet: React.FC<QuickCreateSheetProps> = ({
               <Animated.View
                 style={{
                   transform: [{ translateY: slideAnim }],
-                  backgroundColor: '#fff',
+                  backgroundColor: colors.card,
                   borderTopLeftRadius: 20,
                   borderTopRightRadius: 20,
                   paddingBottom: 34,
@@ -119,7 +121,7 @@ export const QuickCreateSheet: React.FC<QuickCreateSheetProps> = ({
                 </View>
 
                 <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
-                  <Text style={{ fontSize: 18, fontWeight: '600', color: '#111418', marginBottom: 16 }}>
+                  <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text.primary, marginBottom: 16 }}>
                     快速创建任务
                   </Text>
 
@@ -128,23 +130,23 @@ export const QuickCreateSheet: React.FC<QuickCreateSheetProps> = ({
                     ref={titleRef}
                     style={{
                       fontSize: 16,
-                      color: '#111418',
+                      color: colors.text.primary,
                       borderWidth: 1,
                       borderColor: titleError ? '#ef4444' : '#e5e7eb',
                       borderRadius: 12,
                       paddingHorizontal: 14,
                       paddingVertical: 12,
-                      backgroundColor: '#f9fafb',
+                      backgroundColor: colors.background.secondary,
                     }}
                     placeholder="任务标题"
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={colors.text.muted}
                     value={title}
                     onChangeText={(t) => { setTitle(t); if (titleError) setTitleError(''); }}
                     returnKeyType="done"
                     onSubmitEditing={handleSubmit}
                   />
                   {titleError ? (
-                    <Text style={{ color: '#ef4444', fontSize: 12, marginTop: 4, marginLeft: 4 }}>{titleError}</Text>
+                    <Text style={{ color: colors.error, fontSize: 12, marginTop: 4, marginLeft: 4 }}>{titleError}</Text>
                   ) : null}
 
                   {/* Project selector */}
@@ -155,27 +157,27 @@ export const QuickCreateSheet: React.FC<QuickCreateSheetProps> = ({
                       marginTop: 12,
                       paddingHorizontal: 14,
                       paddingVertical: 10,
-                      backgroundColor: '#f9fafb',
+                      backgroundColor: colors.background.secondary,
                       borderRadius: 12,
                       borderWidth: 1,
-                      borderColor: '#e5e7eb',
+                      borderColor: colors.border,
                     }}
                     onPress={() => setShowProjectPicker(!showProjectPicker)}
                   >
-                    <Text style={{ color: '#9ca3af', fontSize: 14, marginRight: 8 }}>📁</Text>
+                    <Text style={{ color: colors.text.muted, fontSize: 14, marginRight: 8 }}>📁</Text>
                     <Text style={{ flex: 1, fontSize: 14, color: selectedProject ? '#374151' : '#9ca3af' }}>
                       {selectedProject ? selectedProject.name : '选择项目（可选）'}
                     </Text>
-                    <Text style={{ color: '#9ca3af' }}>{showProjectPicker ? '▲' : '▼'}</Text>
+                    <Text style={{ color: colors.text.muted }}>{showProjectPicker ? '▲' : '▼'}</Text>
                   </TouchableOpacity>
 
                   {showProjectPicker && (
-                    <ScrollView style={{ maxHeight: 150, marginTop: 4, borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, backgroundColor: '#fff' }}>
+                    <ScrollView style={{ maxHeight: 150, marginTop: 4, borderWidth: 1, borderColor: colors.border, borderRadius: 12, backgroundColor: colors.card }}>
                       <TouchableOpacity
-                        style={{ paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}
+                        style={{ paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}
                         onPress={() => { setSelectedProjectUid(null); setShowProjectPicker(false); }}
                       >
-                        <Text style={{ fontSize: 14, color: '#9ca3af' }}>不选择项目</Text>
+                        <Text style={{ fontSize: 14, color: colors.text.muted }}>不选择项目</Text>
                       </TouchableOpacity>
                       {projects.map((p: Project) => (
                         <TouchableOpacity
@@ -184,13 +186,13 @@ export const QuickCreateSheet: React.FC<QuickCreateSheetProps> = ({
                             paddingHorizontal: 14,
                             paddingVertical: 10,
                             borderBottomWidth: 1,
-                            borderBottomColor: '#f3f4f6',
+                            borderBottomColor: colors.borderLight,
                             backgroundColor: p.uid === selectedProjectUid ? '#f3f0ff' : '#fff',
                           }}
                           onPress={() => { setSelectedProjectUid(p.uid); setShowProjectPicker(false); }}
                         >
-                          <Text style={{ fontSize: 14, color: '#374151' }}>{p.name}</Text>
-                          <Text style={{ fontSize: 12, color: '#9ca3af' }}>{p.group?.name}</Text>
+                          <Text style={{ fontSize: 14, color: colors.text.secondary }}>{p.name}</Text>
+                          <Text style={{ fontSize: 12, color: colors.text.muted }}>{p.group?.name}</Text>
                         </TouchableOpacity>
                       ))}
                     </ScrollView>
@@ -198,7 +200,7 @@ export const QuickCreateSheet: React.FC<QuickCreateSheetProps> = ({
 
                   {/* Priority selector */}
                   <View style={{ marginTop: 12 }}>
-                    <Text style={{ fontSize: 13, color: '#6b7280', marginBottom: 8 }}>优先级</Text>
+                    <Text style={{ fontSize: 13, color: colors.text.secondary, marginBottom: 8 }}>优先级</Text>
                     <View style={{ flexDirection: 'row', gap: 8 }}>
                       {PRIORITY_OPTIONS.map((opt) => (
                         <TouchableOpacity

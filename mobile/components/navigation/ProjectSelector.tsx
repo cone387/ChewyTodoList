@@ -11,6 +11,7 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { Project } from '../../shared/types/index';
 import { useProjects } from '../../hooks/useProjects';
+import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
 
 interface ProjectSelectorProps {
@@ -22,6 +23,7 @@ export const ProjectSelector: React.FC<ProjectSelectorProps> = ({
   selectedProjectUid,
   onSelect,
 }) => {
+  const { colors } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
   const [search, setSearch] = useState('');
   const { data: projects = [] } = useProjects();
@@ -44,7 +46,7 @@ export const ProjectSelector: React.FC<ProjectSelectorProps> = ({
         }}
         onPress={() => setModalVisible(true)}
       >
-        <Text style={{ fontSize: 20, fontWeight: '700', color: '#111418' }} numberOfLines={1}>
+        <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text.primary }} numberOfLines={1}>
           {label}
         </Text>
         <MaterialCommunityIcons name="chevron-down" size={20} color="#9ca3af" />
@@ -55,7 +57,7 @@ export const ProjectSelector: React.FC<ProjectSelectorProps> = ({
           <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}>
             <TouchableWithoutFeedback>
               <View style={{
-                backgroundColor: '#fff',
+                backgroundColor: colors.card,
                 borderTopLeftRadius: 20, borderTopRightRadius: 20,
                 maxHeight: '60%', paddingBottom: 34,
               }}>
@@ -64,17 +66,17 @@ export const ProjectSelector: React.FC<ProjectSelectorProps> = ({
                 </View>
 
                 <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8 }}>
-                  <Text style={{ fontSize: 16, fontWeight: '600', color: '#111418', marginBottom: 12 }}>选择项目</Text>
+                  <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary, marginBottom: 12 }}>选择项目</Text>
                   <View style={{
                     flexDirection: 'row', alignItems: 'center',
-                    backgroundColor: '#f3f4f6', borderRadius: 12,
+                    backgroundColor: colors.background.tertiary, borderRadius: 12,
                     paddingHorizontal: 12, height: 40,
                   }}>
                     <MaterialCommunityIcons name="magnify" size={18} color="#9ca3af" />
                     <TextInput
-                      style={{ flex: 1, fontSize: 14, color: '#111418', paddingVertical: 0, marginLeft: 8 }}
+                      style={{ flex: 1, fontSize: 14, color: colors.text.primary, paddingVertical: 0, marginLeft: 8 }}
                       placeholder="搜索项目..."
-                      placeholderTextColor="#9ca3af"
+                      placeholderTextColor={colors.text.muted}
                       value={search}
                       onChangeText={setSearch}
                     />
@@ -124,11 +126,11 @@ export const ProjectSelector: React.FC<ProjectSelectorProps> = ({
                 <TouchableOpacity
                   style={{
                     marginHorizontal: 16, paddingVertical: 14,
-                    backgroundColor: '#f3f4f6', borderRadius: 12, alignItems: 'center',
+                    backgroundColor: colors.background.tertiary, borderRadius: 12, alignItems: 'center',
                   }}
                   onPress={() => { setModalVisible(false); setSearch(''); }}
                 >
-                  <Text style={{ fontSize: 15, fontWeight: '500', color: '#6b7280' }}>取消</Text>
+                  <Text style={{ fontSize: 15, fontWeight: '500', color: colors.text.secondary }}>取消</Text>
                 </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>

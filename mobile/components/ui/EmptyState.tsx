@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
 
 interface EmptyStateProps {
@@ -23,14 +24,15 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   description,
   action,
 }) => {
+  const { colors } = useTheme();
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 60, paddingHorizontal: 24 }}>
       <MaterialCommunityIcons name={icon} size={iconSize} color={iconColor} />
-      <Text style={{ fontSize: 16, color: '#9ca3af', marginTop: 12, textAlign: 'center' }}>
+      <Text style={{ fontSize: 16, color: colors.text.muted, marginTop: 12, textAlign: 'center' }}>
         {message}
       </Text>
       {description ? (
-        <Text style={{ fontSize: 13, color: '#d1d5db', marginTop: 4, textAlign: 'center' }}>
+        <Text style={{ fontSize: 13, color: colors.text.muted, marginTop: 4, textAlign: 'center' }}>
           {description}
         </Text>
       ) : null}

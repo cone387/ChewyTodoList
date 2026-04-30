@@ -20,6 +20,7 @@ import {
 } from '../../../data/viewTemplates';
 import type { ViewTemplate } from '../../../data/viewTemplates';
 import { useToast } from '../../../hooks/useToast';
+import { useTheme } from '../../../hooks/useTheme';
 import { Colors } from '../../../constants/theme';
 
 function renderStars(rating: number): string {
@@ -29,6 +30,7 @@ function renderStars(rating: number): string {
 }
 
 export default function ViewTemplateMarketPage() {
+  const { colors } = useTheme();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
 
@@ -86,7 +88,7 @@ export default function ViewTemplateMarketPage() {
     <View
       key={template.id}
       style={{
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         borderRadius: 14,
         overflow: 'hidden',
         borderWidth: isRecommended ? 2 : 1,
@@ -95,23 +97,23 @@ export default function ViewTemplateMarketPage() {
       }}
     >
       {/* Preview header */}
-      <View style={{ backgroundColor: '#f9fafb', paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+      <View style={{ backgroundColor: colors.background.secondary, paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <Text style={{ fontSize: 28 }}>{template.icon}</Text>
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={{ fontSize: 16, fontWeight: '600', color: '#111418' }}>{template.name}</Text>
+            <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary }}>{template.name}</Text>
             {isRecommended && (
               <View style={{ backgroundColor: Colors.primary, borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2 }}>
                 <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700' }}>推荐</Text>
               </View>
             )}
           </View>
-          <Text style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }} numberOfLines={2}>{template.description}</Text>
+          <Text style={{ fontSize: 12, color: colors.text.muted, marginTop: 2 }} numberOfLines={2}>{template.description}</Text>
         </View>
       </View>
 
       {/* Meta row */}
-      <View style={{ paddingHorizontal: 14, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 8, borderTopWidth: 1, borderTopColor: '#f3f4f6' }}>
+      <View style={{ paddingHorizontal: 14, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 8, borderTopWidth: 1, borderTopColor: colors.borderLight }}>
         {/* View type badge */}
         <View style={{ backgroundColor: '#f3f0ff', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           <Text style={{ fontSize: 12 }}>{getViewTypeIcon(template.view_type)}</Text>
@@ -122,7 +124,7 @@ export default function ViewTemplateMarketPage() {
         <Text style={{ fontSize: 11, color: '#f59e0b' }}>★ {template.rating}</Text>
 
         {/* Usage */}
-        <Text style={{ fontSize: 11, color: '#9ca3af' }}>{template.usage_count} 次使用</Text>
+        <Text style={{ fontSize: 11, color: colors.text.muted }}>{template.usage_count} 次使用</Text>
 
         <View style={{ flex: 1 }} />
 
@@ -149,8 +151,8 @@ export default function ViewTemplateMarketPage() {
       {/* Tags */}
       <View style={{ paddingHorizontal: 14, paddingBottom: 10, flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
         {template.tags.map((tag) => (
-          <View key={tag} style={{ backgroundColor: '#f3f4f6', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
-            <Text style={{ fontSize: 10, color: '#6b7280' }}>{tag}</Text>
+          <View key={tag} style={{ backgroundColor: colors.background.tertiary, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
+            <Text style={{ fontSize: 10, color: colors.text.secondary }}>{tag}</Text>
           </View>
         ))}
         {/* Filter/sort count */}
@@ -169,14 +171,14 @@ export default function ViewTemplateMarketPage() {
   );
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background.secondary }}>
       {/* Header */}
-      <View style={{ backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', flexDirection: 'row', alignItems: 'center' }}>
+      <View style={{ backgroundColor: colors.card, paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', alignItems: 'center' }}>
         <TouchableOpacity onPress={() => router.back()} style={{ padding: 6 }}>
           <Text style={{ color: Colors.primary, fontSize: 16 }}>← 返回</Text>
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ fontSize: 17, fontWeight: '600', color: '#111418' }}>视图广场</Text>
+          <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text.primary }}>视图广场</Text>
         </View>
         <TouchableOpacity onPress={() => router.push('/(tabs)/views/create' as any)}>
           <Text style={{ color: Colors.primary, fontSize: 14, fontWeight: '600' }}>+ 自定义</Text>
@@ -184,18 +186,18 @@ export default function ViewTemplateMarketPage() {
       </View>
 
       {/* Search */}
-      <View style={{ backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+      <View style={{ backgroundColor: colors.card, paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
         <TextInput
-          style={{ backgroundColor: '#f3f4f6', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: '#111418' }}
+          style={{ backgroundColor: colors.background.tertiary, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: colors.text.primary }}
           placeholder="搜索视图模板..."
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={colors.text.muted}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
       </View>
 
       {/* Category tabs */}
-      <View style={{ backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+      <View style={{ backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 8, gap: 6 }}>
           <TouchableOpacity
             style={{
@@ -223,7 +225,7 @@ export default function ViewTemplateMarketPage() {
       </View>
 
       {/* View type filter */}
-      <View style={{ backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+      <View style={{ backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 6, gap: 6 }}>
           <TouchableOpacity
             style={{
@@ -253,21 +255,21 @@ export default function ViewTemplateMarketPage() {
       {/* Content */}
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
         {/* Results count */}
-        <Text style={{ fontSize: 12, color: '#9ca3af', marginBottom: 12 }}>
+        <Text style={{ fontSize: 12, color: colors.text.muted, marginBottom: 12 }}>
           找到 {filteredTemplates.length} 个模板
         </Text>
 
         {/* Recommended section */}
         {selectedCategory === 'all' && !searchQuery && (
           <View style={{ marginBottom: 20 }}>
-            <Text style={{ fontSize: 16, fontWeight: '600', color: '#111418', marginBottom: 12 }}>⭐ 推荐模板</Text>
+            <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary, marginBottom: 12 }}>⭐ 推荐模板</Text>
             {recommended.map((t) => renderTemplateCard(t, true))}
           </View>
         )}
 
         {/* All templates */}
         {selectedCategory !== 'all' && (
-          <Text style={{ fontSize: 16, fontWeight: '600', color: '#111418', marginBottom: 12 }}>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary, marginBottom: 12 }}>
             {TEMPLATE_CATEGORIES.find((c) => c.id === selectedCategory)?.icon}{' '}
             {TEMPLATE_CATEGORIES.find((c) => c.id === selectedCategory)?.name} 模板
           </Text>
@@ -276,12 +278,12 @@ export default function ViewTemplateMarketPage() {
         {filteredTemplates.length === 0 ? (
           <View style={{ alignItems: 'center', paddingVertical: 40 }}>
             <Text style={{ fontSize: 36, marginBottom: 8 }}>🔍</Text>
-            <Text style={{ color: '#9ca3af', fontSize: 14 }}>没有找到匹配的模板</Text>
+            <Text style={{ color: colors.text.muted, fontSize: 14 }}>没有找到匹配的模板</Text>
             <TouchableOpacity
-              style={{ marginTop: 12, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#f3f4f6', borderRadius: 8 }}
+              style={{ marginTop: 12, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.background.tertiary, borderRadius: 8 }}
               onPress={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedViewType('all'); }}
             >
-              <Text style={{ color: '#6b7280', fontSize: 13 }}>清除筛选</Text>
+              <Text style={{ color: colors.text.secondary, fontSize: 13 }}>清除筛选</Text>
             </TouchableOpacity>
           </View>
         ) : (

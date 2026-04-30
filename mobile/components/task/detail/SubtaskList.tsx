@@ -10,6 +10,7 @@ import { ActionSheet } from '../../ui/ActionSheet';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { DatePicker } from './DatePicker';
 import { useToast } from '../../../hooks/useToast';
+import { useTheme } from '../../../hooks/useTheme';
 import { Colors } from '../../../constants/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { TaskPriority } from '../../../shared/types/index';
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export const SubtaskList: React.FC<Props> = ({ parentTask, subtasks, onRefresh }) => {
+  const { colors } = useTheme();
   const { openTask: openSubtask } = useTaskModal();
   const createTask = useCreateTask();
   const toggleStatus = useToggleTaskStatus();
@@ -97,16 +99,16 @@ export const SubtaskList: React.FC<Props> = ({ parentTask, subtasks, onRefresh }
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'flex-end' }}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
             <TouchableWithoutFeedback>
-              <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: Platform.OS === 'ios' ? 34 : 16 }}>
+              <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: Platform.OS === 'ios' ? 34 : 16 }}>
                 <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 4 }}>
                   <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: '#d1d5db' }} />
                 </View>
                 <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 }}>
-                  <Text style={{ fontSize: 16, fontWeight: '600', color: '#111418', marginBottom: 12 }}>添加子任务</Text>
+                  <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary, marginBottom: 12 }}>添加子任务</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <TextInput ref={inputRef}
-                      style={{ flex: 1, backgroundColor: '#f3f4f6', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#111418' }}
-                      placeholder="子任务标题..." placeholderTextColor="#9ca3af" value={newTitle} onChangeText={setNewTitle}
+                      style={{ flex: 1, backgroundColor: colors.background.tertiary, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.text.primary }}
+                      placeholder="子任务标题..." placeholderTextColor={colors.text.muted} value={newTitle} onChangeText={setNewTitle}
                       returnKeyType="done" onSubmitEditing={handleAdd} autoFocus />
                     <TouchableOpacity onPress={handleAdd}
                       style={{ paddingHorizontal: 16, paddingVertical: 12, backgroundColor: Colors.primary, borderRadius: 12 }}>
@@ -142,8 +144,8 @@ export const SubtaskList: React.FC<Props> = ({ parentTask, subtasks, onRefresh }
       <TouchableOpacity onPress={() => setExpanded(!expanded)}
         style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 6 }}>
         <MaterialCommunityIcons name={expanded ? 'chevron-down' : 'chevron-right'} size={18} color="#9ca3af" />
-        <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginLeft: 4 }}>子任务</Text>
-        <Text style={{ fontSize: 12, color: '#9ca3af', marginLeft: 6 }}>{done}/{total}</Text>
+        <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text.secondary, marginLeft: 4 }}>子任务</Text>
+        <Text style={{ fontSize: 12, color: colors.text.muted, marginLeft: 6 }}>{done}/{total}</Text>
         <View style={{ flex: 1, marginLeft: 10, marginRight: 8 }}>
           <ProgressBar value={total > 0 ? done / total : 0} color={Colors.success} />
         </View>
@@ -172,7 +174,7 @@ export const SubtaskList: React.FC<Props> = ({ parentTask, subtasks, onRefresh }
       <ActionSheet visible={showAct} title={selTask?.title || ''} options={[
         { label: '查看详情', value: 'view', icon: '📄' },
         { label: '快速编辑', value: 'edit', icon: '✏️' },
-        { label: '删除', value: 'del', icon: '🗑', color: '#ef4444', destructive: true },
+        { label: '删除', value: 'del', icon: '🗑', color: colors.error, destructive: true },
       ]} onSelect={(o) => {
         if (o.value === 'view' && selTask) openSubtask(selTask.uid);
         else if (o.value === 'edit' && selTask) openQuickEdit(selTask);
@@ -187,17 +189,17 @@ export const SubtaskList: React.FC<Props> = ({ parentTask, subtasks, onRefresh }
         <TouchableWithoutFeedback onPress={() => setShowQuickEdit(false)}>
           <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'flex-end' }}>
             <TouchableWithoutFeedback>
-              <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, gap: 10 }}>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#111418' }}>快速编辑子任务</Text>
+              <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, gap: 10 }}>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary }}>快速编辑子任务</Text>
                 <TextInput
                   value={quickTitle}
                   onChangeText={setQuickTitle}
                   placeholder="子任务标题"
-                  placeholderTextColor="#9ca3af"
-                  style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: '#111418' }}
+                  placeholderTextColor={colors.text.muted}
+                  style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: colors.text.primary }}
                 />
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={{ width: 56, fontSize: 13, color: '#9ca3af' }}>优先级</Text>
+                  <Text style={{ width: 56, fontSize: 13, color: colors.text.muted }}>优先级</Text>
                   <View style={{ flexDirection: 'row', gap: 6 }}>
                     {[TaskPriority.LOW, TaskPriority.MEDIUM, TaskPriority.HIGH, TaskPriority.URGENT].map((p) => (
                       <TouchableOpacity
@@ -213,16 +215,16 @@ export const SubtaskList: React.FC<Props> = ({ parentTask, subtasks, onRefresh }
                   </View>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={{ width: 56, fontSize: 13, color: '#9ca3af' }}>开始</Text>
+                  <Text style={{ width: 56, fontSize: 13, color: colors.text.muted }}>开始</Text>
                   <DatePicker label="开始" value={quickStartDate} compact onChange={setQuickStartDate} />
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={{ width: 56, fontSize: 13, color: '#9ca3af' }}>截止</Text>
+                  <Text style={{ width: 56, fontSize: 13, color: colors.text.muted }}>截止</Text>
                   <DatePicker label="截止" value={quickDueDate} compact onChange={setQuickDueDate} />
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
                   <TouchableOpacity onPress={() => setShowQuickEdit(false)} style={{ paddingHorizontal: 12, paddingVertical: 8 }}>
-                    <Text style={{ fontSize: 14, color: '#6b7280' }}>取消</Text>
+                    <Text style={{ fontSize: 14, color: colors.text.secondary }}>取消</Text>
                   </TouchableOpacity>
                   <TouchableOpacity onPress={handleQuickSave} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, backgroundColor: Colors.primary }}>
                     <Text style={{ fontSize: 14, color: '#fff', fontWeight: '600' }}>保存</Text>

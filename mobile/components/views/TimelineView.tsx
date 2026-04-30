@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import type { Task, TaskView } from '../../shared/types/index';
 import { TaskPriority } from '../../shared/types/index';
+import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
 
 interface TimelineViewProps {
@@ -60,6 +61,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   isRefreshing = false,
   emptyMessage = '暂无任务',
 }) => {
+  const { colors } = useTheme();
   const displaySettings = view?.view_settings || {};
   const showProject = displaySettings.show_project ?? true;
   const showPriority = displaySettings.show_priority ?? true;
@@ -88,7 +90,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 60 }}>
         <Text style={{ fontSize: 36, marginBottom: 8 }}>⟶</Text>
-        <Text style={{ color: '#9ca3af', fontSize: 14 }}>{emptyMessage}</Text>
+        <Text style={{ color: colors.text.muted, fontSize: 14 }}>{emptyMessage}</Text>
       </View>
     );
   }
@@ -97,8 +99,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 60 }}>
         <Text style={{ fontSize: 36, marginBottom: 8 }}>📅</Text>
-        <Text style={{ color: '#9ca3af', fontSize: 14 }}>没有设置日期的任务</Text>
-        <Text style={{ color: '#d1d5db', fontSize: 12, marginTop: 4 }}>时间线只显示有日期的任务</Text>
+        <Text style={{ color: colors.text.muted, fontSize: 14 }}>没有设置日期的任务</Text>
+        <Text style={{ color: colors.text.muted, fontSize: 12, marginTop: 4 }}>时间线只显示有日期的任务</Text>
       </View>
     );
   }
@@ -137,7 +139,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                   <Text style={{ fontSize: 15, fontWeight: '600', color: isPast ? '#9ca3af' : '#111418' }}>
                     {formatDateHeader(dateKey)}
                   </Text>
-                  <Text style={{ fontSize: 11, color: '#9ca3af' }}>{dateTasks.length} 个任务</Text>
+                  <Text style={{ fontSize: 11, color: colors.text.muted }}>{dateTasks.length} 个任务</Text>
                 </View>
               </View>
 
@@ -147,7 +149,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                   <TouchableOpacity
                     key={task.uid}
                     style={{
-                      backgroundColor: '#fff',
+                      backgroundColor: colors.card,
                       borderRadius: 10,
                       padding: 12,
                       marginBottom: 8,
@@ -163,7 +165,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                           flex: 1,
                           fontSize: 14,
                           fontWeight: '500',
-                          color: '#111418',
+                          color: colors.text.primary,
                           textDecorationLine: task.is_completed ? 'line-through' : 'none',
                         }}
                         numberOfLines={2}
@@ -173,16 +175,16 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                       {task.is_completed && <Text style={{ color: Colors.success, fontSize: 14 }}>✓</Text>}
                       {task.is_overdue && !task.is_completed && (
                         <View style={{ backgroundColor: '#fef2f2', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 }}>
-                          <Text style={{ color: '#ef4444', fontSize: 9, fontWeight: '600' }}>逾期</Text>
+                          <Text style={{ color: colors.error, fontSize: 9, fontWeight: '600' }}>逾期</Text>
                         </View>
                       )}
                     </View>
 
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
-                      {showProject && task.project && <Text style={{ fontSize: 11, color: '#9ca3af' }}>📁 {task.project.name}</Text>}
+                      {showProject && task.project && <Text style={{ fontSize: 11, color: colors.text.muted }}>📁 {task.project.name}</Text>}
                       {showPriority && <Text style={{ fontSize: 11, color: PRIORITY_COLORS[task.priority] }}>⚑ {task.priority_display}</Text>}
                       {task.start_date && (
-                        <Text style={{ fontSize: 11, color: '#9ca3af' }}>
+                        <Text style={{ fontSize: 11, color: colors.text.muted }}>
                           开始: {new Date(task.start_date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
                         </Text>
                       )}
@@ -206,18 +208,18 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
       </View>
 
       {/* Stats */}
-      <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 16, marginTop: 8, flexDirection: 'row', justifyContent: 'space-around' }}>
+      <View style={{ backgroundColor: colors.card, borderRadius: 12, padding: 16, marginTop: 8, flexDirection: 'row', justifyContent: 'space-around' }}>
         <View style={{ alignItems: 'center' }}>
           <Text style={{ fontSize: 20, fontWeight: '700', color: Colors.primary }}>{groupedTasks.length}</Text>
-          <Text style={{ fontSize: 11, color: '#9ca3af' }}>时间节点</Text>
+          <Text style={{ fontSize: 11, color: colors.text.muted }}>时间节点</Text>
         </View>
         <View style={{ alignItems: 'center' }}>
           <Text style={{ fontSize: 20, fontWeight: '700', color: Colors.success }}>{tasks.filter((t) => t.is_completed).length}</Text>
-          <Text style={{ fontSize: 11, color: '#9ca3af' }}>已完成</Text>
+          <Text style={{ fontSize: 11, color: colors.text.muted }}>已完成</Text>
         </View>
         <View style={{ alignItems: 'center' }}>
-          <Text style={{ fontSize: 20, fontWeight: '700', color: '#ef4444' }}>{tasks.filter((t) => t.is_overdue).length}</Text>
-          <Text style={{ fontSize: 11, color: '#9ca3af' }}>逾期</Text>
+          <Text style={{ fontSize: 20, fontWeight: '700', color: colors.error }}>{tasks.filter((t) => t.is_overdue).length}</Text>
+          <Text style={{ fontSize: 11, color: colors.text.muted }}>逾期</Text>
         </View>
       </View>
     </ScrollView>

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
 
 /**
@@ -9,6 +10,7 @@ import { Colors } from '../../constants/theme';
  * The task modal is rendered via TaskModalProvider in (tabs)/_layout.
  */
 export default function TaskRouteRedirect() {
+  const { colors } = useTheme();
   const { uid } = useLocalSearchParams<{ uid: string }>();
 
   useEffect(() => {
@@ -18,7 +20,7 @@ export default function TaskRouteRedirect() {
   }, [uid]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ flex: 1, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' }}>
       <ActivityIndicator size="large" color={Colors.primary} />
     </View>
   );

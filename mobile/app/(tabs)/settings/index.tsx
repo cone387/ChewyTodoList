@@ -76,14 +76,14 @@ export default function SettingsPage() {
   };
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#f9fafb' }}>
-      <View style={{ backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', alignItems: 'center' }}>
-        <Text style={{ fontSize: 18, fontWeight: '600', color: '#111418' }}>我的</Text>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background.secondary }}>
+      <View style={{ backgroundColor: colors.card, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight, alignItems: 'center' }}>
+        <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text.primary }}>我的</Text>
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 }}>
         {/* Profile section */}
-        <View style={{ marginTop: 16, marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+        <View style={{ marginTop: 16, marginHorizontal: 16, backgroundColor: colors.card, borderRadius: 12, overflow: 'hidden' }}>
           <View style={{ paddingHorizontal: 16, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
             {/* Avatar with gradient background */}
             <View style={{ width: 48, height: 48, borderRadius: 24, overflow: 'hidden' }}>
@@ -99,34 +99,34 @@ export default function SettingsPage() {
               </View>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 16, fontWeight: '600', color: '#111418' }}>{profile?.username || '加载中...'}</Text>
-              <Text style={{ fontSize: 13, color: '#9ca3af', marginTop: 2 }}>{profile?.email || ''}</Text>
+              <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary }}>{profile?.username || '加载中...'}</Text>
+              <Text style={{ fontSize: 13, color: colors.text.muted, marginTop: 2 }}>{profile?.email || ''}</Text>
             </View>
           </View>
         </View>
 
         {/* General Settings */}
-        <Text style={{ fontSize: 13, fontWeight: '600', color: '#9ca3af', paddingHorizontal: 16, marginTop: 20, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text.muted, paddingHorizontal: 16, marginTop: 20, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
           通用设置
         </Text>
-        <View style={{ marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+        <View style={{ marginHorizontal: 16, backgroundColor: colors.card, borderRadius: 12, overflow: 'hidden' }}>
           {/* Tag management */}
           <TouchableOpacity
-            style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}
+            style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}
             onPress={() => router.push('/(tabs)/settings/tags' as any)}
           >
             <MaterialCommunityIcons name={SettingsIcons.tags} size={20} color="#6b7280" style={{ marginRight: 12 }} />
-            <Text style={{ fontSize: 15, color: '#374151', flex: 1 }}>标签管理</Text>
+            <Text style={{ fontSize: 15, color: colors.text.secondary, flex: 1 }}>标签管理</Text>
             <MaterialCommunityIcons name="chevron-right" size={20} color="#d1d5db" />
           </TouchableOpacity>
 
           {/* Card config */}
           <TouchableOpacity
-            style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}
+            style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}
             onPress={() => router.push('/(tabs)/settings/card-configs' as any)}
           >
             <MaterialCommunityIcons name={SettingsIcons.cardConfig} size={20} color="#6b7280" style={{ marginRight: 12 }} />
-            <Text style={{ fontSize: 15, color: '#374151', flex: 1 }}>卡片配置</Text>
+            <Text style={{ fontSize: 15, color: colors.text.secondary, flex: 1 }}>卡片配置</Text>
             <MaterialCommunityIcons name="chevron-right" size={20} color="#d1d5db" />
           </TouchableOpacity>
 
@@ -138,7 +138,7 @@ export default function SettingsPage() {
               color="#6b7280"
               style={{ marginRight: 12 }}
             />
-            <Text style={{ fontSize: 15, color: '#374151', flex: 1 }}>深色模式</Text>
+            <Text style={{ fontSize: 15, color: colors.text.secondary, flex: 1 }}>深色模式</Text>
             <Switch
               value={isDark}
               onValueChange={toggleTheme}
@@ -149,17 +149,17 @@ export default function SettingsPage() {
         </View>
 
         {/* Account Security */}
-        <Text style={{ fontSize: 13, fontWeight: '600', color: '#9ca3af', paddingHorizontal: 16, marginTop: 20, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text.muted, paddingHorizontal: 16, marginTop: 20, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
           账户安全
         </Text>
-        <View style={{ marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+        <View style={{ marginHorizontal: 16, backgroundColor: colors.card, borderRadius: 12, overflow: 'hidden' }}>
           {/* Change password */}
           <TouchableOpacity
             style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 }}
             onPress={() => setShowChangePassword(!showChangePassword)}
           >
             <MaterialCommunityIcons name={SettingsIcons.password} size={20} color="#6b7280" style={{ marginRight: 12 }} />
-            <Text style={{ fontSize: 15, color: '#374151', flex: 1 }}>修改密码</Text>
+            <Text style={{ fontSize: 15, color: colors.text.secondary, flex: 1 }}>修改密码</Text>
             <MaterialCommunityIcons
               name={showChangePassword ? 'chevron-up' : 'chevron-right'}
               size={20}
@@ -168,27 +168,27 @@ export default function SettingsPage() {
           </TouchableOpacity>
 
           {showChangePassword && (
-            <View style={{ paddingHorizontal: 16, paddingVertical: 12, gap: 10, backgroundColor: '#f9fafb' }}>
+            <View style={{ paddingHorizontal: 16, paddingVertical: 12, gap: 10, backgroundColor: colors.background.secondary }}>
               <TextInput
-                style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#111418', backgroundColor: '#fff' }}
+                style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: colors.text.primary, backgroundColor: colors.card }}
                 placeholder="当前密码"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.text.muted}
                 secureTextEntry
                 value={oldPassword}
                 onChangeText={setOldPassword}
               />
               <TextInput
-                style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#111418', backgroundColor: '#fff' }}
+                style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: colors.text.primary, backgroundColor: colors.card }}
                 placeholder="新密码"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.text.muted}
                 secureTextEntry
                 value={newPassword}
                 onChangeText={setNewPassword}
               />
               <TextInput
-                style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#111418', backgroundColor: '#fff' }}
+                style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: colors.text.primary, backgroundColor: colors.card }}
                 placeholder="确认新密码"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.text.muted}
                 secureTextEntry
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
@@ -209,14 +209,14 @@ export default function SettingsPage() {
         </View>
 
         {/* About */}
-        <Text style={{ fontSize: 13, fontWeight: '600', color: '#9ca3af', paddingHorizontal: 16, marginTop: 20, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text.muted, paddingHorizontal: 16, marginTop: 20, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
           关于
         </Text>
-        <View style={{ marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+        <View style={{ marginHorizontal: 16, backgroundColor: colors.card, borderRadius: 12, overflow: 'hidden' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 }}>
             <MaterialCommunityIcons name={SettingsIcons.version} size={20} color="#6b7280" style={{ marginRight: 12 }} />
-            <Text style={{ fontSize: 15, color: '#374151', flex: 1 }}>版本</Text>
-            <Text style={{ fontSize: 14, color: '#9ca3af' }}>{APP_VERSION}</Text>
+            <Text style={{ fontSize: 15, color: colors.text.secondary, flex: 1 }}>版本</Text>
+            <Text style={{ fontSize: 14, color: colors.text.muted }}>{APP_VERSION}</Text>
           </View>
         </View>
 
@@ -229,7 +229,7 @@ export default function SettingsPage() {
             accessibilityLabel="退出登录"
           >
             <MaterialCommunityIcons name="logout" size={20} color="#ef4444" style={{ marginRight: 10 }} />
-            <Text style={{ color: '#ef4444', fontSize: 16, fontWeight: '500', flex: 1 }}>退出登录</Text>
+            <Text style={{ color: colors.error, fontSize: 16, fontWeight: '500', flex: 1 }}>退出登录</Text>
             <MaterialCommunityIcons name="chevron-right" size={20} color="#fca5a5" />
           </TouchableOpacity>
         </View>

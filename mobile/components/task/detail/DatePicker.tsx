@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useTheme } from '../../../hooks/useTheme';
 import { Colors } from '../../../constants/theme';
 
 interface DatePickerProps {
@@ -58,6 +59,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   isOverdue = false,
   compact = false,
 }) => {
+  const { colors } = useTheme();
   const [showPicker, setShowPicker] = useState(false);
   const [pickerDate, setPickerDate] = useState(value ? new Date(value) : new Date());
   const webInputRef = useRef<any>(null);
@@ -104,10 +106,10 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           <TouchableWithoutFeedback onPress={() => setShowPicker(false)}>
             <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}>
               <TouchableWithoutFeedback>
-                <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 34 }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
-                    <TouchableOpacity onPress={() => setShowPicker(false)}><Text style={{ color: '#6b7280', fontSize: 15 }}>取消</Text></TouchableOpacity>
-                    <Text style={{ fontSize: 15, fontWeight: '600', color: '#111418' }}>选择日期时间</Text>
+                <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 34 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
+                    <TouchableOpacity onPress={() => setShowPicker(false)}><Text style={{ color: colors.text.secondary, fontSize: 15 }}>取消</Text></TouchableOpacity>
+                    <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text.primary }}>选择日期时间</Text>
                     <TouchableOpacity onPress={handleIOSConfirm}><Text style={{ color: Colors.primary, fontSize: 15, fontWeight: '600' }}>确定</Text></TouchableOpacity>
                   </View>
                   <DateTimePicker value={pickerDate} mode="datetime" display="spinner" onChange={handlePickerChange} locale="zh-CN" style={{ height: 200 }} />
@@ -152,9 +154,9 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   }
 
   return (
-    <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+    <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <Text style={{ color: '#9ca3af', fontSize: 14, width: 70 }}>{label}</Text>
+        <Text style={{ color: colors.text.muted, fontSize: 14, width: 70 }}>{label}</Text>
 
         {value ? (
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
@@ -170,11 +172,11 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             ) : null}
             {isOverdue && (
               <View style={{ backgroundColor: '#fef2f2', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
-                <Text style={{ color: '#ef4444', fontSize: 11, fontWeight: '600' }}>逾期</Text>
+                <Text style={{ color: colors.error, fontSize: 11, fontWeight: '600' }}>逾期</Text>
               </View>
             )}
             <TouchableOpacity onPress={() => onChange(null)}>
-              <Text style={{ color: '#d1d5db', fontSize: 16 }}>×</Text>
+              <Text style={{ color: colors.text.muted, fontSize: 16 }}>×</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -182,10 +184,10 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             {getQuickDates().map((qd) => (
               <TouchableOpacity
                 key={qd.label}
-                style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: '#f3f4f6', borderRadius: 6 }}
+                style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: colors.background.tertiary, borderRadius: 6 }}
                 onPress={() => handleQuickDate(qd.value)}
               >
-                <Text style={{ fontSize: 12, color: '#6b7280' }}>{qd.icon} {qd.label}</Text>
+                <Text style={{ fontSize: 12, color: colors.text.secondary }}>{qd.icon} {qd.label}</Text>
               </TouchableOpacity>
             ))}
             <TouchableOpacity

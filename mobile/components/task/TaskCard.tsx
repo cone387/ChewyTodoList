@@ -8,6 +8,7 @@ import { View, TouchableOpacity } from 'react-native';
 import type { Task, TaskCardConfig, CardFieldConfig } from '../../shared/types/index';
 import { TaskStatus } from '../../shared/types/index';
 import { FieldRenderer, groupFieldsByPosition } from './TaskCardRenderer';
+import { useTheme } from '../../hooks/useTheme';
 import { CardLayout, Shadows } from '../../constants/theme';
 
 // 默认字段配置（当视图没有绑定 card_config 时使用）
@@ -28,6 +29,7 @@ interface TaskCardProps {
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task, cardConfig, onPress, style }) => {
+  const { colors } = useTheme();
   const fieldConfigs = cardConfig?.field_configs?.length
     ? cardConfig.field_configs
     : DEFAULT_FIELD_CONFIGS;
@@ -48,7 +50,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, cardConfig, onPress, s
       activeOpacity={0.75}
       style={[
         {
-          backgroundColor: '#ffffff',
+          backgroundColor: colors.card,
           borderRadius,
           padding: spacing.padding,
           marginHorizontal: 16,

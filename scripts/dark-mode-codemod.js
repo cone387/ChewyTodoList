@@ -1,0 +1,136 @@
+#!/usr/bin/env node
+/**
+ * Dark-mode codemod — replaces hardcoded color tokens with theme-aware references.
+ * Only matches tokens in clearly "style" contexts to avoid touching data/icon strings.
+ *
+ * Usage: node scripts/dark-mode-codemod.js <file1> <file2> ...
+ *        node scripts/dark-mode-codemod.js --dry <file>   # preview
+ */
+const fs = require('fs');
+const path = require('path');
+
+// Safe one-way substitutions. Order matters (longer/more specific first).
+// Each entry: [pattern: RegExp, replacement: string, description]
+const RULES = [
+  // backgroundColor
+  [/backgroundColor:\s*'#ffffff'/g,      "backgroundColor: colors.card",                "bg white -> card"],
+  [/backgroundColor:\s*'#fff'/g,         "backgroundColor: colors.card",                "bg white -> card"],
+  [/backgroundColor:\s*'#f9fafb'/g,      "backgroundColor: colors.background.secondary", "bg light gray -> secondary"],
+  [/backgroundColor:\s*'#f3f4f6'/g,      "backgroundColor: colors.background.tertiary",  "bg mid gray -> tertiary"],
+
+  // text color — with "color: "
+  [/color:\s*'#111418'/g,                "color: colors.text.primary",     "text primary"],
+  [/color:\s*'#111827'/g,                "color: colors.text.primary",     "text primary alt"],
+  [/color:\s*'#1f2937'/g,                "color: colors.text.primary",     "text primary alt2"],
+  [/color:\s*'#374151'/g,                "color: colors.text.secondary",   "text secondary"],
+  [/color:\s*'#4b5563'/g,                "color: colors.text.secondary",   "text secondary alt"],
+  [/color:\s*'#6b7280'/g,                "color: colors.text.secondary",   "text secondary alt2"],
+  [/color:\s*'#9ca3af'/g,                "color: colors.text.muted",       "text muted"],
+  [/color:\s*'#d1d5db'/g,                "color: colors.text.muted",       "text muted alt"],
+
+  // borderColor / borderBottomColor / borderTopColor / borderLeftColor / borderRightColor
+  [/borderBottomColor:\s*'#f3f4f6'/g,    "borderBottomColor: colors.borderLight", "border light bottom"],
+  [/borderBottomColor:\s*'#e5e7eb'/g,    "borderBottomColor: colors.border",      "border bottom"],
+  [/borderTopColor:\s*'#f3f4f6'/g,       "borderTopColor: colors.borderLight",    "border light top"],
+  [/borderTopColor:\s*'#e5e7eb'/g,       "borderTopColor: colors.border",         "border top"],
+  [/borderColor:\s*'#f3f4f6'/g,          "borderColor: colors.borderLight",       "border light all"],
+  [/borderColor:\s*'#e5e7eb'/g,          "borderColor: colors.border",            "border all"],
+
+  // placeholderTextColor (JSX attribute, string literal)
+  [/placeholderTextColor="#9ca3af"/g,    'placeholderTextColor={colors.text.muted}', "placeholder muted"],
+  [/placeholderTextColor="#6b7280"/g,    'placeholderTextColor={colors.text.secondary}', "placeholder secondary"],
+  [/placeholderTextColor='#9ca3af'/g,    "placeholderTextColor={colors.text.muted}", "placeholder muted alt"],
+
+  // Common "color: '#ef4444'" for destructive Text -> colors.error
+  [/color:\s*'#ef4444'/g,                "color: colors.error",                     "destructive text"],
+
+  // shadow/elevation on dividers — leave as is
+];
+
+function transform(source) {
+  let out = source;
+  const changes = [];
+  for (const [pattern, replacement, desc] of RULES) {
+    const before = out;
+    out = out.replace(pattern, replacement);
+    if (before !== out) {
+      const count = (before.match(pattern) || []).length;
+      changes.push({ desc, count });
+    }
+  }
+  return { out, changes };
+}
+
+function ensureUseThemeImport(source) {
+  // Skip if already uses useTheme
+  if (/useTheme\s*\(\s*\)/.test(source)) return { source, added: false };
+  // Skip if file doesn't import from constants/theme (probably not a RN component)
+  if (!/from\s+['"][^'"]+constants\/theme['"]/.test(source)) return { source, added: false };
+
+  // Insert import next to existing theme import
+  source = source.replace(
+    /(import\s+\{[^}]+\}\s+from\s+['"])(\.[^'"]+)(\/constants\/theme['"];?)/,
+    (m, pre, prefix, suf) => {
+      // Insert useTheme import right BEFORE the theme constants import
+      // We can derive the path: prefix is like "../../.." to reach mobile root
+      const relBase = prefix.replace(/\/constants\/theme$/, '');
+      const hooksPath = `${relBase}/hooks/useTheme`;
+      return `import { useTheme } from '${hooksPath}';\n${m}`;
+    }
+  );
+
+  // Insert `const { colors } = useTheme();` inside the first function component's body
+  // Heuristic: find `export default function X() {` and insert right after.
+  const functionMatch = source.match(/(export\s+default\s+function\s+\w+\s*\([^)]*\)\s*\{)/);
+  if (functionMatch) {
+    source = source.replace(
+      functionMatch[1],
+      `${functionMatch[1]}\n  const { colors } = useTheme();`
+    );
+  }
+
+  return { source, added: true };
+}
+
+function main() {
+  const args = process.argv.slice(2);
+  const dry = args.includes('--dry');
+  const files = args.filter((a) => a !== '--dry');
+
+  if (files.length === 0) {
+    console.error('Usage: node dark-mode-codemod.js [--dry] <file>...');
+    process.exit(1);
+  }
+
+  let totalChanges = 0;
+  for (const file of files) {
+    const abs = path.resolve(file);
+    if (!fs.existsSync(abs)) {
+      console.warn(`skip (not found): ${file}`);
+      continue;
+    }
+    const src = fs.readFileSync(abs, 'utf8');
+    const { out: transformed, changes } = transform(src);
+    // Only ensure useTheme() import/call if substitutions actually introduced `colors.*`
+    const needsTheme = transformed !== src && /\bcolors\./.test(transformed);
+    const { source: final, added: addedTheme } = needsTheme
+      ? ensureUseThemeImport(transformed)
+      : { source: transformed, added: false };
+
+    if (transformed === src) {
+      console.log(`· no changes: ${path.relative(process.cwd(), abs)}`);
+      continue;
+    }
+
+    const changeSummary = changes.map((c) => `${c.desc}×${c.count}`).join(', ');
+    totalChanges += changes.reduce((s, c) => s + c.count, 0);
+    console.log(`✎ ${path.relative(process.cwd(), abs)}: ${changeSummary}${addedTheme ? ' [+useTheme]' : ''}`);
+
+    if (!dry) {
+      fs.writeFileSync(abs, final, 'utf8');
+    }
+  }
+  console.log(`\n${dry ? '(dry-run) ' : ''}Total substitutions: ${totalChanges}`);
+}
+
+main();

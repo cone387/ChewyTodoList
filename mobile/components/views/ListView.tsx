@@ -12,6 +12,7 @@ import type { Task, TaskView, TaskCardConfig, CardFieldConfig } from '../../shar
 import { DEFAULT_FIELD_CONFIGS, TaskCard } from '../task/TaskCard';
 import { EmptyState } from '../ui/EmptyState';
 import { useToggleTaskStatus } from '../../hooks/useTasks';
+import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
 
 interface ListViewProps {
@@ -39,6 +40,7 @@ export const ListView: React.FC<ListViewProps> = ({
   isLoading = false,
   emptyMessage = '暂无任务',
 }) => {
+  const { colors } = useTheme();
   const toggleStatus = useToggleTaskStatus();
   const displaySettings = view?.view_settings || {};
 
@@ -82,7 +84,7 @@ export const ListView: React.FC<ListViewProps> = ({
   const renderItem = useCallback(
     ({ item }: { item: Task }) => {
       return (
-        <View style={{ backgroundColor: '#fff' }}>
+        <View style={{ backgroundColor: colors.card }}>
           <View style={{ position: 'relative' }}>
             <TaskCard
               task={item}
@@ -157,8 +159,8 @@ export const ListView: React.FC<ListViewProps> = ({
     if (!section.title) return null;
 
     return (
-      <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, backgroundColor: '#f9fafb' }}>
-        <Text style={{ fontSize: 12, fontWeight: '700', color: '#6b7280' }}>{section.title}</Text>
+      <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, backgroundColor: colors.background.secondary }}>
+        <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text.secondary }}>{section.title}</Text>
       </View>
     );
   }, []);

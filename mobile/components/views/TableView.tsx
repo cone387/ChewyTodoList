@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import type { Task, TaskView } from '../../shared/types/index';
 import { TaskStatus, TaskPriority } from '../../shared/types/index';
+import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
 
 interface TableViewProps {
@@ -25,14 +26,14 @@ const STATUS_LABELS: Record<number, { label: string; color: string }> = {
   [TaskStatus.UNASSIGNED]: { label: '待分配', color: '#94a3b8' },
   [TaskStatus.TODO]: { label: '待办', color: '#3b82f6' },
   [TaskStatus.COMPLETED]: { label: '已完成', color: '#22c55e' },
-  [TaskStatus.ABANDONED]: { label: '已放弃', color: '#ef4444' },
+  [TaskStatus.ABANDONED]: { label: '已放弃', color: colors.error },
 };
 
 const PRIORITY_LABELS: Record<number, { label: string; color: string }> = {
   [TaskPriority.LOW]: { label: '低', color: '#94a3b8' },
   [TaskPriority.MEDIUM]: { label: '中', color: '#f59e0b' },
   [TaskPriority.HIGH]: { label: '高', color: '#f97316' },
-  [TaskPriority.URGENT]: { label: '紧急', color: '#ef4444' },
+  [TaskPriority.URGENT]: { label: '紧急', color: colors.error },
 };
 
 const COL_WIDTHS = { title: 180, status: 70, priority: 60, project: 100, dueDate: 90, tags: 120 };
@@ -45,6 +46,7 @@ export const TableView: React.FC<TableViewProps> = ({
   isRefreshing = false,
   emptyMessage = '暂无任务',
 }) => {
+  const { colors } = useTheme();
   const displaySettings = view?.view_settings || {};
 
   const columns = useMemo(() => {
@@ -69,8 +71,8 @@ export const TableView: React.FC<TableViewProps> = ({
           flexDirection: 'row',
           alignItems: 'center',
           borderBottomWidth: 1,
-          borderBottomColor: '#f3f4f6',
-          backgroundColor: '#fff',
+          borderBottomColor: colors.borderLight,
+          backgroundColor: colors.card,
           opacity: item.is_completed ? 0.6 : 1,
         }}
         onPress={() => onTaskPress(item)}
@@ -84,7 +86,7 @@ export const TableView: React.FC<TableViewProps> = ({
                     style={{
                       fontSize: 13,
                       fontWeight: '500',
-                      color: '#111418',
+                      color: colors.text.primary,
                       textDecorationLine: item.is_completed ? 'line-through' : 'none',
                     }}
                     numberOfLines={2}
@@ -110,7 +112,7 @@ export const TableView: React.FC<TableViewProps> = ({
             case 'project':
               return (
                 <View key={column.key} style={{ width: column.width, paddingHorizontal: 8, paddingVertical: 12 }}>
-                  <Text style={{ fontSize: 11, color: '#6b7280' }} numberOfLines={1}>
+                  <Text style={{ fontSize: 11, color: colors.text.secondary }} numberOfLines={1}>
                     {item.project?.name || '收集箱'}
                   </Text>
                 </View>
@@ -123,7 +125,7 @@ export const TableView: React.FC<TableViewProps> = ({
                       {new Date(item.due_date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
                     </Text>
                   ) : (
-                    <Text style={{ fontSize: 11, color: '#d1d5db' }}>-</Text>
+                    <Text style={{ fontSize: 11, color: colors.text.muted }}>-</Text>
                   )}
                 </View>
               );
@@ -135,7 +137,7 @@ export const TableView: React.FC<TableViewProps> = ({
                       <Text style={{ color: tag.color, fontSize: 9 }}>{tag.name}</Text>
                     </View>
                   ))}
-                  {item.tags.length > 2 && <Text style={{ fontSize: 9, color: '#9ca3af' }}>+{item.tags.length - 2}</Text>}
+                  {item.tags.length > 2 && <Text style={{ fontSize: 9, color: colors.text.muted }}>+{item.tags.length - 2}</Text>}
                 </View>
               );
             default:
@@ -150,7 +152,7 @@ export const TableView: React.FC<TableViewProps> = ({
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 60 }}>
         <Text style={{ fontSize: 36, marginBottom: 8 }}>⊟</Text>
-        <Text style={{ color: '#9ca3af', fontSize: 14 }}>{emptyMessage}</Text>
+        <Text style={{ color: colors.text.muted, fontSize: 14 }}>{emptyMessage}</Text>
       </View>
     );
   }
@@ -161,7 +163,7 @@ export const TableView: React.FC<TableViewProps> = ({
     <ScrollView horizontal showsHorizontalScrollIndicator={true} style={{ flex: 1 }}>
       <View style={{ width: totalWidth }}>
         {/* Header */}
-        <View style={{ flexDirection: 'row', backgroundColor: '#f9fafb', borderBottomWidth: 2, borderBottomColor: '#e5e7eb' }}>
+        <View style={{ flexDirection: 'row', backgroundColor: colors.background.secondary, borderBottomWidth: 2, borderBottomColor: colors.border }}>
           {columns.map((column) => (
             <View
               key={column.key}
@@ -172,7 +174,7 @@ export const TableView: React.FC<TableViewProps> = ({
                 paddingVertical: 10,
               }}
             >
-              <Text style={{ fontSize: 11, fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>{column.label}</Text>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.text.secondary, textTransform: 'uppercase' }}>{column.label}</Text>
             </View>
           ))}
         </View>
@@ -186,8 +188,8 @@ export const TableView: React.FC<TableViewProps> = ({
         />
 
         {/* Footer stats */}
-        <View style={{ flexDirection: 'row', backgroundColor: '#f9fafb', paddingHorizontal: 12, paddingVertical: 8, borderTopWidth: 1, borderTopColor: '#e5e7eb' }}>
-          <Text style={{ fontSize: 11, color: '#6b7280' }}>
+        <View style={{ flexDirection: 'row', backgroundColor: colors.background.secondary, paddingHorizontal: 12, paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.border }}>
+          <Text style={{ fontSize: 11, color: colors.text.secondary }}>
             共 {tasks.length} 个任务 · 已完成 {tasks.filter((t) => t.is_completed).length} · 逾期 {tasks.filter((t) => t.is_overdue).length}
           </Text>
         </View>

@@ -9,6 +9,7 @@ import { formatDistanceToNow, isPast, isToday, isTomorrow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import type { Task, CardFieldConfig } from '../../shared/types/index';
 import { TaskStatus, TaskPriority } from '../../shared/types/index';
+import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
 import { PriorityIcons, StatusIcons } from '../../constants/icons';
 
@@ -156,7 +157,7 @@ export const TagsField: React.FC<{ task: Task; style: Record<string, any> }> = (
         );
       })}
       {task.tags.length > maxCount && (
-        <Text style={{ color: '#9ca3af', fontSize: 10 }}>+{task.tags.length - maxCount}</Text>
+        <Text style={{ color: colors.text.muted, fontSize: 10 }}>+{task.tags.length - maxCount}</Text>
       )}
     </View>
   );
@@ -170,7 +171,7 @@ export const ProjectField: React.FC<{ task: Task; style: Record<string, any> }> 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
       <MaterialCommunityIcons name="folder" size={11} color="#9ca3af" style={{ marginRight: 3 }} />
-      <Text style={{ color: '#9ca3af', fontSize: 11 }}>{task.project.name}</Text>
+      <Text style={{ color: colors.text.muted, fontSize: 11 }}>{task.project.name}</Text>
     </View>
   );
 };
@@ -189,7 +190,7 @@ export const SubtasksProgressField: React.FC<{ task: Task; style: Record<string,
           <View style={{ width: `${ratio * 100}%` as any, height: 3, backgroundColor: Colors.primary, borderRadius: 2 }} />
         </View>
       )}
-      <Text style={{ color: '#9ca3af', fontSize: 11 }}>
+      <Text style={{ color: colors.text.muted, fontSize: 11 }}>
         {task.completed_subtasks_count}/{task.subtasks_count}
       </Text>
     </View>
@@ -220,6 +221,7 @@ export const FieldRenderer: React.FC<{ field: string; task: Task; fieldStyle: Re
 // 按 position 分组渲染
 // ========================
 export function groupFieldsByPosition(fieldConfigs: CardFieldConfig[]) {
+  const { colors } = useTheme();
   const groups: Record<string, CardFieldConfig[]> = {
     header_left: [],
     header: [],

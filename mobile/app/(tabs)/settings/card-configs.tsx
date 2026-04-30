@@ -14,6 +14,7 @@ import { TaskCard, DEFAULT_FIELD_CONFIGS } from '../../../components/task/TaskCa
 import { ActionSheet } from '../../../components/ui/ActionSheet';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { useToast } from '../../../hooks/useToast';
+import { useTheme } from '../../../hooks/useTheme';
 import { Colors } from '../../../constants/theme';
 import type { TaskCardConfig, CardFieldConfig, Task } from '../../../shared/types/index';
 import { TaskStatus, TaskPriority } from '../../../shared/types/index';
@@ -29,7 +30,7 @@ const PREVIEW_TASK: Task = {
   priority_display: '高',
   project: { uid: 'p1', name: '示例项目', group: { uid: 'g1', name: '默认分组', sort_order: 0, settings: {}, created_at: '', updated_at: '', projects_count: 1 }, view_type: 'list', style: {}, settings: {}, sort_order: 0, created_at: '', updated_at: '', tasks_count: 5, completed_tasks_count: 2, desc: '' },
   tags: [
-    { uid: 't1', name: '重要', color: '#ef4444', sort_order: 0, created_at: '', updated_at: '' },
+    { uid: 't1', name: '重要', color: colors.error, sort_order: 0, created_at: '', updated_at: '' },
     { uid: 't2', name: '工作', color: '#3b82f6', sort_order: 1, created_at: '', updated_at: '' },
   ],
   is_all_day: false,
@@ -65,6 +66,7 @@ const FIELD_LABELS: Record<string, string> = {
 };
 
 export default function CardConfigsPage() {
+  const { colors } = useTheme();
   const { data: configs, isLoading } = useCardConfigs();
   const updateConfig = useUpdateCardConfig();
   const duplicateConfig = useDuplicateCardConfig();
@@ -133,14 +135,14 @@ export default function CardConfigsPage() {
   const userConfigs = allConfigs.filter((c) => !c.is_preset);
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background.secondary }}>
       {/* Header */}
-      <View style={{ backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', flexDirection: 'row', alignItems: 'center' }}>
+      <View style={{ backgroundColor: colors.card, paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', alignItems: 'center' }}>
         <TouchableOpacity onPress={() => router.back()} style={{ padding: 6 }}>
           <Text style={{ color: Colors.primary, fontSize: 16 }}>← 返回</Text>
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ fontSize: 17, fontWeight: '600', color: '#111418' }}>卡片配置</Text>
+          <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text.primary }}>卡片配置</Text>
         </View>
         <View style={{ width: 50 }} />
       </View>
@@ -154,26 +156,26 @@ export default function CardConfigsPage() {
           {/* User configs */}
           {userConfigs.length > 0 && (
             <View style={{ marginTop: 16 }}>
-              <Text style={{ fontSize: 13, fontWeight: '600', color: '#9ca3af', paddingHorizontal: 16, marginBottom: 8, textTransform: 'uppercase' }}>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text.muted, paddingHorizontal: 16, marginBottom: 8, textTransform: 'uppercase' }}>
                 自定义配置
               </Text>
               {userConfigs.map((config) => {
                 const fieldConfigs = getFieldConfigs(config);
                 return (
-                <View key={config.uid} style={{ marginHorizontal: 16, marginBottom: 12, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+                <View key={config.uid} style={{ marginHorizontal: 16, marginBottom: 12, backgroundColor: colors.card, borderRadius: 12, overflow: 'hidden' }}>
                   {/* Preview */}
-                  <View style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+                  <View style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
                     <TaskCard task={PREVIEW_TASK} cardConfig={config} onPress={() => {}} />
                   </View>
                   {/* Config info */}
                   <View style={{ padding: 12 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151' }}>{config.name}</Text>
+                      <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>{config.name}</Text>
                       <TouchableOpacity onPress={() => { setSelectedConfig(config); setShowActions(true); }}>
-                        <Text style={{ color: '#9ca3af', fontSize: 14 }}>⋯</Text>
+                        <Text style={{ color: colors.text.muted, fontSize: 14 }}>⋯</Text>
                       </TouchableOpacity>
                     </View>
-                    <Text style={{ fontSize: 12, color: '#9ca3af' }}>
+                    <Text style={{ fontSize: 12, color: colors.text.muted }}>
                       布局: {LAYOUT_OPTIONS.find((l) => l.value === config.layout)?.label || config.layout}
                       {' · '}
                       {fieldConfigs.filter((f) => f.visible).length}/{fieldConfigs.length} 字段可见
@@ -183,7 +185,7 @@ export default function CardConfigsPage() {
                     <View style={{ marginTop: 10, gap: 6 }}>
                       {fieldConfigs.map((fc) => (
                         <View key={fc.field} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <Text style={{ fontSize: 13, color: '#6b7280' }}>{FIELD_LABELS[fc.field] || fc.field}</Text>
+                          <Text style={{ fontSize: 13, color: colors.text.secondary }}>{FIELD_LABELS[fc.field] || fc.field}</Text>
                           <Switch
                             value={fc.visible}
                             onValueChange={() => handleToggleField(config, fc.field)}
@@ -204,18 +206,18 @@ export default function CardConfigsPage() {
           {/* Preset configs */}
           {presetConfigs.length > 0 && (
             <View style={{ marginTop: 16 }}>
-              <Text style={{ fontSize: 13, fontWeight: '600', color: '#9ca3af', paddingHorizontal: 16, marginBottom: 8, textTransform: 'uppercase' }}>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text.muted, paddingHorizontal: 16, marginBottom: 8, textTransform: 'uppercase' }}>
                 系统预设
               </Text>
               {presetConfigs.map((config) => (
-                <View key={config.uid} style={{ marginHorizontal: 16, marginBottom: 12, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
-                  <View style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+                <View key={config.uid} style={{ marginHorizontal: 16, marginBottom: 12, backgroundColor: colors.card, borderRadius: 12, overflow: 'hidden' }}>
+                  <View style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
                     <TaskCard task={PREVIEW_TASK} cardConfig={config} onPress={() => {}} />
                   </View>
                   <View style={{ padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <View>
-                      <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151' }}>{config.name}</Text>
-                      <Text style={{ fontSize: 12, color: '#9ca3af' }}>
+                      <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>{config.name}</Text>
+                      <Text style={{ fontSize: 12, color: colors.text.muted }}>
                         {LAYOUT_OPTIONS.find((l) => l.value === config.layout)?.label || config.layout}
                       </Text>
                     </View>
@@ -234,7 +236,7 @@ export default function CardConfigsPage() {
           {allConfigs.length === 0 && (
             <View style={{ alignItems: 'center', paddingTop: 60 }}>
               <Text style={{ fontSize: 36, marginBottom: 8 }}>🎨</Text>
-              <Text style={{ color: '#9ca3af', fontSize: 14 }}>暂无卡片配置</Text>
+              <Text style={{ color: colors.text.muted, fontSize: 14 }}>暂无卡片配置</Text>
             </View>
           )}
         </ScrollView>
@@ -247,7 +249,7 @@ export default function CardConfigsPage() {
         options={[
           { label: '修改布局', value: 'layout', icon: '📐' },
           { label: '复制配置', value: 'duplicate', icon: '📋' },
-          ...(!selectedConfig?.is_preset ? [{ label: '删除配置', value: 'delete', icon: '🗑', color: '#ef4444', destructive: true }] : []),
+          ...(!selectedConfig?.is_preset ? [{ label: '删除配置', value: 'delete', icon: '🗑', color: colors.error, destructive: true }] : []),
         ]}
         onSelect={(opt) => {
           if (opt.value === 'layout') {

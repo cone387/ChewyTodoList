@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useTags, useCreateTag } from '../../../hooks/useTags';
 import { useToast } from '../../../hooks/useToast';
+import { useTheme } from '../../../hooks/useTheme';
 import { Colors } from '../../../constants/theme';
 import type { Tag } from '../../../shared/types/index';
 
@@ -27,6 +28,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({
   onToggleTag,
   onClose,
 }) => {
+  const { colors } = useTheme();
   const { data: tagsData } = useTags();
   const createTag = useCreateTag();
   const { showToast } = useToast();
@@ -57,20 +59,20 @@ export const TagPicker: React.FC<TagPickerProps> = ({
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}>
           <TouchableWithoutFeedback>
-            <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '70%', paddingBottom: 34 }}>
+            <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '70%', paddingBottom: 34 }}>
               {/* Handle */}
               <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 4 }}>
                 <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: '#d1d5db' }} />
               </View>
 
               <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
-                <Text style={{ fontSize: 17, fontWeight: '600', color: '#111418', marginBottom: 12 }}>选择标签</Text>
+                <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text.primary, marginBottom: 12 }}>选择标签</Text>
 
                 {/* Search */}
                 <TextInput
-                  style={{ backgroundColor: '#f3f4f6', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: '#111418', marginBottom: 12 }}
+                  style={{ backgroundColor: colors.background.tertiary, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: colors.text.primary, marginBottom: 12 }}
                   placeholder="搜索标签..."
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={colors.text.muted}
                   value={search}
                   onChangeText={setSearch}
                 />
@@ -87,12 +89,12 @@ export const TagPicker: React.FC<TagPickerProps> = ({
                         alignItems: 'center',
                         paddingVertical: 12,
                         borderBottomWidth: 1,
-                        borderBottomColor: '#f3f4f6',
+                        borderBottomColor: colors.borderLight,
                       }}
                       onPress={() => onToggleTag(tag.uid)}
                     >
                       <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: tag.color, marginRight: 12 }} />
-                      <Text style={{ flex: 1, fontSize: 15, color: '#374151' }}>{tag.name}</Text>
+                      <Text style={{ flex: 1, fontSize: 15, color: colors.text.secondary }}>{tag.name}</Text>
                       {isSelected && (
                         <Text style={{ color: Colors.primary, fontSize: 18, fontWeight: '600' }}>✓</Text>
                       )}
@@ -102,18 +104,18 @@ export const TagPicker: React.FC<TagPickerProps> = ({
 
                 {filteredTags.length === 0 && !search && (
                   <View style={{ alignItems: 'center', paddingVertical: 20 }}>
-                    <Text style={{ color: '#9ca3af', fontSize: 14 }}>暂无标签</Text>
+                    <Text style={{ color: colors.text.muted, fontSize: 14 }}>暂无标签</Text>
                   </View>
                 )}
               </ScrollView>
 
               {/* Create new tag */}
-              <View style={{ paddingHorizontal: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f3f4f6' }}>
+              <View style={{ paddingHorizontal: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.borderLight }}>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                   <TextInput
-                    style={{ flex: 1, backgroundColor: '#f3f4f6', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: '#111418' }}
+                    style={{ flex: 1, backgroundColor: colors.background.tertiary, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: colors.text.primary }}
                     placeholder="创建新标签..."
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={colors.text.muted}
                     value={newTagName}
                     onChangeText={setNewTagName}
                     returnKeyType="done"

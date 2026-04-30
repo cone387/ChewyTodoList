@@ -12,6 +12,7 @@ import { router } from 'expo-router';
 import { useTags, useCreateTag, useUpdateTag, useDeleteTag } from '../../../hooks/useTags';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { useToast } from '../../../hooks/useToast';
+import { useTheme } from '../../../hooks/useTheme';
 import { Colors } from '../../../constants/theme';
 import type { Tag } from '../../../shared/types/index';
 
@@ -21,6 +22,7 @@ const PRESET_COLORS = [
 ];
 
 export default function TagsPage() {
+  const { colors } = useTheme();
   const { data: tagsData, isLoading } = useTags();
   const createTag = useCreateTag();
   const updateTag = useUpdateTag();
@@ -75,14 +77,14 @@ export default function TagsPage() {
   };
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background.secondary }}>
       {/* Header */}
-      <View style={{ backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', flexDirection: 'row', alignItems: 'center' }}>
+      <View style={{ backgroundColor: colors.card, paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', alignItems: 'center' }}>
         <TouchableOpacity onPress={() => router.back()} style={{ padding: 6 }}>
           <Text style={{ color: Colors.primary, fontSize: 16 }}>← 返回</Text>
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ fontSize: 17, fontWeight: '600', color: '#111418' }}>标签管理</Text>
+          <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text.primary }}>标签管理</Text>
         </View>
         <TouchableOpacity onPress={() => setShowCreate(true)}>
           <Text style={{ color: Colors.primary, fontSize: 14, fontWeight: '600' }}>+ 新建</Text>
@@ -97,12 +99,12 @@ export default function TagsPage() {
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 }}>
           {/* Create form */}
           {showCreate && (
-            <View style={{ backgroundColor: '#fff', marginHorizontal: 16, marginTop: 12, borderRadius: 12, padding: 16, gap: 12 }}>
-              <Text style={{ fontSize: 15, fontWeight: '600', color: '#374151' }}>新建标签</Text>
+            <View style={{ backgroundColor: colors.card, marginHorizontal: 16, marginTop: 12, borderRadius: 12, padding: 16, gap: 12 }}>
+              <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text.secondary }}>新建标签</Text>
               <TextInput
-                style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: '#111418', backgroundColor: '#f9fafb' }}
+                style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: colors.text.primary, backgroundColor: colors.background.secondary }}
                 placeholder="标签名称"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.text.muted}
                 value={newTagName}
                 onChangeText={setNewTagName}
                 autoFocus
@@ -121,7 +123,7 @@ export default function TagsPage() {
               </View>
               <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'flex-end' }}>
                 <TouchableOpacity onPress={() => { setShowCreate(false); setNewTagName(''); }} style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
-                  <Text style={{ color: '#6b7280', fontSize: 14 }}>取消</Text>
+                  <Text style={{ color: colors.text.secondary, fontSize: 14 }}>取消</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleCreate} style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: Colors.primary, borderRadius: 8 }}>
                   <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>创建</Text>
@@ -132,10 +134,10 @@ export default function TagsPage() {
 
           {/* Edit form */}
           {editingTag && (
-            <View style={{ backgroundColor: '#fff', marginHorizontal: 16, marginTop: 12, borderRadius: 12, padding: 16, gap: 12 }}>
-              <Text style={{ fontSize: 15, fontWeight: '600', color: '#374151' }}>编辑标签</Text>
+            <View style={{ backgroundColor: colors.card, marginHorizontal: 16, marginTop: 12, borderRadius: 12, padding: 16, gap: 12 }}>
+              <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text.secondary }}>编辑标签</Text>
               <TextInput
-                style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: '#111418', backgroundColor: '#f9fafb' }}
+                style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: colors.text.primary, backgroundColor: colors.background.secondary }}
                 value={editName}
                 onChangeText={setEditName}
                 autoFocus
@@ -154,7 +156,7 @@ export default function TagsPage() {
               </View>
               <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'flex-end' }}>
                 <TouchableOpacity onPress={() => setEditingTag(null)} style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
-                  <Text style={{ color: '#6b7280', fontSize: 14 }}>取消</Text>
+                  <Text style={{ color: colors.text.secondary, fontSize: 14 }}>取消</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleUpdate} style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: Colors.primary, borderRadius: 8 }}>
                   <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>保存</Text>
@@ -165,7 +167,7 @@ export default function TagsPage() {
 
           {/* Tags list */}
           {tags.length > 0 ? (
-            <View style={{ marginTop: 16, marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+            <View style={{ marginTop: 16, marginHorizontal: 16, backgroundColor: colors.card, borderRadius: 12, overflow: 'hidden' }}>
               {tags.map((tag, idx) => (
                 <TouchableOpacity
                   key={tag.uid}
@@ -175,15 +177,15 @@ export default function TagsPage() {
                     paddingHorizontal: 16,
                     paddingVertical: 14,
                     borderBottomWidth: idx < tags.length - 1 ? 1 : 0,
-                    borderBottomColor: '#f3f4f6',
+                    borderBottomColor: colors.borderLight,
                   }}
                   onPress={() => { setEditingTag(tag); setEditName(tag.name); setEditColor(tag.color); }}
                   onLongPress={() => setDeleteConfirm(tag)}
                 >
                   <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: tag.color, marginRight: 12 }} />
-                  <Text style={{ flex: 1, fontSize: 15, color: '#111418' }}>{tag.name}</Text>
+                  <Text style={{ flex: 1, fontSize: 15, color: colors.text.primary }}>{tag.name}</Text>
                   <TouchableOpacity onPress={() => setDeleteConfirm(tag)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                    <Text style={{ color: '#d1d5db', fontSize: 14 }}>×</Text>
+                    <Text style={{ color: colors.text.muted, fontSize: 14 }}>×</Text>
                   </TouchableOpacity>
                 </TouchableOpacity>
               ))}
@@ -191,7 +193,7 @@ export default function TagsPage() {
           ) : (
             <View style={{ alignItems: 'center', paddingTop: 60 }}>
               <Text style={{ fontSize: 36, marginBottom: 8 }}>🏷</Text>
-              <Text style={{ color: '#9ca3af', fontSize: 14 }}>暂无标签</Text>
+              <Text style={{ color: colors.text.muted, fontSize: 14 }}>暂无标签</Text>
             </View>
           )}
         </ScrollView>

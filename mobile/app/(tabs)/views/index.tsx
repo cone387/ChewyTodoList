@@ -18,6 +18,7 @@ import { ActionSheet } from '../../../components/ui/ActionSheet';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { SkeletonListItem } from '../../../components/ui/SkeletonLoader';
 import { useToast } from '../../../hooks/useToast';
+import { useTheme } from '../../../hooks/useTheme';
 import { Colors } from '../../../constants/theme';
 import { ViewTypeIcons } from '../../../constants/icons';
 import type { TaskView, ViewFilter, ViewSort } from '../../../shared/types/index';
@@ -43,6 +44,7 @@ const OP_LABELS: Record<string, string> = { eq: '=', neq: '≠', gte: '≥', is_
 
 /** Render compact filter/sort/group info tags */
 function ViewMeta({ view }: { view: TaskView }) {
+  const { colors } = useTheme();
   const tags: { label: string; color: string; bg: string }[] = [];
   // Filters
   if (view.filters?.length) {
@@ -75,8 +77,8 @@ function ViewMeta({ view }: { view: TaskView }) {
         </View>
       ))}
       {hiddenCount > 0 && (
-        <View style={{ backgroundColor: '#f3f4f6', borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 }}>
-          <Text style={{ fontSize: 10, color: '#6b7280', fontWeight: '500' }}>+{hiddenCount} 条规则</Text>
+        <View style={{ backgroundColor: colors.background.tertiary, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 }}>
+          <Text style={{ fontSize: 10, color: colors.text.secondary, fontWeight: '500' }}>+{hiddenCount} 条规则</Text>
         </View>
       )}
     </View>
@@ -84,6 +86,7 @@ function ViewMeta({ view }: { view: TaskView }) {
 }
 
 function TemplateMeta({ filters, sorts, group_by }: { filters: ViewFilter[]; sorts: ViewSort[]; group_by?: string }) {
+  const { colors } = useTheme();
   const tags: { label: string; color: string; bg: string }[] = [];
   filters.forEach((f) => {
     const field = FILTER_LABELS[f.field] || f.field;
@@ -102,8 +105,8 @@ function TemplateMeta({ filters, sorts, group_by }: { filters: ViewFilter[]; sor
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
       {visibleTags.map((t, i) => <View key={i} style={{ backgroundColor: t.bg, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 }}><Text style={{ fontSize: 10, color: t.color, fontWeight: '500' }}>{t.label}</Text></View>)}
       {hiddenCount > 0 && (
-        <View style={{ backgroundColor: '#f3f4f6', borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 }}>
-          <Text style={{ fontSize: 10, color: '#6b7280', fontWeight: '500' }}>+{hiddenCount} 条规则</Text>
+        <View style={{ backgroundColor: colors.background.tertiary, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 }}>
+          <Text style={{ fontSize: 10, color: colors.text.secondary, fontWeight: '500' }}>+{hiddenCount} 条规则</Text>
         </View>
       )}
     </View>
@@ -135,6 +138,7 @@ const PRESETS: ViewTemplate[] = [
 type Tab = 'nav' | 'my' | 'system';
 
 export default function ViewsPage() {
+  const { colors } = useTheme();
   const { data: viewsData, isLoading } = useViews();
   const deleteView = useDeleteView();
   const duplicateView = useDuplicateView();
@@ -197,7 +201,7 @@ export default function ViewsPage() {
     const icon = ViewTypeIcons[item.view_type] || 'format-list-bulleted';
     return (
       <TouchableOpacity onPress={() => router.push(`/(tabs)/views/${item.uid}/edit` as any)} activeOpacity={0.7}
-        style={{ paddingHorizontal: 14, paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+        style={{ paddingHorizontal: 14, paddingVertical: 12, backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
         <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
           {dragHandle}
           <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: Colors.primary + '14', alignItems: 'center', justifyContent: 'center', marginRight: 10, marginTop: 2 }}>
@@ -205,17 +209,17 @@ export default function ViewsPage() {
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={{ fontSize: 15, fontWeight: '600', color: '#111418' }} numberOfLines={1}>{item.name}</Text>
+              <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text.primary }} numberOfLines={1}>{item.name}</Text>
               {item.is_default && <View style={{ backgroundColor: Colors.primary + '18', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 }}><Text style={{ fontSize: 9, fontWeight: '700', color: Colors.primary }}>默认</Text></View>}
             </View>
-            <Text style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>
+            <Text style={{ fontSize: 11, color: colors.text.muted, marginTop: 2 }}>
               {VTL[item.view_type]}{item.project ? ` · ${item.project.name}` : ' · 全局'}{item.follow_selected_project ? ' · 跟随项目' : ''}
             </Text>
             <ViewMeta view={item} />
           </View>
           <TouchableOpacity onPress={() => handleRemove(item)}
             style={{ paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: '#fef2f2', marginTop: 2 }}>
-            <Text style={{ fontSize: 11, fontWeight: '500', color: '#ef4444' }}>移除</Text>
+            <Text style={{ fontSize: 11, fontWeight: '500', color: colors.error }}>移除</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -257,13 +261,13 @@ export default function ViewsPage() {
   };
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background.secondary }}>
       {/* Header */}
-      <View style={{ backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+      <View style={{ backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12 }}>
           <View style={{ width: 32 }} />
           <View style={{ flex: 1, alignItems: 'center' }}>
-            <Text style={{ fontSize: 18, fontWeight: '600', color: '#111418' }}>视图管理</Text>
+            <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text.primary }}>视图管理</Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
             <TouchableOpacity onPress={() => router.push('/(tabs)/views/templates' as any)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -281,17 +285,17 @@ export default function ViewsPage() {
               style={{ flex: 1, alignItems: 'center', paddingVertical: 10, borderBottomWidth: 2, borderBottomColor: tab === t.key ? Colors.primary : 'transparent' }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <Text style={{ fontSize: 14, fontWeight: tab === t.key ? '600' : '400', color: tab === t.key ? Colors.primary : '#6b7280' }}>{t.label}</Text>
-                <View style={{ backgroundColor: '#f3f4f6', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 }}><Text style={{ fontSize: 10, color: '#6b7280' }}>{t.n}</Text></View>
+                <View style={{ backgroundColor: colors.background.tertiary, borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 }}><Text style={{ fontSize: 10, color: colors.text.secondary }}>{t.n}</Text></View>
               </View>
             </TouchableOpacity>
           ))}
         </View>
         {tab !== 'nav' && (
           <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f3f4f6', borderRadius: 10, paddingHorizontal: 12, height: 36 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.background.tertiary, borderRadius: 10, paddingHorizontal: 12, height: 36 }}>
               <MaterialCommunityIcons name="magnify" size={16} color="#9ca3af" />
-              <TextInput style={{ flex: 1, fontSize: 14, color: '#111418', paddingVertical: 0, marginLeft: 6 }}
-                placeholder="搜索..." placeholderTextColor="#9ca3af" value={search} onChangeText={setSearch} />
+              <TextInput style={{ flex: 1, fontSize: 14, color: colors.text.primary, paddingVertical: 0, marginLeft: 6 }}
+                placeholder="搜索..." placeholderTextColor={colors.text.muted} value={search} onChangeText={setSearch} />
               {search ? <TouchableOpacity onPress={() => setSearch('')}><MaterialCommunityIcons name="close" size={14} color="#9ca3af" /></TouchableOpacity> : null}
             </View>
           </View>
@@ -299,18 +303,18 @@ export default function ViewsPage() {
       </View>
 
       {isLoading ? (
-        <View style={{ paddingTop: 16, marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12 }}><SkeletonListItem /><SkeletonListItem /><SkeletonListItem /></View>
+        <View style={{ paddingTop: 16, marginHorizontal: 16, backgroundColor: colors.card, borderRadius: 12 }}><SkeletonListItem /><SkeletonListItem /><SkeletonListItem /></View>
       ) : tab === 'nav' ? (
         navViews.length > 0 ? (
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 11, color: '#9ca3af', paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4 }}>
+            <Text style={{ fontSize: 11, color: colors.text.muted, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4 }}>
               {isWeb ? '点击上下箭头排序 · 点击编辑' : '长按拖动排序 · 点击编辑'}
             </Text>
             {!isWeb && DraggableFlatList ? (
               <DraggableFlatList data={navViews} keyExtractor={(item: TaskView) => item.uid} renderItem={renderNavItem} onDragEnd={handleDragEnd}
-                containerStyle={{ marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }} />
+                containerStyle={{ marginHorizontal: 16, backgroundColor: colors.card, borderRadius: 12, overflow: 'hidden' }} />
             ) : (
-              <ScrollView style={{ marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+              <ScrollView style={{ marginHorizontal: 16, backgroundColor: colors.card, borderRadius: 12, overflow: 'hidden' }}>
                 {navViews.map((v, i) => renderNavItemWeb(v, i))}
               </ScrollView>
             )}
@@ -319,21 +323,21 @@ export default function ViewsPage() {
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 }}>
           {tab === 'my' && (myFiltered.length > 0 ? (
-            <View style={{ marginTop: 10, marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+            <View style={{ marginTop: 10, marginHorizontal: 16, backgroundColor: colors.card, borderRadius: 12, overflow: 'hidden' }}>
               {myFiltered.map((v, i) => {
                 const ic = ViewTypeIcons[v.view_type] || 'format-list-bulleted';
                 return (
                   <TouchableOpacity key={v.uid} onPress={() => router.push(`/(tabs)/views/${v.uid}/edit` as any)}
                     onLongPress={() => { setSelView(v); setShowAct(true); }} activeOpacity={0.7}
-                    style={{ paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: i < myFiltered.length - 1 ? 1 : 0, borderBottomColor: '#f3f4f6' }}>
+                    style={{ paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: i < myFiltered.length - 1 ? 1 : 0, borderBottomColor: colors.borderLight }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <MaterialCommunityIcons name={ic} size={18} color={Colors.primary} style={{ marginRight: 10 }} />
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Text style={{ fontSize: 14, fontWeight: '500', color: '#111418' }}>{v.name}</Text>
+                          <Text style={{ fontSize: 14, fontWeight: '500', color: colors.text.primary }}>{v.name}</Text>
                           {v.is_visible_in_nav && <View style={{ backgroundColor: '#f3f0ff', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 }}><Text style={{ fontSize: 9, fontWeight: '600', color: Colors.primary }}>导航栏</Text></View>}
                         </View>
-                        <Text style={{ fontSize: 11, color: '#9ca3af', marginTop: 1 }}>{VTL[v.view_type]}{v.project ? ` · ${v.project.name}` : ''}</Text>
+                        <Text style={{ fontSize: 11, color: colors.text.muted, marginTop: 1 }}>{VTL[v.view_type]}{v.project ? ` · ${v.project.name}` : ''}</Text>
                         <ViewMeta view={v} />
                       </View>
                       <MaterialCommunityIcons name="chevron-right" size={16} color="#d1d5db" />
@@ -347,24 +351,24 @@ export default function ViewsPage() {
           {tab === 'system' && (
             <View style={{ marginTop: 10, paddingHorizontal: 16, gap: 10 }}>
               {sysFiltered.map((t) => (
-                <View key={t.id} style={{ backgroundColor: '#fff', borderRadius: 12, padding: 14 }}>
+                <View key={t.id} style={{ backgroundColor: colors.card, borderRadius: 12, padding: 14 }}>
                   <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
                     <View style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: Colors.primary + '14', alignItems: 'center', justifyContent: 'center' }}>
                       <MaterialCommunityIcons name={t.icon as any} size={20} color={Colors.primary} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={{ fontSize: 15, fontWeight: '600', color: '#111418' }}>{t.name}</Text>
+                        <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text.primary }}>{t.name}</Text>
                         <View style={{ backgroundColor: '#eff6ff', borderRadius: 3, paddingHorizontal: 5, paddingVertical: 1 }}><Text style={{ fontSize: 9, fontWeight: '600', color: '#3b82f6' }}>系统</Text></View>
                       </View>
-                      <Text style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>{t.description}</Text>
+                      <Text style={{ fontSize: 12, color: colors.text.muted, marginTop: 2 }}>{t.description}</Text>
                       <TemplateMeta filters={t.filters} sorts={t.sorts} group_by={t.group_by} />
                     </View>
                   </View>
                   <View style={{ flexDirection: 'row', gap: 8 }}>
                     <TouchableOpacity onPress={() => handleCreate(t, false)} disabled={createView.isPending}
-                      style={{ flex: 1, paddingVertical: 8, backgroundColor: '#f3f4f6', borderRadius: 8, alignItems: 'center' }}>
-                      <Text style={{ fontSize: 13, fontWeight: '500', color: '#374151' }}>创建副本</Text>
+                      style={{ flex: 1, paddingVertical: 8, backgroundColor: colors.background.tertiary, borderRadius: 8, alignItems: 'center' }}>
+                      <Text style={{ fontSize: 13, fontWeight: '500', color: colors.text.secondary }}>创建副本</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => handleCreate(t, true)} disabled={createView.isPending}
                       style={{ flex: 1, paddingVertical: 8, backgroundColor: '#22c55e', borderRadius: 8, alignItems: 'center' }}>
@@ -381,7 +385,7 @@ export default function ViewsPage() {
       <ActionSheet visible={showAct} title={selView?.name || ''} options={[
         ...(selView?.is_visible_in_nav ? [{ label: '从导航栏移除', value: 'rm', icon: '👁‍🗨' }] : [{ label: '加入导航栏', value: 'add', icon: '👁' }]),
         { label: '复制', value: 'dup', icon: '📋' },
-        ...(!selView?.is_system ? [{ label: '删除', value: 'del', icon: '🗑', color: '#ef4444', destructive: true }] : []),
+        ...(!selView?.is_system ? [{ label: '删除', value: 'del', icon: '🗑', color: colors.error, destructive: true }] : []),
       ]} onSelect={(o) => {
         if (o.value === 'rm' && selView) handleRemove(selView);
         else if (o.value === 'add' && selView) handleAdd(selView);

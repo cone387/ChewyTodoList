@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import type { Task, TaskView } from '../../shared/types/index';
 import { TaskPriority } from '../../shared/types/index';
+import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
 
 interface CalendarViewProps {
@@ -35,6 +36,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   onTaskPress,
   emptyMessage = '暂无任务',
 }) => {
+  const { colors } = useTheme();
   const displaySettings = view?.view_settings || {};
   const showProject = displaySettings.show_project ?? true;
   const showPriority = displaySettings.show_priority ?? true;
@@ -103,7 +105,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const renderTaskItem = useCallback(({ item }: { item: Task }) => (
     <TouchableOpacity
       style={{
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         borderRadius: 10,
         padding: 12,
         marginBottom: 8,
@@ -129,14 +131,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         </Text>
         {(showProject || showPriority) && (
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-            {showProject && item.project && <Text style={{ fontSize: 11, color: '#9ca3af' }}>📁 {item.project.name}</Text>}
-            {showPriority && <Text style={{ fontSize: 11, color: '#9ca3af' }}>{item.priority_display}</Text>}
+            {showProject && item.project && <Text style={{ fontSize: 11, color: colors.text.muted }}>📁 {item.project.name}</Text>}
+            {showPriority && <Text style={{ fontSize: 11, color: colors.text.muted }}>{item.priority_display}</Text>}
           </View>
         )}
       </View>
       {item.is_overdue && !item.is_completed && (
         <View style={{ backgroundColor: '#fef2f2', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
-          <Text style={{ color: '#ef4444', fontSize: 10, fontWeight: '600' }}>逾期</Text>
+          <Text style={{ color: colors.error, fontSize: 10, fontWeight: '600' }}>逾期</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -145,12 +147,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   return (
     <View style={{ flex: 1 }}>
       {/* Month navigation */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#fff' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: colors.card }}>
         <TouchableOpacity onPress={() => navigateMonth('prev')} style={{ padding: 8 }}>
-          <Text style={{ fontSize: 18, color: '#6b7280' }}>‹</Text>
+          <Text style={{ fontSize: 18, color: colors.text.secondary }}>‹</Text>
         </TouchableOpacity>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text style={{ fontSize: 17, fontWeight: '600', color: '#111418' }}>
+          <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text.primary }}>
             {currentDate.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long' })}
           </Text>
           <TouchableOpacity
@@ -161,21 +163,21 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           </TouchableOpacity>
         </View>
         <TouchableOpacity onPress={() => navigateMonth('next')} style={{ padding: 8 }}>
-          <Text style={{ fontSize: 18, color: '#6b7280' }}>›</Text>
+          <Text style={{ fontSize: 18, color: colors.text.secondary }}>›</Text>
         </TouchableOpacity>
       </View>
 
       {/* Weekday headers */}
-      <View style={{ flexDirection: 'row', backgroundColor: '#fff', paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+      <View style={{ flexDirection: 'row', backgroundColor: colors.card, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
         {WEEKDAYS.map((day) => (
           <View key={day} style={{ flex: 1, alignItems: 'center' }}>
-            <Text style={{ fontSize: 12, color: '#9ca3af', fontWeight: '500' }}>{day}</Text>
+            <Text style={{ fontSize: 12, color: colors.text.muted, fontWeight: '500' }}>{day}</Text>
           </View>
         ))}
       </View>
 
       {/* Calendar grid */}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', backgroundColor: '#fff' }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', backgroundColor: colors.card }}>
         {monthDates.map((date) => {
           const dateKey = date.toDateString();
           const dayTasks = tasksByDate[dateKey] || [];
@@ -193,7 +195,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 justifyContent: 'center',
                 borderBottomWidth: 0.5,
                 borderRightWidth: 0.5,
-                borderColor: '#f3f4f6',
+                borderColor: colors.borderLight,
                 backgroundColor: isSelectedDate ? '#f3f0ff' : '#fff',
               }}
               onPress={() => setSelectedDate(dateKey)}
@@ -228,11 +230,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       </View>
 
       {/* Selected date tasks */}
-      <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+      <View style={{ flex: 1, backgroundColor: colors.background.secondary }}>
         {selectedDate ? (
           <View style={{ flex: 1 }}>
-            <View style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151' }}>
+            <View style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>
                 {new Date(selectedDate).toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' })}
                 {' · '}{selectedTasks.length} 个任务
               </Text>
@@ -246,13 +248,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               />
             ) : (
               <View style={{ alignItems: 'center', paddingVertical: 24 }}>
-                <Text style={{ color: '#d1d5db', fontSize: 13 }}>该日期暂无任务</Text>
+                <Text style={{ color: colors.text.muted, fontSize: 13 }}>该日期暂无任务</Text>
               </View>
             )}
           </View>
         ) : (
           <View style={{ alignItems: 'center', paddingVertical: 24 }}>
-            <Text style={{ color: '#9ca3af', fontSize: 13 }}>点击日期查看任务</Text>
+            <Text style={{ color: colors.text.muted, fontSize: 13 }}>点击日期查看任务</Text>
           </View>
         )}
       </View>

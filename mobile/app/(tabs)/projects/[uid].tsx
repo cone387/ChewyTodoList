@@ -14,11 +14,13 @@ import { ListView } from '../../../components/views/ListView';
 import { FAB } from '../../../components/ui/FAB';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { useToast } from '../../../hooks/useToast';
+import { useTheme } from '../../../hooks/useTheme';
 import { Colors } from '../../../constants/theme';
 import { useTaskModal } from '../../../hooks/useTaskModal';
 import type { Task } from '../../../shared/types/index';
 
 export default function ProjectDetailPage() {
+  const { colors } = useTheme();
   const { uid } = useLocalSearchParams<{ uid: string }>();
   const { data: project, isLoading } = useProject(uid);
   const updateProject = useUpdateProject();
@@ -62,7 +64,7 @@ export default function ProjectDetailPage() {
 
   if (isLoading) {
     return (
-      <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+      <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator size="large" color={Colors.primary} />
       </SafeAreaView>
     );
@@ -70,8 +72,8 @@ export default function ProjectDetailPage() {
 
   if (!project) {
     return (
-      <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ color: '#9ca3af', fontSize: 16 }}>项目不存在</Text>
+      <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ color: colors.text.muted, fontSize: 16 }}>项目不存在</Text>
         <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 12 }}>
           <Text style={{ color: Colors.primary }}>返回</Text>
         </TouchableOpacity>
@@ -80,16 +82,16 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background.secondary }}>
       {/* Header */}
-      <View style={{ backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', flexDirection: 'row', alignItems: 'center' }}>
+      <View style={{ backgroundColor: colors.card, paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', alignItems: 'center' }}>
         <TouchableOpacity onPress={() => router.back()} style={{ padding: 6 }}>
           <Text style={{ color: Colors.primary, fontSize: 16 }}>← 返回</Text>
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
           {isEditingName ? (
             <TextInput
-              style={{ fontSize: 17, fontWeight: '600', color: '#111418', textAlign: 'center', borderBottomWidth: 1, borderBottomColor: '#e5e7eb', paddingVertical: 2, minWidth: 120 }}
+              style={{ fontSize: 17, fontWeight: '600', color: colors.text.primary, textAlign: 'center', borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 2, minWidth: 120 }}
               value={editName}
               onChangeText={setEditName}
               onBlur={handleSaveName}
@@ -98,28 +100,28 @@ export default function ProjectDetailPage() {
             />
           ) : (
             <TouchableOpacity onPress={() => { setEditName(project.name); setIsEditingName(true); }}>
-              <Text style={{ fontSize: 17, fontWeight: '600', color: '#111418' }}>{project.name}</Text>
+              <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text.primary }}>{project.name}</Text>
             </TouchableOpacity>
           )}
         </View>
         <TouchableOpacity onPress={() => setShowDeleteConfirm(true)} style={{ padding: 6 }}>
-          <Text style={{ color: '#ef4444', fontSize: 14 }}>删除</Text>
+          <Text style={{ color: colors.error, fontSize: 14 }}>删除</Text>
         </TouchableOpacity>
       </View>
 
       {/* Project info */}
-      <View style={{ backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', flexDirection: 'row', gap: 16 }}>
+      <View style={{ backgroundColor: colors.card, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', gap: 16 }}>
         <View style={{ alignItems: 'center' }}>
-          <Text style={{ fontSize: 20, fontWeight: '700', color: '#111418' }}>{project.tasks_count || 0}</Text>
-          <Text style={{ fontSize: 11, color: '#9ca3af' }}>总任务</Text>
+          <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text.primary }}>{project.tasks_count || 0}</Text>
+          <Text style={{ fontSize: 11, color: colors.text.muted }}>总任务</Text>
         </View>
         <View style={{ alignItems: 'center' }}>
           <Text style={{ fontSize: 20, fontWeight: '700', color: Colors.success }}>{project.completed_tasks_count || 0}</Text>
-          <Text style={{ fontSize: 11, color: '#9ca3af' }}>已完成</Text>
+          <Text style={{ fontSize: 11, color: colors.text.muted }}>已完成</Text>
         </View>
         <View style={{ flex: 1 }} />
         <View style={{ justifyContent: 'center' }}>
-          <Text style={{ fontSize: 12, color: '#9ca3af' }}>{project.group?.name}</Text>
+          <Text style={{ fontSize: 12, color: colors.text.muted }}>{project.group?.name}</Text>
         </View>
       </View>
 

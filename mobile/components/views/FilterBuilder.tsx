@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ActionSheet } from '../ui/ActionSheet';
+import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
 import type { ViewFilter } from '../../shared/types/index';
 import { TaskStatus, TaskPriority } from '../../shared/types/index';
@@ -115,6 +116,7 @@ function valLabel(fieldKey: string, val: any): string {
 interface Props { filters: ViewFilter[]; onChange: (f: ViewFilter[]) => void; }
 
 export const FilterBuilder: React.FC<Props> = ({ filters, onChange }) => {
+  const { colors } = useTheme();
   const [showFieldPicker, setShowFieldPicker] = useState(false);
   const [editIdx, setEditIdx] = useState<number | null>(null);
   const [showOpPicker, setShowOpPicker] = useState(false);
@@ -165,8 +167,8 @@ export const FilterBuilder: React.FC<Props> = ({ filters, onChange }) => {
         const hasVal = f.value !== null && f.value !== undefined && f.value !== '';
 
         return (
-          <View key={f.id || idx} style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', backgroundColor: '#f9fafb', borderRadius: 10, padding: 8, marginBottom: 6, gap: 4 }}>
-            {idx > 0 && <Text style={{ fontSize: 10, color: '#9ca3af', fontWeight: '600', marginRight: 2 }}>且</Text>}
+          <View key={f.id || idx} style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', backgroundColor: colors.background.secondary, borderRadius: 10, padding: 8, marginBottom: 6, gap: 4 }}>
+            {idx > 0 && <Text style={{ fontSize: 10, color: colors.text.muted, fontWeight: '600', marginRight: 2 }}>且</Text>}
             {/* Field */}
             <TouchableOpacity onPress={() => { setEditIdx(idx); setShowFieldPicker(true); }}
               style={{ backgroundColor: '#e0e7ff', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 3 }}>
@@ -264,20 +266,20 @@ export const FilterBuilder: React.FC<Props> = ({ filters, onChange }) => {
       {/* Text input for text/relation/date fields */}
       {showTextInput && editIdx !== null && (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', padding: 20, zIndex: 100 }}>
-          <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 20 }}>
-            <Text style={{ fontSize: 15, fontWeight: '600', color: '#111418', marginBottom: 12 }}>输入值</Text>
+          <View style={{ backgroundColor: colors.card, borderRadius: 16, padding: 20 }}>
+            <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text.primary, marginBottom: 12 }}>输入值</Text>
             <TextInput
-              style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: '#111418', backgroundColor: '#f9fafb' }}
+              style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: colors.text.primary, backgroundColor: colors.background.secondary }}
               value={textInputVal}
               onChangeText={setTextInputVal}
               autoFocus
               placeholder="输入筛选值..."
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.text.muted}
             />
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}>
               <TouchableOpacity onPress={() => { setShowTextInput(false); setEditIdx(null); }}
-                style={{ flex: 1, paddingVertical: 10, backgroundColor: '#f3f4f6', borderRadius: 10, alignItems: 'center' }}>
-                <Text style={{ fontSize: 14, color: '#6b7280' }}>取消</Text>
+                style={{ flex: 1, paddingVertical: 10, backgroundColor: colors.background.tertiary, borderRadius: 10, alignItems: 'center' }}>
+                <Text style={{ fontSize: 14, color: colors.text.secondary }}>取消</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => {
                 if (editIdx !== null) update(editIdx, { value: textInputVal || null });

@@ -17,6 +17,7 @@ import { ActionSheet } from '../../../../components/ui/ActionSheet';
 import { ConfirmDialog } from '../../../../components/ui/ConfirmDialog';
 import { FilterBuilder } from '../../../../components/views/FilterBuilder';
 import { useToast } from '../../../../hooks/useToast';
+import { useTheme } from '../../../../hooks/useTheme';
 import { Colors } from '../../../../constants/theme';
 import type { Project, ViewFilter, ViewSort } from '../../../../shared/types/index';
 
@@ -62,6 +63,11 @@ function fmtVal(field: string, val: any): string {
 }
 
 export default function EditViewPage() {
+  const { colors } = useTheme();
+  const boxStyle = {
+    backgroundColor: colors.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
+    borderWidth: 1, borderColor: colors.border, flexDirection: 'row' as const, alignItems: 'center' as const,
+  };
   const { uid } = useLocalSearchParams<{ uid: string }>();
   const { data: view, isLoading } = useView(uid);
   const updateView = useUpdateView();
@@ -107,16 +113,16 @@ export default function EditViewPage() {
     finally { setSaving(false); }
   };
 
-  if (isLoading) return <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#f9fafb', alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size="large" color={Colors.primary} /></SafeAreaView>;
+  if (isLoading) return <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background.secondary, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size="large" color={Colors.primary} /></SafeAreaView>;
 
   const proj = projects.find((p) => p.uid === pUid);
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background.secondary }}>
       {/* Header */}
-      <View style={{ backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', flexDirection: 'row', alignItems: 'center' }}>
+      <View style={{ backgroundColor: colors.card, paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', alignItems: 'center' }}>
         <TouchableOpacity onPress={() => router.back()} style={{ padding: 6 }}><Text style={{ color: Colors.primary, fontSize: 15 }}>返回</Text></TouchableOpacity>
-        <View style={{ flex: 1, alignItems: 'center' }}><Text style={{ fontSize: 16, fontWeight: '600', color: '#111418' }}>{ro ? '查看视图' : '编辑视图'}</Text></View>
+        <View style={{ flex: 1, alignItems: 'center' }}><Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary }}>{ro ? '查看视图' : '编辑视图'}</Text></View>
         {!ro && <TouchableOpacity onPress={save} disabled={saving} style={{ paddingHorizontal: 12, paddingVertical: 5, backgroundColor: Colors.primary, borderRadius: 8, opacity: saving ? 0.7 : 1 }}>
           {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>保存</Text>}
         </TouchableOpacity>}
@@ -125,8 +131,8 @@ export default function EditViewPage() {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40, paddingHorizontal: 16 }}>
         {/* Row 1: Name + Nav toggle on same line */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 }}>
-          <TextInput style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 16, color: '#111418', borderWidth: 1, borderColor: '#e5e7eb' }}
-            placeholder="视图名称" placeholderTextColor="#9ca3af" value={name} onChangeText={setName} editable={!ro} />
+          <TextInput style={{ flex: 1, backgroundColor: colors.card, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 16, color: colors.text.primary, borderWidth: 1, borderColor: colors.border }}
+            placeholder="视图名称" placeholderTextColor={colors.text.muted} value={name} onChangeText={setName} editable={!ro} />
           <TouchableOpacity onPress={() => !ro && setNav(!nav)} disabled={ro}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10,
               backgroundColor: nav ? Colors.primary + '14' : '#f3f4f6', borderWidth: 1, borderColor: nav ? Colors.primary + '30' : '#e5e7eb' }}>
@@ -200,35 +206,35 @@ export default function EditViewPage() {
               </TouchableOpacity>}
             </View>
           ))}
-          {!ro && <TouchableOpacity onPress={() => setShowSF(true)} style={{ paddingHorizontal: 8, paddingVertical: 4, borderRadius: 14, backgroundColor: '#f3f4f6' }}>
+          {!ro && <TouchableOpacity onPress={() => setShowSF(true)} style={{ paddingHorizontal: 8, paddingVertical: 4, borderRadius: 14, backgroundColor: colors.background.tertiary }}>
             <Text style={{ fontSize: 12, color: Colors.primary, fontWeight: '600' }}>+ 排序</Text>
           </TouchableOpacity>}
-          {sorts.length === 0 && ro && <Text style={{ fontSize: 12, color: '#9ca3af' }}>无</Text>}
+          {sorts.length === 0 && ro && <Text style={{ fontSize: 12, color: colors.text.muted }}>无</Text>}
         </View>
 
         {/* Filters */}
         <Lbl text="筛选条件" />
-        <View style={{ backgroundColor: '#fff', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#e5e7eb' }}>
+        <View style={{ backgroundColor: colors.card, borderRadius: 10, padding: 10, borderWidth: 1, borderColor: colors.border }}>
           {ro ? (
             filters.length > 0 ? (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                 {filters.map((f, i) => (
                   <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#e0e7ff', borderRadius: 14, paddingHorizontal: 8, paddingVertical: 3 }}>
-                    {i > 0 && <Text style={{ fontSize: 10, color: '#6b7280' }}>且</Text>}
+                    {i > 0 && <Text style={{ fontSize: 10, color: colors.text.secondary }}>且</Text>}
                     <Text style={{ fontSize: 11, color: '#4338ca', fontWeight: '500' }}>{FIELD_L[f.field] || f.field}</Text>
-                    <Text style={{ fontSize: 11, color: '#6b7280' }}>{OP_L[f.operator] || f.operator}</Text>
+                    <Text style={{ fontSize: 11, color: colors.text.secondary }}>{OP_L[f.operator] || f.operator}</Text>
                     {f.value !== null && f.value !== undefined && <Text style={{ fontSize: 11, color: '#92400e', fontWeight: '500' }}>{fmtVal(f.field, f.value)}</Text>}
                   </View>
                 ))}
               </View>
-            ) : <Text style={{ fontSize: 12, color: '#9ca3af' }}>无</Text>
+            ) : <Text style={{ fontSize: 12, color: colors.text.muted }}>无</Text>
           ) : <FilterBuilder filters={filters} onChange={setFilters} />}
         </View>
 
         {/* Delete */}
         {!ro && (
           <TouchableOpacity onPress={() => setShowDel(true)} style={{ marginTop: 24, paddingVertical: 12, backgroundColor: '#fef2f2', borderRadius: 10, alignItems: 'center' }}>
-            <Text style={{ fontSize: 14, fontWeight: '600', color: '#ef4444' }}>删除视图</Text>
+            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.error }}>删除视图</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -256,10 +262,6 @@ export default function EditViewPage() {
 }
 
 function Lbl({ text }: { text: string }) {
-  return <Text style={{ fontSize: 12, fontWeight: '600', color: '#9ca3af', marginTop: 14, marginBottom: 6 }}>{text}</Text>;
+  const { colors } = useTheme();
+  return <Text style={{ fontSize: 12, fontWeight: '600', color: colors.text.muted, marginTop: 14, marginBottom: 6 }}>{text}</Text>;
 }
-
-const boxStyle = {
-  backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
-  borderWidth: 1, borderColor: '#e5e7eb', flexDirection: 'row' as const, alignItems: 'center' as const,
-};

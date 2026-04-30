@@ -9,6 +9,7 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
+import { useTheme } from '../../hooks/useTheme';
 
 export interface ActionSheetOption {
   label: string;
@@ -35,6 +36,7 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
   onCancel,
   cancelLabel = '取消',
 }) => {
+  const { colors } = useTheme();
   const slideAnim = useRef(new Animated.Value(300)).current;
 
   useEffect(() => {
@@ -62,7 +64,7 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
             <Animated.View
               style={{
                 transform: [{ translateY: slideAnim }],
-                backgroundColor: '#fff',
+                backgroundColor: colors.card,
                 borderTopLeftRadius: 20,
                 borderTopRightRadius: 20,
                 paddingBottom: 34,
@@ -74,8 +76,8 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
               </View>
 
               {title && (
-                <View style={{ paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
-                  <Text style={{ textAlign: 'center', fontSize: 14, color: '#6b7280', fontWeight: '500' }}>{title}</Text>
+                <View style={{ paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
+                  <Text style={{ textAlign: 'center', fontSize: 14, color: colors.text.secondary, fontWeight: '500' }}>{title}</Text>
                 </View>
               )}
               <ScrollView style={{ maxHeight: 300 }}>
@@ -115,13 +117,13 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
                   marginHorizontal: 16,
                   marginTop: 12,
                   paddingVertical: 14,
-                  backgroundColor: '#f3f4f6',
+                  backgroundColor: colors.background.tertiary,
                   borderRadius: 12,
                   alignItems: 'center',
                 }}
                 onPress={onCancel}
               >
-                <Text style={{ fontSize: 16, fontWeight: '500', color: '#374151' }}>{cancelLabel}</Text>
+                <Text style={{ fontSize: 16, fontWeight: '500', color: colors.text.secondary }}>{cancelLabel}</Text>
               </TouchableOpacity>
             </Animated.View>
           </TouchableWithoutFeedback>

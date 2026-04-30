@@ -19,10 +19,12 @@ import { ActionSheet } from '../../../components/ui/ActionSheet';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { SkeletonListItem } from '../../../components/ui/SkeletonLoader';
 import { useToast } from '../../../hooks/useToast';
+import { useTheme } from '../../../hooks/useTheme';
 import { Colors, Shadows } from '../../../constants/theme';
 import type { Project, Group } from '../../../shared/types/index';
 
 export default function ProjectsPage() {
+  const { colors, isDark } = useTheme();
   const PRESET_ICONS = [
     'folder', 'briefcase', 'account', 'cart', 'airplane', 'book-open-page-variant', 'home', 'code-tags',
     'calendar', 'clipboard-text', 'target', 'lightbulb-on-outline', 'rocket-launch-outline', 'music-note',
@@ -124,19 +126,19 @@ export default function ProjectsPage() {
   const selectedGroup = groups.find((g) => g.uid === newProjectGroupUid);
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background.secondary }}>
       {/* Header */}
-      <View style={{ backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', flexDirection: 'row', alignItems: 'center', zIndex: 10 }}>
+      <View style={{ backgroundColor: colors.card, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', alignItems: 'center', zIndex: 10 }}>
         <View style={{ width: 32 }} />
         <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ fontSize: 18, fontWeight: '600', color: '#111418' }}>项目</Text>
+          <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text.primary }}>项目</Text>
         </View>
         <View style={{ width: 32, alignItems: 'flex-end', justifyContent: 'center', position: 'relative' }}>
           <TouchableOpacity onPress={() => setShowCreateMenu((prev) => !prev)} style={{ width: 32, alignItems: 'center', justifyContent: 'center' }}>
             <MaterialCommunityIcons name="plus" size={22} color={Colors.primary} />
           </TouchableOpacity>
           {showCreateMenu && (
-            <View style={{ position: 'absolute', right: 0, top: 28, width: 152, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', paddingVertical: 4, zIndex: 20, ...Shadows.low }}>
+            <View style={{ position: 'absolute', right: 0, top: 28, width: 152, backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.border, paddingVertical: 4, zIndex: 20, ...Shadows.low }}>
               <TouchableOpacity
                 onPress={() => {
                   setShowCreateMenu(false);
@@ -147,7 +149,7 @@ export default function ProjectsPage() {
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10 }}
               >
                 <MaterialCommunityIcons name="format-list-bulleted-square" size={17} color={Colors.primary} />
-                <Text style={{ fontSize: 14, color: '#374151' }}>新建清单</Text>
+                <Text style={{ fontSize: 14, color: colors.text.secondary }}>新建清单</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
@@ -158,7 +160,7 @@ export default function ProjectsPage() {
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10 }}
               >
                 <MaterialCommunityIcons name="folder-plus-outline" size={17} color="#f97316" />
-                <Text style={{ fontSize: 14, color: '#374151' }}>新建分组</Text>
+                <Text style={{ fontSize: 14, color: colors.text.secondary }}>新建分组</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -167,7 +169,7 @@ export default function ProjectsPage() {
 
       {isLoading ? (
         <View style={{ flex: 1, paddingTop: 16 }}>
-          <View style={{ marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
+          <View style={{ marginHorizontal: 16, backgroundColor: colors.card, borderRadius: 12, overflow: 'hidden' }}>
             <SkeletonListItem />
             <SkeletonListItem />
             <SkeletonListItem />
@@ -180,7 +182,7 @@ export default function ProjectsPage() {
           {groupedProjects.map(({ group, projects: groupProjects }) => (
             <View key={group.uid} style={{ marginTop: 16 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 8 }}>
-                <Text style={{ fontSize: 13, fontWeight: '600', color: '#9ca3af', flex: 1, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text.muted, flex: 1, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                   {group.name}
                 </Text>
                 <TouchableOpacity
@@ -192,11 +194,11 @@ export default function ProjectsPage() {
               </View>
 
               {groupProjects.length === 0 ? (
-                <View style={{ marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, padding: 16, alignItems: 'center' }}>
-                  <Text style={{ color: '#d1d5db', fontSize: 13 }}>暂无项目</Text>
+                <View style={{ marginHorizontal: 16, backgroundColor: colors.card, borderRadius: 12, padding: 16, alignItems: 'center' }}>
+                  <Text style={{ color: colors.text.muted, fontSize: 13 }}>暂无项目</Text>
                 </View>
               ) : (
-                <View style={{ marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden', ...Shadows.low }}>
+                <View style={{ marginHorizontal: 16, backgroundColor: colors.card, borderRadius: 12, overflow: 'hidden', ...Shadows.low }}>
                   {groupProjects.map((project, idx) => {
                     const projectIcon = (project.style?.icon as string) || 'folder';
                     const projectColor = (project.style?.color as string) || Colors.primary;
@@ -209,7 +211,7 @@ export default function ProjectsPage() {
                         paddingHorizontal: 16,
                         paddingVertical: 14,
                         borderBottomWidth: idx < groupProjects.length - 1 ? 1 : 0,
-                        borderBottomColor: '#f3f4f6',
+                        borderBottomColor: colors.borderLight,
                       }}
                       onPress={() => router.push(`/projects/${project.uid}` as any)}
                       onLongPress={() => setDeleteConfirm({ type: 'project', uid: project.uid, name: project.name })}
@@ -221,14 +223,14 @@ export default function ProjectsPage() {
                         <MaterialCommunityIcons name={projectIcon as any} size={18} color={projectColor} />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 15, fontWeight: '500', color: '#111418' }}>{project.name}</Text>
+                        <Text style={{ fontSize: 15, fontWeight: '500', color: colors.text.primary }}>{project.name}</Text>
                         {project.desc ? (
-                          <Text style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }} numberOfLines={1}>{project.desc}</Text>
+                          <Text style={{ fontSize: 12, color: colors.text.muted, marginTop: 2 }} numberOfLines={1}>{project.desc}</Text>
                         ) : null}
                       </View>
                       <View style={{ alignItems: 'flex-end' }}>
-                        <Text style={{ fontSize: 13, color: '#9ca3af' }}>{project.tasks_count || 0}</Text>
-                        <Text style={{ fontSize: 11, color: '#d1d5db' }}>任务</Text>
+                        <Text style={{ fontSize: 13, color: colors.text.muted }}>{project.tasks_count || 0}</Text>
+                        <Text style={{ fontSize: 11, color: colors.text.muted }}>任务</Text>
                       </View>
                     </TouchableOpacity>
                     );
@@ -252,42 +254,42 @@ export default function ProjectsPage() {
         <TouchableWithoutFeedback onPress={() => setShowCreateProject(false)}>
           <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' }}>
             <TouchableWithoutFeedback>
-              <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, gap: 12, maxHeight: '75%' }}>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#111418' }}>新建清单</Text>
+              <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, gap: 12, maxHeight: '75%' }}>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary }}>新建清单</Text>
                 <TextInput
-                  style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: '#111418', backgroundColor: '#f9fafb' }}
+                  style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: colors.text.primary, backgroundColor: colors.background.secondary }}
                   placeholder="输入清单名称..."
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={colors.text.muted}
                   value={newProjectName}
                   onChangeText={setNewProjectName}
                   autoFocus
                 />
                 <TouchableOpacity
-                  style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#f9fafb', flexDirection: 'row', alignItems: 'center' }}
+                  style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: colors.background.secondary, flexDirection: 'row', alignItems: 'center' }}
                   onPress={() => setShowGroupPicker(true)}
                 >
-                  <Text style={{ flex: 1, fontSize: 14, color: selectedGroup ? '#374151' : '#9ca3af' }}>
+                  <Text style={{ flex: 1, fontSize: 14, color: selectedGroup ? colors.text.secondary : colors.text.muted }}>
                     {selectedGroup ? selectedGroup.name : '选择分组'}
                   </Text>
                   <MaterialCommunityIcons name="chevron-down" size={16} color="#9ca3af" />
                 </TouchableOpacity>
-                <Text style={{ fontSize: 12, color: '#9ca3af' }}>图标</Text>
+                <Text style={{ fontSize: 12, color: colors.text.muted }}>图标</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                   {PRESET_ICONS.map((icon) => (
-                    <TouchableOpacity key={icon} onPress={() => setNewProjectIcon(icon)} style={{ width: 34, height: 34, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: newProjectIcon === icon ? '#eef2ff' : '#f9fafb', borderWidth: 1, borderColor: newProjectIcon === icon ? Colors.primary : '#e5e7eb' }}>
-                      <MaterialCommunityIcons name={icon as any} size={18} color={newProjectIcon === icon ? Colors.primary : '#6b7280'} />
+                    <TouchableOpacity key={icon} onPress={() => setNewProjectIcon(icon)} style={{ width: 34, height: 34, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: newProjectIcon === icon ? (isDark ? Colors.primary + '22' : '#eef2ff') : colors.background.secondary, borderWidth: 1, borderColor: newProjectIcon === icon ? Colors.primary : colors.border }}>
+                      <MaterialCommunityIcons name={icon as any} size={18} color={newProjectIcon === icon ? Colors.primary : colors.text.secondary} />
                     </TouchableOpacity>
                   ))}
                 </View>
-                <Text style={{ fontSize: 12, color: '#9ca3af' }}>颜色</Text>
+                <Text style={{ fontSize: 12, color: colors.text.muted }}>颜色</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                   {PRESET_COLORS.map((color) => (
-                    <TouchableOpacity key={color} onPress={() => setNewProjectColor(color)} style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: color, borderWidth: newProjectColor === color ? 2 : 0, borderColor: '#111418' }} />
+                    <TouchableOpacity key={color} onPress={() => setNewProjectColor(color)} style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: color, borderWidth: newProjectColor === color ? 2 : 0, borderColor: colors.text.primary }} />
                   ))}
                 </View>
                 <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'flex-end' }}>
                   <TouchableOpacity onPress={() => setShowCreateProject(false)} style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                    <Text style={{ color: '#6b7280', fontSize: 14 }}>取消</Text>
+                    <Text style={{ color: colors.text.secondary, fontSize: 14 }}>取消</Text>
                   </TouchableOpacity>
                   <TouchableOpacity onPress={handleCreateProject} style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: Colors.primary, borderRadius: 10 }}>
                     <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>创建清单</Text>
@@ -303,19 +305,19 @@ export default function ProjectsPage() {
         <TouchableWithoutFeedback onPress={() => setShowCreateGroup(false)}>
           <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' }}>
             <TouchableWithoutFeedback>
-              <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, gap: 12 }}>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#111418' }}>新建分组</Text>
+              <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, gap: 12 }}>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary }}>新建分组</Text>
                 <TextInput
-                  style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: '#111418', backgroundColor: '#f9fafb' }}
+                  style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: colors.text.primary, backgroundColor: colors.background.secondary }}
                   placeholder="输入分组名称..."
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={colors.text.muted}
                   value={newGroupName}
                   onChangeText={setNewGroupName}
                   autoFocus
                 />
                 <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'flex-end' }}>
                   <TouchableOpacity onPress={() => setShowCreateGroup(false)} style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                    <Text style={{ color: '#6b7280', fontSize: 14 }}>取消</Text>
+                    <Text style={{ color: colors.text.secondary, fontSize: 14 }}>取消</Text>
                   </TouchableOpacity>
                   <TouchableOpacity onPress={handleCreateGroup} style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: Colors.primary, borderRadius: 10 }}>
                     <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>创建分组</Text>
@@ -338,17 +340,17 @@ export default function ProjectsPage() {
         <TouchableWithoutFeedback onPress={() => setShowGroupPicker(false)}>
           <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', paddingHorizontal: 24 }}>
             <TouchableWithoutFeedback>
-              <View style={{ backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' }}>
-                <View style={{ paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
-                  <Text style={{ fontSize: 15, fontWeight: '600', color: '#111418' }}>选择分组</Text>
+              <View style={{ backgroundColor: colors.card, borderRadius: 12, overflow: 'hidden' }}>
+                <View style={{ paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
+                  <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text.primary }}>选择分组</Text>
                 </View>
                 {groups.map((g) => (
-                  <TouchableOpacity key={g.uid} onPress={() => { setNewProjectGroupUid(g.uid); setShowGroupPicker(false); }} style={{ paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
-                    <Text style={{ fontSize: 14, color: '#374151' }}>{g.name}</Text>
+                  <TouchableOpacity key={g.uid} onPress={() => { setNewProjectGroupUid(g.uid); setShowGroupPicker(false); }} style={{ paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
+                    <Text style={{ fontSize: 14, color: colors.text.secondary }}>{g.name}</Text>
                   </TouchableOpacity>
                 ))}
                 <TouchableOpacity onPress={() => setShowGroupPicker(false)} style={{ paddingHorizontal: 14, paddingVertical: 12, alignItems: 'center' }}>
-                  <Text style={{ fontSize: 14, color: '#6b7280' }}>取消</Text>
+                  <Text style={{ fontSize: 14, color: colors.text.secondary }}>取消</Text>
                 </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>

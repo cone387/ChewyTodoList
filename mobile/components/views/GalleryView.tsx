@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import type { Task, TaskView } from '../../shared/types/index';
 import { TaskPriority } from '../../shared/types/index';
+import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
 
 interface GalleryViewProps {
@@ -55,6 +56,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
   isRefreshing = false,
   emptyMessage = '暂无任务',
 }) => {
+  const { colors } = useTheme();
   const displaySettings = view?.view_settings || {};
   const showPriority = displaySettings.show_priority ?? true;
   const showDueDate = displaySettings.show_due_date ?? true;
@@ -149,7 +151,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
             {item.subtasks_count > 0 && (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
                 <View style={{ flex: 1, height: 2, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 1 }}>
-                  <View style={{ width: `${(item.completed_subtasks_count / item.subtasks_count) * 100}%`, height: 2, backgroundColor: '#fff', borderRadius: 1 }} />
+                  <View style={{ width: `${(item.completed_subtasks_count / item.subtasks_count) * 100}%`, height: 2, backgroundColor: colors.card, borderRadius: 1 }} />
                 </View>
                 <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 9 }}>
                   {item.completed_subtasks_count}/{item.subtasks_count}
@@ -166,7 +168,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 60 }}>
         <Text style={{ fontSize: 36, marginBottom: 8 }}>⊡</Text>
-        <Text style={{ color: '#9ca3af', fontSize: 14 }}>{emptyMessage}</Text>
+        <Text style={{ color: colors.text.muted, fontSize: 14 }}>{emptyMessage}</Text>
       </View>
     );
   }
@@ -180,11 +182,11 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
       contentContainerStyle={{ padding: 12 }}
       refreshControl={onRefresh ? <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={Colors.primary} /> : undefined}
       ListFooterComponent={
-        <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 12, marginTop: 4, flexDirection: 'row', justifyContent: 'space-around' }}>
-          <Text style={{ fontSize: 11, color: '#6b7280' }}>共 {tasks.length}</Text>
+        <View style={{ backgroundColor: colors.card, borderRadius: 12, padding: 12, marginTop: 4, flexDirection: 'row', justifyContent: 'space-around' }}>
+          <Text style={{ fontSize: 11, color: colors.text.secondary }}>共 {tasks.length}</Text>
           <Text style={{ fontSize: 11, color: Colors.success }}>完成 {tasks.filter((t) => t.is_completed).length}</Text>
           <Text style={{ fontSize: 11, color: '#3b82f6' }}>进行 {tasks.filter((t) => !t.is_completed).length}</Text>
-          <Text style={{ fontSize: 11, color: '#ef4444' }}>逾期 {tasks.filter((t) => t.is_overdue).length}</Text>
+          <Text style={{ fontSize: 11, color: colors.error }}>逾期 {tasks.filter((t) => t.is_overdue).length}</Text>
         </View>
       }
     />

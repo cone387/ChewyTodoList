@@ -6,6 +6,7 @@ import {
   Switch,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
 
 export interface DisplaySettings {
@@ -57,6 +58,7 @@ export function hasActiveFilterBarSettings(
   groupBy: string,
   displaySettings: DisplaySettings,
 ) {
+  const { colors } = useTheme();
   if (sortField || groupBy) return true;
 
   return DISPLAY_OPTIONS.some(({ key }) => displaySettings[key] !== DEFAULT_DISPLAY_SETTINGS[key]);
@@ -107,7 +109,7 @@ export const HomeFilterBar: React.FC<HomeFilterBarProps> = ({
   if (!visible) return null;
 
   return (
-    <View style={{ borderTopWidth: 1, borderTopColor: '#f3f4f6', backgroundColor: '#fff' }}>
+    <View style={{ borderTopWidth: 1, borderTopColor: colors.borderLight, backgroundColor: colors.card }}>
       <View style={{ flexDirection: 'row', paddingHorizontal: 8, paddingVertical: 6 }}>
         <TabButton
           label={`排序：${getSortLabel(sortField)}`}
@@ -127,7 +129,7 @@ export const HomeFilterBar: React.FC<HomeFilterBarProps> = ({
       </View>
 
       {activePanel === 'sort' && (
-        <View style={{ borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingVertical: 4 }}>
+        <View style={{ borderTopWidth: 1, borderTopColor: colors.borderLight, paddingVertical: 4 }}>
           {SORT_OPTIONS.map((option) => {
             const selected = sortField === option.value;
             return (
@@ -185,7 +187,7 @@ export const HomeFilterBar: React.FC<HomeFilterBarProps> = ({
       )}
 
       {activePanel === 'group' && (
-        <View style={{ borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingVertical: 4 }}>
+        <View style={{ borderTopWidth: 1, borderTopColor: colors.borderLight, paddingVertical: 4 }}>
           {GROUP_OPTIONS.map((option) => {
             const selected = groupBy === option.value;
             return (
@@ -214,7 +216,7 @@ export const HomeFilterBar: React.FC<HomeFilterBarProps> = ({
       )}
 
       {activePanel === 'display' && (
-        <View style={{ borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingVertical: 4 }}>
+        <View style={{ borderTopWidth: 1, borderTopColor: colors.borderLight, paddingVertical: 4 }}>
           {DISPLAY_OPTIONS.map((option) => (
             <View
               key={option.key}
@@ -226,7 +228,7 @@ export const HomeFilterBar: React.FC<HomeFilterBarProps> = ({
                 paddingVertical: 10,
               }}
             >
-              <Text style={{ fontSize: 14, color: '#374151' }}>{option.label}</Text>
+              <Text style={{ fontSize: 14, color: colors.text.secondary }}>{option.label}</Text>
               <Switch
                 value={displaySettings[option.key]}
                 onValueChange={(value) => onDisplaySettingsChange({ [option.key]: value })}

@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTheme } from '../../../hooks/useTheme';
 
 interface Props {
   value: string;
@@ -28,6 +29,7 @@ const TOOLS = [
 ] as const;
 
 export const MarkdownEditor: React.FC<Props> = ({ value, onChange, placeholder, editable = true, footerText, autoFocus = false }) => {
+  const { colors } = useTheme();
   const inputRef = useRef<TextInput>(null);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
 
@@ -66,7 +68,7 @@ export const MarkdownEditor: React.FC<Props> = ({ value, onChange, placeholder, 
       <TextInput
         ref={inputRef}
         style={{
-          flex: 1, fontSize: 15, color: '#374151', lineHeight: 24,
+          flex: 1, fontSize: 15, color: colors.text.secondary, lineHeight: 24,
           paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10,
           fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
         }}
@@ -84,13 +86,13 @@ export const MarkdownEditor: React.FC<Props> = ({ value, onChange, placeholder, 
       {/* Footer meta text — right-aligned inside editor */}
       {footerText && (
         <View style={{ paddingHorizontal: 16, paddingBottom: 4, alignItems: 'flex-end' }}>
-          <Text style={{ fontSize: 10, color: '#d1d5db' }}>{footerText}</Text>
+          <Text style={{ fontSize: 10, color: colors.text.muted }}>{footerText}</Text>
         </View>
       )}
 
       {/* Toolbar */}
       {editable && (
-        <View style={{ borderTopWidth: 1, borderTopColor: '#f3f4f6', backgroundColor: '#fff' }}>
+        <View style={{ borderTopWidth: 1, borderTopColor: colors.borderLight, backgroundColor: colors.card }}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 8, paddingVertical: 6, gap: 2 }}>
             {TOOLS.map((tool, i) => (
@@ -100,7 +102,7 @@ export const MarkdownEditor: React.FC<Props> = ({ value, onChange, placeholder, 
                 style={{
                   width: 36, height: 36, borderRadius: 8,
                   alignItems: 'center', justifyContent: 'center',
-                  backgroundColor: '#f9fafb',
+                  backgroundColor: colors.background.secondary,
                 }}
                 activeOpacity={0.6}
               >

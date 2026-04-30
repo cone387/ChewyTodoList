@@ -260,7 +260,7 @@ export default function HomePage() {
             accessibilityRole="button"
             accessibilityLabel={showSearch ? '关闭搜索' : '打开搜索'}
           >
-            <MaterialCommunityIcons name={showSearch ? 'close' : 'magnify'} size={22} color="#6b7280" />
+            <MaterialCommunityIcons name={showSearch ? 'close' : 'magnify'} size={22} color={colors.text.secondary} />
           </TouchableOpacity>
         </View>
 
@@ -268,23 +268,23 @@ export default function HomePage() {
         {showSearch && (
           <View style={{
             flexDirection: 'row', alignItems: 'center',
-            backgroundColor: '#f3f4f6', borderRadius: 10,
+            backgroundColor: colors.background.tertiary, borderRadius: 10,
             paddingHorizontal: 12, height: 38,
             marginHorizontal: 16, marginBottom: 10,
           }}>
-            <MaterialCommunityIcons name="magnify" size={18} color="#9ca3af" />
+            <MaterialCommunityIcons name="magnify" size={18} color={colors.text.muted} />
             <TextInput
-              style={{ flex: 1, fontSize: 14, color: '#111418', paddingVertical: 0, marginLeft: 8 }}
+              style={{ flex: 1, fontSize: 14, color: colors.text.primary, paddingVertical: 0, marginLeft: 8 }}
               placeholder="搜索任务..."
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.text.muted}
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoFocus
               returnKeyType="search"
             />
             {searchQuery ? (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <MaterialCommunityIcons name="close" size={16} color="#9ca3af" />
+              <TouchableOpacity onPress={() => setSearchQuery('')} accessibilityLabel="清空搜索">
+                <MaterialCommunityIcons name="close" size={16} color={colors.text.muted} />
               </TouchableOpacity>
             ) : null}
           </View>
@@ -305,15 +305,18 @@ export default function HomePage() {
                       paddingHorizontal: 12, paddingVertical: 6,
                       borderRadius: 16,
                       flexDirection: 'row', alignItems: 'center', gap: 4,
-                      backgroundColor: isActive ? Colors.primary : '#f3f4f6',
+                      backgroundColor: isActive ? colors.primary : colors.background.tertiary,
                     }}
                     onPress={() => handleViewTabPress(view.uid)}
+                    accessibilityRole="tab"
+                    accessibilityLabel={view.name}
+                    accessibilityState={{ selected: isActive }}
                   >
-                    <MaterialCommunityIcons name={iconName} size={14} color={isActive ? '#fff' : '#6b7280'} />
+                    <MaterialCommunityIcons name={iconName} size={14} color={isActive ? '#fff' : colors.text.secondary} />
                     <Text style={{
                       fontSize: 14,
                       fontWeight: isActive ? '700' : '500',
-                      color: isActive ? '#fff' : '#4b5563',
+                      color: isActive ? '#fff' : colors.text.secondary,
                     }}>
                       {view.name}
                     </Text>
@@ -331,24 +334,24 @@ export default function HomePage() {
               style={{
                 flexDirection: 'row', alignItems: 'center', gap: 4,
                 paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16,
-                backgroundColor: showFilterBar || hasActiveViewControls ? Colors.primary + '14' : '#f3f4f6',
+                backgroundColor: showFilterBar || hasActiveViewControls ? colors.primary + '22' : colors.background.tertiary,
               }}
               accessibilityRole="button"
               accessibilityLabel={showFilterBar ? '收起筛选栏' : (hasActiveViewControls ? '筛选栏 (有激活规则)' : '筛选栏')}
               accessibilityState={{ expanded: showFilterBar }}
             >
-              <MaterialCommunityIcons name="filter-variant" size={16} color={showFilterBar || hasActiveViewControls ? Colors.primary : '#6b7280'} />
+              <MaterialCommunityIcons name="filter-variant" size={16} color={showFilterBar || hasActiveViewControls ? colors.primary : colors.text.secondary} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => router.push('/(tabs)/views' as any)}
               style={{
                 paddingHorizontal: 8, paddingVertical: 6, borderRadius: 16,
-                backgroundColor: '#f3f4f6',
+                backgroundColor: colors.background.tertiary,
               }}
               accessibilityRole="button"
               accessibilityLabel="视图管理"
             >
-              <MaterialCommunityIcons name="menu" size={16} color="#6b7280" />
+              <MaterialCommunityIcons name="menu" size={16} color={colors.text.secondary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -379,7 +382,7 @@ export default function HomePage() {
           renderViewContent()
         ) : (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ color: '#9ca3af', fontSize: 16 }}>暂无视图</Text>
+            <Text style={{ color: colors.text.muted, fontSize: 16 }}>暂无视图</Text>
           </View>
         )}
       </Animated.View>

@@ -14,6 +14,7 @@ import { ActionSheet } from '../../ui/ActionSheet';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { ProgressBar } from '../../ui/ProgressBar';
 import { useToast } from '../../../hooks/useToast';
+import { useTheme } from '../../../hooks/useTheme';
 import { Colors } from '../../../constants/theme';
 
 interface AttachmentListProps {
@@ -41,6 +42,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
   attachments,
   onContentInsert,
 }) => {
+  const { colors } = useTheme();
   const { showToast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -135,10 +137,10 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
   };
 
   return (
-    <View style={{ backgroundColor: '#fff', marginTop: 8, paddingVertical: 14 }}>
+    <View style={{ backgroundColor: colors.card, marginTop: 8, paddingVertical: 14 }}>
       {/* Header */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 10 }}>
-        <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151' }}>附件</Text>
+        <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>附件</Text>
         <TouchableOpacity onPress={() => setShowUploadOptions(true)}>
           <Text style={{ color: Colors.primary, fontSize: 13, fontWeight: '600' }}>+ 上传</Text>
         </TouchableOpacity>
@@ -148,7 +150,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
       {uploading && (
         <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
           <ProgressBar value={uploadProgress} color={Colors.primary} />
-          <Text style={{ fontSize: 11, color: '#9ca3af', marginTop: 4, textAlign: 'center' }}>
+          <Text style={{ fontSize: 11, color: colors.text.muted, marginTop: 4, textAlign: 'center' }}>
             上传中 {Math.round(uploadProgress * 100)}%
           </Text>
         </View>
@@ -171,8 +173,8 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
           >
             <Text style={{ fontSize: 20, marginRight: 10 }}>{getFileIcon(att.mime_type)}</Text>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, color: '#374151' }} numberOfLines={1}>{att.original_name || att.name || '附件'}</Text>
-              <Text style={{ fontSize: 11, color: '#9ca3af' }}>{att.size ? formatFileSize(att.size) : ''}</Text>
+              <Text style={{ fontSize: 13, color: colors.text.secondary }} numberOfLines={1}>{att.original_name || att.name || '附件'}</Text>
+              <Text style={{ fontSize: 11, color: colors.text.muted }}>{att.size ? formatFileSize(att.size) : ''}</Text>
             </View>
           </TouchableOpacity>
         ))
@@ -200,7 +202,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
         visible={showAttachmentActions}
         title={selectedAttachment?.original_name || '附件'}
         options={[
-          { label: '删除附件', value: 'delete', icon: '🗑', color: '#ef4444', destructive: true },
+          { label: '删除附件', value: 'delete', icon: '🗑', color: colors.error, destructive: true },
         ]}
         onSelect={(opt) => {
           if (opt.value === 'delete') setShowDeleteConfirm(true);
