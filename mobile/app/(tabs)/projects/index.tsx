@@ -197,7 +197,10 @@ export default function ProjectsPage() {
                 </View>
               ) : (
                 <View style={{ marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden', ...Shadows.low }}>
-                  {groupProjects.map((project, idx) => (
+                  {groupProjects.map((project, idx) => {
+                    const projectIcon = (project.style?.icon as string) || 'folder';
+                    const projectColor = (project.style?.color as string) || Colors.primary;
+                    return (
                     <TouchableOpacity
                       key={project.uid}
                       style={{
@@ -210,9 +213,12 @@ export default function ProjectsPage() {
                       }}
                       onPress={() => router.push(`/projects/${project.uid}` as any)}
                       onLongPress={() => setDeleteConfirm({ type: 'project', uid: project.uid, name: project.name })}
+                      accessibilityRole="button"
+                      accessibilityLabel={`项目 ${project.name}，${project.tasks_count || 0} 个任务`}
+                      accessibilityHint="长按删除"
                     >
-                      <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#f3f0ff', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
-                        <MaterialCommunityIcons name="folder" size={18} color={Colors.primary} />
+                      <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: projectColor + '1F', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                        <MaterialCommunityIcons name={projectIcon as any} size={18} color={projectColor} />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 15, fontWeight: '500', color: '#111418' }}>{project.name}</Text>
@@ -225,7 +231,8 @@ export default function ProjectsPage() {
                         <Text style={{ fontSize: 11, color: '#d1d5db' }}>任务</Text>
                       </View>
                     </TouchableOpacity>
-                  ))}
+                    );
+                  })}
                 </View>
               )}
             </View>

@@ -53,9 +53,15 @@ function TabsContent() {
           return (
             <TouchableOpacity
               key={tab.name}
-              onPress={() => router.replace(tab.path as any)}
+              onPress={() => {
+                if (active) return;
+                router.replace(tab.path as any);
+              }}
               style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 4 }}
               activeOpacity={0.7}
+              accessibilityRole="tab"
+              accessibilityLabel={tab.title}
+              accessibilityState={{ selected: active }}
             >
               <MaterialCommunityIcons
                 name={tab.icon}

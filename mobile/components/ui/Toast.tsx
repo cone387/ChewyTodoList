@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Animated, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -82,13 +83,14 @@ interface ToastContainerProps {
 }
 
 export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismiss }) => {
+  const insets = useSafeAreaInsets();
   if (toasts.length === 0) return null;
 
   return (
     <View
       style={{
         position: 'absolute',
-        top: 60,
+        top: Math.max(60, insets.top + 12),
         left: 16,
         right: 16,
         zIndex: 9999,

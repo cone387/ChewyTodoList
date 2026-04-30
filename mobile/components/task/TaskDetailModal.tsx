@@ -58,12 +58,6 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
     onClose();
   }, [onClose]);
 
-  const handleClose = useCallback(() => {
-    setModalVisible(false);
-    // Small delay to let the native dismiss animation complete
-    setTimeout(() => onClose(), 100);
-  }, [onClose]);
-
   const { data: task, isLoading } = useTask(isCreate ? '' : taskUid);
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
@@ -79,6 +73,7 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'idle'>('idle');
   const [showStatusSheet, setShowStatusSheet] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showAbandonConfirm, setShowAbandonConfirm] = useState(false);
   const [showProjectPicker, setShowProjectPicker] = useState(false);
   const [showTagPicker, setShowTagPicker] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -90,6 +85,32 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialLoadRef = useRef(true);
 
+  const flushPendingSave = useCallback(() => {
+    if (!task || isCreate) return;
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+    const trimmedTitle = title.trim();
+    const trimmedContent = content.trim();
+    const hasChanges = trimmedTitle !== task.title || trimmedContent !== (task.content || '');
+    if (!hasChanges) return;
+    if (!trimmedTitle) return; // don't persist empty title
+    // Fire-and-forget; react-query mutation runs even after unmount
+    updateTask.mutate({
+      uid: task.uid,
+      data: { title: trimmedTitle, content: trimmedContent || undefined },
+    });
+  }, [task, isCreate, title, content, updateTask]);
+
+  const handleClose = useCallback(() => {
+    // Flush pending edits before closing
+    flushPendingSave();
+    setModalVisible(false);
+    // Small delay to let the native dismiss animation complete
+    setTimeout(() => onClose(), 100);
+  }, [flushPendingSave, onClose]);
+
   // Reset state when modal opens with a new task
   useEffect(() => {
     if (visible) {
@@ -98,6 +119,7 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
       setSaveStatus('idle');
       setShowStatusSheet(false);
       setShowDeleteConfirm(false);
+      setShowAbandonConfirm(false);
       setShowProjectPicker(false);
       setShowTagPicker(false);
       setShowMoreMenu(false);
@@ -151,6 +173,7 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
   };
   const handleDelete = async () => { if (!task) return; try { await deleteTask.mutateAsync(task.uid); handleClose(); } catch {} };
   const handleCreate = async () => {
+    if (createTask.isPending) return;
     if (!title.trim()) { showToast('error', '请输入标题'); return; }
     try {
       const d: Record<string, any> = { title: title.trim(), priority: createPriority };
@@ -220,8 +243,15 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
           </TouchableOpacity>
         </View>
         {isCreate ? (
-          <TouchableOpacity onPress={handleCreate} style={{ paddingHorizontal: 14, paddingVertical: 5, backgroundColor: Colors.primary, borderRadius: 8 }}>
-            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>创建</Text>
+          <TouchableOpacity
+            onPress={handleCreate}
+            disabled={createTask.isPending}
+            accessibilityLabel="创建任务"
+            style={{ paddingHorizontal: 14, paddingVertical: 5, backgroundColor: Colors.primary, borderRadius: 8, opacity: createTask.isPending ? 0.6 : 1 }}
+          >
+            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>
+              {createTask.isPending ? '创建中...' : '创建'}
+            </Text>
           </TouchableOpacity>
         ) : (
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -389,13 +419,18 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
         { label: '删除任务', value: 'delete', icon: '🗑', color: '#ef4444', destructive: true },
       ]} onSelect={(o) => {
         if (o.value === 'delete') setShowDeleteConfirm(true);
-        else if (o.value === 'abandon' && task) updateTask.mutateAsync({ uid: task.uid, data: { status: TaskStatus.ABANDONED } });
+        else if (o.value === 'abandon') setShowAbandonConfirm(true);
         else if (o.value === 'restore' && task) updateTask.mutateAsync({ uid: task.uid, data: { status: TaskStatus.TODO } });
       }} onCancel={() => setShowMoreMenu(false)} />
       <TagPicker visible={showTagPicker} selectedTagUids={selectedTagUids} onToggleTag={handleToggleTag} onClose={() => setShowTagPicker(false)} />
       <ConfirmDialog visible={showDeleteConfirm} title="删除任务"
         message={task?.subtasks_count ? `包含 ${task.subtasks_count} 个子任务，删除后无法恢复` : '确认删除？'}
         confirmText="删除" destructive onConfirm={handleDelete} onCancel={() => setShowDeleteConfirm(false)} />
+      <ConfirmDialog visible={showAbandonConfirm} title="放弃任务"
+        message="放弃后将归档到已放弃，可通过更多菜单恢复。"
+        confirmText="放弃" destructive
+        onConfirm={() => { if (task) updateTask.mutateAsync({ uid: task.uid, data: { status: TaskStatus.ABANDONED } }); }}
+        onCancel={() => setShowAbandonConfirm(false)} />
       </View>
     </Modal>
   );

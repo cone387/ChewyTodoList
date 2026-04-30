@@ -17,6 +17,10 @@ import { authApi } from '../../../shared/services/api';
 import { useToast } from '../../../hooks/useToast';
 import { Colors } from '../../../constants/theme';
 import { SettingsIcons } from '../../../constants/icons';
+import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const appJson = require('../../../app.json');
+const APP_VERSION: string = appJson?.expo?.version || '0.0.0';
 
 export default function SettingsPage() {
   const { logout } = useAuth();
@@ -25,6 +29,7 @@ export default function SettingsPage() {
 
   const [profile, setProfile] = useState<{ username: string; email: string } | null>(null);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -211,7 +216,7 @@ export default function SettingsPage() {
           <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 }}>
             <MaterialCommunityIcons name={SettingsIcons.version} size={20} color="#6b7280" style={{ marginRight: 12 }} />
             <Text style={{ fontSize: 15, color: '#374151', flex: 1 }}>版本</Text>
-            <Text style={{ fontSize: 14, color: '#9ca3af' }}>1.0.0</Text>
+            <Text style={{ fontSize: 14, color: '#9ca3af' }}>{APP_VERSION}</Text>
           </View>
         </View>
 
@@ -219,7 +224,9 @@ export default function SettingsPage() {
         <View style={{ marginTop: 24, marginHorizontal: 16 }}>
           <TouchableOpacity
             style={{ backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 16, flexDirection: 'row', alignItems: 'center' }}
-            onPress={logout}
+            onPress={() => setShowLogoutConfirm(true)}
+            accessibilityRole="button"
+            accessibilityLabel="退出登录"
           >
             <MaterialCommunityIcons name="logout" size={20} color="#ef4444" style={{ marginRight: 10 }} />
             <Text style={{ color: '#ef4444', fontSize: 16, fontWeight: '500', flex: 1 }}>退出登录</Text>
@@ -227,6 +234,16 @@ export default function SettingsPage() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <ConfirmDialog
+        visible={showLogoutConfirm}
+        title="退出登录"
+        message="退出后需重新输入账号密码。离线缓存的任务数据会被清空。"
+        confirmText="退出"
+        destructive
+        onConfirm={logout}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </SafeAreaView>
   );
 }

@@ -1,5 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, Text, View } from 'react-native';
+import { TouchableOpacity, Text, View, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Shadows } from '../../constants/theme';
 
@@ -7,11 +8,19 @@ interface FABProps {
   onPress: () => void;
   icon?: string;
   label?: string;
+  accessibilityLabel?: string;
 }
 
-export const FAB: React.FC<FABProps> = ({ onPress, icon, label }) => {
+// Tab bar height approximation (paddingTop:8 + icon:24 + mt:2 + text:~14 + paddingBottom varies)
+const TAB_BAR_CONTENT_HEIGHT = 52;
+
+export const FAB: React.FC<FABProps> = ({ onPress, icon, label, accessibilityLabel }) => {
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = TAB_BAR_CONTENT_HEIGHT + (Platform.OS === 'ios' ? insets.bottom : 8);
+  const bottom = tabBarHeight + 16;
+
   return (
-    <View style={{ position: 'absolute', bottom: 24, right: 20 }}>
+    <View style={{ position: 'absolute', bottom, right: 20 }} pointerEvents="box-none">
       <TouchableOpacity
         style={{
           backgroundColor: Colors.primary,
@@ -26,6 +35,8 @@ export const FAB: React.FC<FABProps> = ({ onPress, icon, label }) => {
         }}
         onPress={onPress}
         activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel || label || '创建任务'}
       >
         <MaterialCommunityIcons name="plus" size={28} color="#fff" />
         {label && (

@@ -257,6 +257,8 @@ export default function HomePage() {
           <TouchableOpacity
             onPress={() => setShowSearch(!showSearch)}
             style={{ position: 'absolute', right: 16, padding: 6 }}
+            accessibilityRole="button"
+            accessibilityLabel={showSearch ? '关闭搜索' : '打开搜索'}
           >
             <MaterialCommunityIcons name={showSearch ? 'close' : 'magnify'} size={22} color="#6b7280" />
           </TouchableOpacity>
@@ -331,6 +333,9 @@ export default function HomePage() {
                 paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16,
                 backgroundColor: showFilterBar || hasActiveViewControls ? Colors.primary + '14' : '#f3f4f6',
               }}
+              accessibilityRole="button"
+              accessibilityLabel={showFilterBar ? '收起筛选栏' : (hasActiveViewControls ? '筛选栏 (有激活规则)' : '筛选栏')}
+              accessibilityState={{ expanded: showFilterBar }}
             >
               <MaterialCommunityIcons name="filter-variant" size={16} color={showFilterBar || hasActiveViewControls ? Colors.primary : '#6b7280'} />
             </TouchableOpacity>
@@ -340,6 +345,8 @@ export default function HomePage() {
                 paddingHorizontal: 8, paddingVertical: 6, borderRadius: 16,
                 backgroundColor: '#f3f4f6',
               }}
+              accessibilityRole="button"
+              accessibilityLabel="视图管理"
             >
               <MaterialCommunityIcons name="menu" size={16} color="#6b7280" />
             </TouchableOpacity>

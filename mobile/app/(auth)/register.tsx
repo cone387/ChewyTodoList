@@ -10,11 +10,14 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Link } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
+import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
 
 export default function RegisterPage() {
   const { register } = useAuth();
+  const { colors, isDark } = useTheme();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,6 +26,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
+    if (loading) return;
     if (!username.trim() || !email.trim() || !password.trim()) {
       setError('请填写所有必填字段');
       return;
@@ -47,21 +51,21 @@ export default function RegisterPage() {
     }
   };
 
-  const inputStyle = () => ({
+  const inputWrapStyle = {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: colors.border,
     borderRadius: 16,
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.background.secondary,
     paddingHorizontal: 14,
     height: 48,
-  });
+  };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f0f0ff' }}>
-      <View style={{ position: 'absolute', top: -80, left: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(59,130,246,0.1)' }} />
-      <View style={{ position: 'absolute', bottom: -80, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(139,92,246,0.12)' }} />
+    <View style={{ flex: 1, backgroundColor: isDark ? colors.background.primary : '#f0f0ff' }}>
+      <View style={{ position: 'absolute', top: -80, left: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.1)' }} />
+      <View style={{ position: 'absolute', bottom: -80, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: isDark ? 'rgba(139,92,246,0.18)' : 'rgba(139,92,246,0.12)' }} />
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
@@ -86,47 +90,48 @@ export default function RegisterPage() {
               }),
               marginBottom: 16,
             }}>
-              <Text style={{ color: '#fff', fontSize: 32, fontWeight: '700' }}>+</Text>
+              <MaterialCommunityIcons name="account-plus" size={36} color="#fff" />
             </View>
-            <Text style={{ fontSize: 28, fontWeight: '800', color: '#1e1b4b', marginBottom: 6 }}>创建账号</Text>
-            <Text style={{ fontSize: 15, color: '#6b7280' }}>开始管理你的待办事项</Text>
+            <Text style={{ fontSize: 28, fontWeight: '800', color: isDark ? colors.text.primary : '#1e1b4b', marginBottom: 6 }}>创建账号</Text>
+            <Text style={{ fontSize: 15, color: colors.text.secondary }}>开始管理你的待办事项</Text>
           </View>
 
           {/* Form card */}
           <View style={{
-            backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: 24, padding: 24,
+            backgroundColor: isDark ? colors.card : 'rgba(255,255,255,0.85)', borderRadius: 24, padding: 24,
             ...Platform.select({
-              web: { boxShadow: '0px 4px 20px rgba(0,0,0,0.08)' },
+              web: { boxShadow: isDark ? '0px 4px 20px rgba(0,0,0,0.4)' : '0px 4px 20px rgba(0,0,0,0.08)' },
               default: {
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
+                shadowOpacity: isDark ? 0.4 : 0.08,
                 shadowRadius: 20,
                 elevation: 8,
               },
             }),
-            borderWidth: 1, borderColor: 'rgba(255,255,255,0.5)',
+            borderWidth: 1, borderColor: isDark ? colors.border : 'rgba(255,255,255,0.5)',
           }}>
             {error ? (
               <View style={{
-                backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca',
+                backgroundColor: isDark ? 'rgba(239,68,68,0.12)' : '#fef2f2',
+                borderWidth: 1, borderColor: isDark ? 'rgba(239,68,68,0.3)' : '#fecaca',
                 borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 16,
                 flexDirection: 'row', alignItems: 'center', gap: 8,
               }}>
-                <Text style={{ color: '#ef4444', fontSize: 16 }}>⚠</Text>
-                <Text style={{ color: '#dc2626', fontSize: 13, flex: 1 }}>{error}</Text>
+                <MaterialCommunityIcons name="alert-circle" size={18} color={Colors.error} />
+                <Text style={{ color: Colors.error, fontSize: 13, flex: 1 }}>{error}</Text>
               </View>
             ) : null}
 
             {/* Username */}
             <View style={{ marginBottom: 14 }}>
-              <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8 }}>用户名</Text>
-              <View style={inputStyle()}>
-                <Text style={{ fontSize: 16, color: '#9ca3af', marginRight: 10 }}>👤</Text>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text.secondary, marginBottom: 8 }}>用户名</Text>
+              <View style={inputWrapStyle}>
+                <MaterialCommunityIcons name="account" size={20} color={colors.text.muted} style={{ marginRight: 10 }} />
                 <TextInput
-                  style={{ flex: 1, paddingVertical: 0, fontSize: 16, color: '#111827' }}
+                  style={{ flex: 1, paddingVertical: 0, fontSize: 16, color: colors.text.primary }}
                   placeholder="输入用户名"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={colors.text.muted}
                   value={username}
                   onChangeText={setUsername}
                   autoCapitalize="none"
@@ -137,13 +142,13 @@ export default function RegisterPage() {
 
             {/* Email */}
             <View style={{ marginBottom: 14 }}>
-              <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8 }}>邮箱</Text>
-              <View style={inputStyle()}>
-                <Text style={{ fontSize: 16, color: '#9ca3af', marginRight: 10 }}>📧</Text>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text.secondary, marginBottom: 8 }}>邮箱</Text>
+              <View style={inputWrapStyle}>
+                <MaterialCommunityIcons name="email-outline" size={20} color={colors.text.muted} style={{ marginRight: 10 }} />
                 <TextInput
-                  style={{ flex: 1, paddingVertical: 0, fontSize: 16, color: '#111827' }}
+                  style={{ flex: 1, paddingVertical: 0, fontSize: 16, color: colors.text.primary }}
                   placeholder="输入邮箱"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={colors.text.muted}
                   value={email}
                   onChangeText={setEmail}
                   autoCapitalize="none"
@@ -154,13 +159,13 @@ export default function RegisterPage() {
 
             {/* Password */}
             <View style={{ marginBottom: 14 }}>
-              <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8 }}>密码</Text>
-              <View style={inputStyle()}>
-                <Text style={{ fontSize: 16, color: '#9ca3af', marginRight: 10 }}>🔒</Text>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text.secondary, marginBottom: 8 }}>密码</Text>
+              <View style={inputWrapStyle}>
+                <MaterialCommunityIcons name="lock" size={20} color={colors.text.muted} style={{ marginRight: 10 }} />
                 <TextInput
-                  style={{ flex: 1, paddingVertical: 0, fontSize: 16, color: '#111827' }}
+                  style={{ flex: 1, paddingVertical: 0, fontSize: 16, color: colors.text.primary }}
                   placeholder="输入密码（至少8位）"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={colors.text.muted}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
@@ -170,13 +175,13 @@ export default function RegisterPage() {
 
             {/* Confirm password */}
             <View style={{ marginBottom: 20 }}>
-              <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8 }}>确认密码</Text>
-              <View style={inputStyle()}>
-                <Text style={{ fontSize: 16, color: '#9ca3af', marginRight: 10 }}>🔒</Text>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text.secondary, marginBottom: 8 }}>确认密码</Text>
+              <View style={inputWrapStyle}>
+                <MaterialCommunityIcons name="lock-check" size={20} color={colors.text.muted} style={{ marginRight: 10 }} />
                 <TextInput
-                  style={{ flex: 1, paddingVertical: 0, fontSize: 16, color: '#111827' }}
+                  style={{ flex: 1, paddingVertical: 0, fontSize: 16, color: colors.text.primary }}
                   placeholder="再次输入密码"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={colors.text.muted}
                   value={passwordConfirm}
                   onChangeText={setPasswordConfirm}
                   secureTextEntry
@@ -190,6 +195,8 @@ export default function RegisterPage() {
             <TouchableOpacity
               onPress={handleRegister}
               disabled={loading}
+              accessibilityRole="button"
+              accessibilityLabel="创建账号"
               style={{
                 backgroundColor: Colors.primary, borderRadius: 16, paddingVertical: 16,
                 alignItems: 'center', justifyContent: 'center',
@@ -214,7 +221,7 @@ export default function RegisterPage() {
                 </>
               ) : (
                 <>
-                  <Text style={{ fontSize: 18 }}>✨</Text>
+                  <MaterialCommunityIcons name="account-check" size={20} color="#fff" />
                   <Text style={{ color: '#fff', fontSize: 17, fontWeight: '600' }}>创建账号</Text>
                 </>
               )}
@@ -223,9 +230,9 @@ export default function RegisterPage() {
 
           {/* Login link */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 24, gap: 4 }}>
-            <Text style={{ color: '#6b7280', fontSize: 14 }}>已有账号？</Text>
+            <Text style={{ color: colors.text.secondary, fontSize: 14 }}>已有账号？</Text>
             <Link href="/(auth)/login" asChild>
-              <TouchableOpacity>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="前往登录">
                 <Text style={{ color: Colors.primary, fontSize: 14, fontWeight: '600' }}>立即登录</Text>
               </TouchableOpacity>
             </Link>
