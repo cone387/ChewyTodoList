@@ -115,9 +115,9 @@ export default function SettingsPage() {
             style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}
             onPress={() => router.push('/(tabs)/settings/tags' as any)}
           >
-            <MaterialCommunityIcons name={SettingsIcons.tags} size={20} color="#6b7280" style={{ marginRight: 12 }} />
+            <MaterialCommunityIcons name={SettingsIcons.tags} size={20} color={colors.text.secondary} style={{ marginRight: 12 }} />
             <Text style={{ fontSize: 15, color: colors.text.secondary, flex: 1 }}>标签管理</Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#d1d5db" />
+            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.text.muted} />
           </TouchableOpacity>
 
           {/* Card config */}
@@ -125,9 +125,9 @@ export default function SettingsPage() {
             style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}
             onPress={() => router.push('/(tabs)/settings/card-configs' as any)}
           >
-            <MaterialCommunityIcons name={SettingsIcons.cardConfig} size={20} color="#6b7280" style={{ marginRight: 12 }} />
+            <MaterialCommunityIcons name={SettingsIcons.cardConfig} size={20} color={colors.text.secondary} style={{ marginRight: 12 }} />
             <Text style={{ fontSize: 15, color: colors.text.secondary, flex: 1 }}>卡片配置</Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#d1d5db" />
+            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.text.muted} />
           </TouchableOpacity>
 
           {/* Dark mode toggle */}
@@ -135,7 +135,7 @@ export default function SettingsPage() {
             <MaterialCommunityIcons
               name={isDark ? SettingsIcons.darkMode : SettingsIcons.lightMode}
               size={20}
-              color="#6b7280"
+              color={colors.text.secondary}
               style={{ marginRight: 12 }}
             />
             <Text style={{ fontSize: 15, color: colors.text.secondary, flex: 1 }}>深色模式</Text>
@@ -158,12 +158,12 @@ export default function SettingsPage() {
             style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 }}
             onPress={() => setShowChangePassword(!showChangePassword)}
           >
-            <MaterialCommunityIcons name={SettingsIcons.password} size={20} color="#6b7280" style={{ marginRight: 12 }} />
+            <MaterialCommunityIcons name={SettingsIcons.password} size={20} color={colors.text.secondary} style={{ marginRight: 12 }} />
             <Text style={{ fontSize: 15, color: colors.text.secondary, flex: 1 }}>修改密码</Text>
             <MaterialCommunityIcons
               name={showChangePassword ? 'chevron-up' : 'chevron-right'}
               size={20}
-              color="#d1d5db"
+              color={colors.text.muted}
             />
           </TouchableOpacity>
 
@@ -214,7 +214,7 @@ export default function SettingsPage() {
         </Text>
         <View style={{ marginHorizontal: 16, backgroundColor: colors.card, borderRadius: 12, overflow: 'hidden' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 }}>
-            <MaterialCommunityIcons name={SettingsIcons.version} size={20} color="#6b7280" style={{ marginRight: 12 }} />
+            <MaterialCommunityIcons name={SettingsIcons.version} size={20} color={colors.text.secondary} style={{ marginRight: 12 }} />
             <Text style={{ fontSize: 15, color: colors.text.secondary, flex: 1 }}>版本</Text>
             <Text style={{ fontSize: 14, color: colors.text.muted }}>{APP_VERSION}</Text>
           </View>
@@ -223,12 +223,12 @@ export default function SettingsPage() {
         {/* Logout */}
         <View style={{ marginTop: 24, marginHorizontal: 16 }}>
           <TouchableOpacity
-            style={{ backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 16, flexDirection: 'row', alignItems: 'center' }}
+            style={{ backgroundColor: colors.error + '14', borderWidth: 1, borderColor: '#fecaca', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 16, flexDirection: 'row', alignItems: 'center' }}
             onPress={() => setShowLogoutConfirm(true)}
             accessibilityRole="button"
             accessibilityLabel="退出登录"
           >
-            <MaterialCommunityIcons name="logout" size={20} color="#ef4444" style={{ marginRight: 10 }} />
+            <MaterialCommunityIcons name="logout" size={20} color={colors.error} style={{ marginRight: 10 }} />
             <Text style={{ color: colors.error, fontSize: 16, fontWeight: '500', flex: 1 }}>退出登录</Text>
             <MaterialCommunityIcons name="chevron-right" size={20} color="#fca5a5" />
           </TouchableOpacity>

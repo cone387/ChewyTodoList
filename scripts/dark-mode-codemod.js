@@ -50,17 +50,44 @@ const RULES = [
   [/placeholderTextColor="#6b7280"/g,    'placeholderTextColor={colors.text.secondary}', "placeholder secondary"],
   [/placeholderTextColor='#9ca3af'/g,    "placeholderTextColor={colors.text.muted}", "placeholder muted alt"],
 
+  // Pastel backgrounds (tint variants) — map to semantic tokens with alpha suffix
+  [/backgroundColor:\s*'#fef2f2'/g,     "backgroundColor: colors.error + '14'",          "bg error tint"],
+  [/backgroundColor:\s*'#fecaca'/g,     "backgroundColor: colors.error + '30'",          "bg error stronger tint"],
+  [/backgroundColor:\s*'#f0fdf4'/g,     "backgroundColor: colors.success + '14'",        "bg success tint"],
+  [/backgroundColor:\s*'#dcfce7'/g,     "backgroundColor: colors.success + '22'",        "bg success mid tint"],
+  [/backgroundColor:\s*'#fffbeb'/g,     "backgroundColor: colors.warning + '14'",        "bg warning tint"],
+  [/backgroundColor:\s*'#fef3c7'/g,     "backgroundColor: colors.warning + '22'",        "bg warning mid tint"],
+  [/backgroundColor:\s*'#f3f0ff'/g,     "backgroundColor: Colors.primary + '14'",        "bg primary tint"],
+  [/backgroundColor:\s*'#ede9fe'/g,     "backgroundColor: Colors.primary + '22'",        "bg primary mid tint"],
+  [/backgroundColor:\s*'#eef2ff'/g,     "backgroundColor: Colors.primary + '14'",        "bg primary indigo tint"],
+
+  // Dark destructive text variants
+  [/color:\s*'#dc2626'/g,                "color: colors.error",                     "text error alt"],
+  [/color:\s*'#15803d'/g,                "color: colors.success",                   "text success dark"],
+
   // Destructive / error family — map all red variants to colors.error
   [/color:\s*'#ef4444'/g,                "color: colors.error",                     "destructive text"],
-  [/color:\s*'#dc2626'/g,                "color: colors.error",                     "destructive text alt"],
   [/backgroundColor:\s*'#ef4444'/g,      "backgroundColor: colors.error",           "destructive bg"],
   // Success family
   [/color:\s*'#22c55e'/g,                "color: colors.success",                   "success text"],
   [/color:\s*'#16a34a'/g,                "color: colors.success",                   "success text alt"],
   [/backgroundColor:\s*'#22c55e'/g,      "backgroundColor: colors.success",         "success bg"],
 
-  // Color attribute (MCI icon color) without `color:` — as ternary RHS
-  [/color=\{'#ef4444'\}/g,               "color={colors.error}",                    "icon destructive"],
+  // JSX attr icon colors: `color="#ef4444"` → `color={colors.error}`
+  [/color="#ef4444"/g,                  'color={colors.error}',                      "icon error dbl-quote"],
+  [/color="#dc2626"/g,                  'color={colors.error}',                      "icon error alt dbl-quote"],
+  [/color="#22c55e"/g,                  'color={colors.success}',                    "icon success dbl-quote"],
+  [/color="#16a34a"/g,                  'color={colors.success}',                    "icon success alt dbl-quote"],
+  [/color="#9ca3af"/g,                  'color={colors.text.muted}',                 "icon muted dbl-quote"],
+  [/color="#6b7280"/g,                  'color={colors.text.secondary}',             "icon secondary dbl-quote"],
+  [/color="#374151"/g,                  'color={colors.text.secondary}',             "icon secondary alt dbl-quote"],
+  [/color="#111418"/g,                  'color={colors.text.primary}',               "icon primary dbl-quote"],
+  [/color="#d1d5db"/g,                  'color={colors.text.muted}',                 "icon muted alt dbl-quote"],
+
+  // Color attribute (MCI icon color) single-quote literal form
+  [/color=\{'#ef4444'\}/g,               "color={colors.error}",                    "icon destructive sq"],
+  [/color=\{'#dc2626'\}/g,               "color={colors.error}",                    "icon destructive alt sq"],
+  [/color=\{'#22c55e'\}/g,               "color={colors.success}",                  "icon success sq"],
 ];
 
 

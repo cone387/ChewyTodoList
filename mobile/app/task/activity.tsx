@@ -70,7 +70,7 @@ export default function ActivityLogPage() {
           contentContainerStyle={{ padding: 16 }}
           ListEmptyComponent={
             <View style={{ alignItems: 'center', paddingVertical: 40 }}>
-              <MaterialCommunityIcons name="history" size={48} color="#d1d5db" />
+              <MaterialCommunityIcons name="history" size={48} color={colors.text.muted} />
               <Text style={{ color: colors.text.muted, fontSize: 14, marginTop: 12 }}>暂无活动记录</Text>
             </View>
           }

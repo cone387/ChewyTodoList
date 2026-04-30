@@ -115,7 +115,7 @@ export default function ViewTemplateMarketPage() {
       {/* Meta row */}
       <View style={{ paddingHorizontal: 14, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 8, borderTopWidth: 1, borderTopColor: colors.borderLight }}>
         {/* View type badge */}
-        <View style={{ backgroundColor: '#f3f0ff', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <View style={{ backgroundColor: Colors.primary + '14', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           <Text style={{ fontSize: 12 }}>{getViewTypeIcon(template.view_type)}</Text>
           <Text style={{ fontSize: 11, color: Colors.primary, fontWeight: '600' }}>{getViewTypeLabel(template.view_type)}</Text>
         </View>
@@ -162,7 +162,7 @@ export default function ViewTemplateMarketPage() {
           </View>
         )}
         {template.sorts.length > 0 && (
-          <View style={{ backgroundColor: '#f0fdf4', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
+          <View style={{ backgroundColor: colors.success + '14', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
             <Text style={{ fontSize: 10, color: colors.success }}>{template.sorts.length} 个排序</Text>
           </View>
         )}

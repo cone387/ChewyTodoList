@@ -143,7 +143,7 @@ export const SubtaskList: React.FC<Props> = ({ parentTask, subtasks, onRefresh }
       {/* Header — always visible, tap to expand/collapse */}
       <TouchableOpacity onPress={() => setExpanded(!expanded)}
         style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 6 }}>
-        <MaterialCommunityIcons name={expanded ? 'chevron-down' : 'chevron-right'} size={18} color="#9ca3af" />
+        <MaterialCommunityIcons name={expanded ? 'chevron-down' : 'chevron-right'} size={18} color={colors.text.muted} />
         <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text.secondary, marginLeft: 4 }}>子任务</Text>
         <Text style={{ fontSize: 12, color: colors.text.muted, marginLeft: 6 }}>{done}/{total}</Text>
         <View style={{ flex: 1, marginLeft: 10, marginRight: 8 }}>

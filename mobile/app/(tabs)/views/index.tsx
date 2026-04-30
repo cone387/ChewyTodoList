@@ -218,7 +218,7 @@ export default function ViewsPage() {
             <ViewMeta view={item} />
           </View>
           <TouchableOpacity onPress={() => handleRemove(item)}
-            style={{ paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: '#fef2f2', marginTop: 2 }}>
+            style={{ paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: colors.error + '14', marginTop: 2 }}>
             <Text style={{ fontSize: 11, fontWeight: '500', color: colors.error }}>移除</Text>
           </TouchableOpacity>
         </View>
@@ -249,10 +249,10 @@ export default function ViewsPage() {
         <NavCard item={item} idx={idx} dragHandle={
           <View style={{ marginRight: 8, gap: 0, paddingTop: 2 }}>
             <TouchableOpacity onPress={() => handleMove(idx, 'up')} disabled={idx === 0} style={{ padding: 2, opacity: idx === 0 ? 0.2 : 1 }}>
-              <MaterialCommunityIcons name="chevron-up" size={14} color="#9ca3af" />
+              <MaterialCommunityIcons name="chevron-up" size={14} color={colors.text.muted} />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => handleMove(idx, 'down')} disabled={idx === navViews.length - 1} style={{ padding: 2, opacity: idx === navViews.length - 1 ? 0.2 : 1 }}>
-              <MaterialCommunityIcons name="chevron-down" size={14} color="#9ca3af" />
+              <MaterialCommunityIcons name="chevron-down" size={14} color={colors.text.muted} />
             </TouchableOpacity>
           </View>
         } />
@@ -293,10 +293,10 @@ export default function ViewsPage() {
         {tab !== 'nav' && (
           <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.background.tertiary, borderRadius: 10, paddingHorizontal: 12, height: 36 }}>
-              <MaterialCommunityIcons name="magnify" size={16} color="#9ca3af" />
+              <MaterialCommunityIcons name="magnify" size={16} color={colors.text.muted} />
               <TextInput style={{ flex: 1, fontSize: 14, color: colors.text.primary, paddingVertical: 0, marginLeft: 6 }}
                 placeholder="搜索..." placeholderTextColor={colors.text.muted} value={search} onChangeText={setSearch} />
-              {search ? <TouchableOpacity onPress={() => setSearch('')}><MaterialCommunityIcons name="close" size={14} color="#9ca3af" /></TouchableOpacity> : null}
+              {search ? <TouchableOpacity onPress={() => setSearch('')}><MaterialCommunityIcons name="close" size={14} color={colors.text.muted} /></TouchableOpacity> : null}
             </View>
           </View>
         )}
@@ -335,12 +335,12 @@ export default function ViewsPage() {
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                           <Text style={{ fontSize: 14, fontWeight: '500', color: colors.text.primary }}>{v.name}</Text>
-                          {v.is_visible_in_nav && <View style={{ backgroundColor: '#f3f0ff', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 }}><Text style={{ fontSize: 9, fontWeight: '600', color: Colors.primary }}>导航栏</Text></View>}
+                          {v.is_visible_in_nav && <View style={{ backgroundColor: Colors.primary + '14', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 }}><Text style={{ fontSize: 9, fontWeight: '600', color: Colors.primary }}>导航栏</Text></View>}
                         </View>
                         <Text style={{ fontSize: 11, color: colors.text.muted, marginTop: 1 }}>{VTL[v.view_type]}{v.project ? ` · ${v.project.name}` : ''}</Text>
                         <ViewMeta view={v} />
                       </View>
-                      <MaterialCommunityIcons name="chevron-right" size={16} color="#d1d5db" />
+                      <MaterialCommunityIcons name="chevron-right" size={16} color={colors.text.muted} />
                     </View>
                   </TouchableOpacity>
                 );

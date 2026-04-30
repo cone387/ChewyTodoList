@@ -106,7 +106,7 @@ export const MarkdownEditor: React.FC<Props> = ({ value, onChange, placeholder, 
                 }}
                 activeOpacity={0.6}
               >
-                <MaterialCommunityIcons name={tool.icon as any} size={18} color="#6b7280" />
+                <MaterialCommunityIcons name={tool.icon as any} size={18} color={colors.text.secondary} />
               </TouchableOpacity>
             ))}
           </ScrollView>

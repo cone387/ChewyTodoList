@@ -190,7 +190,7 @@ export const FilterBuilder: React.FC<Props> = ({ filters, onChange }) => {
             )}
             <View style={{ flex: 1 }} />
             <TouchableOpacity onPress={() => onChange(filters.filter((_, i) => i !== idx))} style={{ padding: 4 }}>
-              <MaterialCommunityIcons name="close-circle" size={16} color="#d1d5db" />
+              <MaterialCommunityIcons name="close-circle" size={16} color={colors.text.muted} />
             </TouchableOpacity>
           </View>
         );

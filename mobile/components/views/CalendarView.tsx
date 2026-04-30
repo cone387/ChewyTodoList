@@ -137,7 +137,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         )}
       </View>
       {item.is_overdue && !item.is_completed && (
-        <View style={{ backgroundColor: '#fef2f2', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+        <View style={{ backgroundColor: colors.error + '14', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
           <Text style={{ color: colors.error, fontSize: 10, fontWeight: '600' }}>逾期</Text>
         </View>
       )}

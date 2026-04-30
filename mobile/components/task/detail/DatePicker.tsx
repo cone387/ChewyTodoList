@@ -171,7 +171,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               <Text style={{ fontSize: 12, color: isOverdue ? '#ef4444' : colors.text.muted }}>{relative}</Text>
             ) : null}
             {isOverdue && (
-              <View style={{ backgroundColor: '#fef2f2', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+              <View style={{ backgroundColor: colors.error + '14', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
                 <Text style={{ color: colors.error, fontSize: 11, fontWeight: '600' }}>逾期</Text>
               </View>
             )}
@@ -191,7 +191,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               </TouchableOpacity>
             ))}
             <TouchableOpacity
-              style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: '#f3f0ff', borderRadius: 6 }}
+              style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: Colors.primary + '14', borderRadius: 6 }}
               onPress={() => { setPickerDate(new Date()); setShowPicker(true); }}
             >
               <Text style={{ fontSize: 12, color: Colors.primary }}>选择</Text>

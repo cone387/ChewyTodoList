@@ -63,7 +63,7 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ taskUid }) => {
         <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>
           活动日志{logs.length > 0 ? ` (${logs.length})` : ''}
         </Text>
-        <MaterialCommunityIcons name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color="#9ca3af" />
+        <MaterialCommunityIcons name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color={colors.text.muted} />
       </TouchableOpacity>
 
       {expanded && (

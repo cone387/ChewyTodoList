@@ -120,11 +120,11 @@ export default function LoginPage() {
           }}>
             {error ? (
               <View style={{
-                backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca',
+                backgroundColor: colors.error + '14', borderWidth: 1, borderColor: '#fecaca',
                 borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 16,
                 flexDirection: 'row', alignItems: 'center', gap: 8,
               }}>
-                <MaterialCommunityIcons name="alert-circle" size={18} color="#ef4444" />
+                <MaterialCommunityIcons name="alert-circle" size={18} color={colors.error} />
                 <Text style={{ color: colors.error, fontSize: 13, flex: 1 }}>{error}</Text>
               </View>
             ) : null}

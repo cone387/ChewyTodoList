@@ -164,14 +164,14 @@ export default function EditViewPage() {
               <Text style={{ flex: 1, fontSize: 13, color: follow ? Colors.primary : (proj ? '#374151' : colors.text.muted) }} numberOfLines={1}>
                 {follow ? '跟随主页选择' : (proj?.name || '不关联')}
               </Text>
-              {!ro && <MaterialCommunityIcons name="chevron-down" size={14} color="#9ca3af" />}
+              {!ro && <MaterialCommunityIcons name="chevron-down" size={14} color={colors.text.muted} />}
             </TouchableOpacity>
           </View>
           <View style={{ flex: 1 }}>
             <Lbl text="分组" />
             <TouchableOpacity onPress={() => !ro && setShowGB(true)} disabled={ro} style={boxStyle}>
               <Text style={{ flex: 1, fontSize: 13, color: gb ? '#374151' : colors.text.muted }} numberOfLines={1}>{GO.find((o) => o.k === gb)?.l || '不分组'}</Text>
-              {!ro && <MaterialCommunityIcons name="chevron-down" size={14} color="#9ca3af" />}
+              {!ro && <MaterialCommunityIcons name="chevron-down" size={14} color={colors.text.muted} />}
             </TouchableOpacity>
           </View>
         </View>
@@ -196,7 +196,7 @@ export default function EditViewPage() {
         <Lbl text="排序" />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
           {sorts.map((s, i) => (
-            <View key={i} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fef3c7', borderRadius: 14, paddingLeft: 8, paddingRight: ro ? 8 : 2, paddingVertical: 3, gap: 4 }}>
+            <View key={i} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.warning + '22', borderRadius: 14, paddingLeft: 8, paddingRight: ro ? 8 : 2, paddingVertical: 3, gap: 4 }}>
               <Text style={{ fontSize: 12, color: '#92400e', fontWeight: '500' }}>{SF.find((f) => f.k === s.field)?.l || s.field}</Text>
               <TouchableOpacity onPress={() => { if (ro) return; const n = [...sorts]; n[i] = { ...n[i], direction: n[i].direction === 'asc' ? 'desc' : 'asc' }; setSorts(n); }} disabled={ro}>
                 <MaterialCommunityIcons name={s.direction === 'asc' ? 'arrow-up' : 'arrow-down'} size={14} color="#92400e" />
@@ -233,7 +233,7 @@ export default function EditViewPage() {
 
         {/* Delete */}
         {!ro && (
-          <TouchableOpacity onPress={() => setShowDel(true)} style={{ marginTop: 24, paddingVertical: 12, backgroundColor: '#fef2f2', borderRadius: 10, alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => setShowDel(true)} style={{ marginTop: 24, paddingVertical: 12, backgroundColor: colors.error + '14', borderRadius: 10, alignItems: 'center' }}>
             <Text style={{ fontSize: 14, fontWeight: '600', color: colors.error }}>删除视图</Text>
           </TouchableOpacity>
         )}

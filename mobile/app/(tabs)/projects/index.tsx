@@ -189,7 +189,7 @@ export default function ProjectsPage() {
                   onPress={() => { setGroupMenuGroup(group); setShowGroupMenu(true); }}
                   style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
                 >
-                  <MaterialCommunityIcons name="dots-horizontal" size={18} color="#9ca3af" />
+                  <MaterialCommunityIcons name="dots-horizontal" size={18} color={colors.text.muted} />
                 </TouchableOpacity>
               </View>
 
@@ -271,7 +271,7 @@ export default function ProjectsPage() {
                   <Text style={{ flex: 1, fontSize: 14, color: selectedGroup ? colors.text.secondary : colors.text.muted }}>
                     {selectedGroup ? selectedGroup.name : '选择分组'}
                   </Text>
-                  <MaterialCommunityIcons name="chevron-down" size={16} color="#9ca3af" />
+                  <MaterialCommunityIcons name="chevron-down" size={16} color={colors.text.muted} />
                 </TouchableOpacity>
                 <Text style={{ fontSize: 12, color: colors.text.muted }}>图标</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>

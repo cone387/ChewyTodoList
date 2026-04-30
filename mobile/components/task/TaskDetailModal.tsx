@@ -241,7 +241,7 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
           <TouchableOpacity onPress={() => setShowProjectPicker(true)}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text.secondary }} numberOfLines={1}>{curProject?.name || '收集箱'}</Text>
-            <MaterialCommunityIcons name="chevron-down" size={16} color="#9ca3af" />
+            <MaterialCommunityIcons name="chevron-down" size={16} color={colors.text.muted} />
           </TouchableOpacity>
         </View>
         {isCreate ? (
@@ -258,10 +258,10 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
         ) : (
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <TouchableOpacity onPress={() => router.push(`/task/activity?uid=${task?.uid}` as any)} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
-              <MaterialCommunityIcons name="history" size={20} color="#6b7280" />
+              <MaterialCommunityIcons name="history" size={20} color={colors.text.secondary} />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setShowMoreMenu(true)} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
-              <MaterialCommunityIcons name="dots-horizontal" size={22} color="#6b7280" />
+              <MaterialCommunityIcons name="dots-horizontal" size={22} color={colors.text.secondary} />
             </TouchableOpacity>
           </View>
         )}
@@ -363,7 +363,7 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
                         <TouchableOpacity onPress={() => handleQuickTime('due_date', 'today')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#dbeafe' }}>
                           <Text style={{ fontSize: 13, color: '#2563eb' }}>今天</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => handleQuickTime('due_date', 'tomorrow')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#dcfce7' }}>
+                        <TouchableOpacity onPress={() => handleQuickTime('due_date', 'tomorrow')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: colors.success + '22' }}>
                           <Text style={{ fontSize: 13, color: colors.success }}>明天</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => handleQuickTime('due_date', 'clear')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: colors.background.tertiary }}>

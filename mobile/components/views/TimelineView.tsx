@@ -174,7 +174,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                       </Text>
                       {task.is_completed && <Text style={{ color: Colors.success, fontSize: 14 }}>✓</Text>}
                       {task.is_overdue && !task.is_completed && (
-                        <View style={{ backgroundColor: '#fef2f2', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 }}>
+                        <View style={{ backgroundColor: colors.error + '14', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 }}>
                           <Text style={{ color: colors.error, fontSize: 9, fontWeight: '600' }}>逾期</Text>
                         </View>
                       )}

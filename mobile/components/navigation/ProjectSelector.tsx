@@ -49,7 +49,7 @@ export const ProjectSelector: React.FC<ProjectSelectorProps> = ({
         <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text.primary }} numberOfLines={1}>
           {label}
         </Text>
-        <MaterialCommunityIcons name="chevron-down" size={20} color="#9ca3af" />
+        <MaterialCommunityIcons name="chevron-down" size={20} color={colors.text.muted} />
       </TouchableOpacity>
 
       <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={() => setModalVisible(false)}>
@@ -72,7 +72,7 @@ export const ProjectSelector: React.FC<ProjectSelectorProps> = ({
                     backgroundColor: colors.background.tertiary, borderRadius: 12,
                     paddingHorizontal: 12, height: 40,
                   }}>
-                    <MaterialCommunityIcons name="magnify" size={18} color="#9ca3af" />
+                    <MaterialCommunityIcons name="magnify" size={18} color={colors.text.muted} />
                     <TextInput
                       style={{ flex: 1, fontSize: 14, color: colors.text.primary, paddingVertical: 0, marginLeft: 8 }}
                       placeholder="搜索项目..."

@@ -170,7 +170,7 @@ export const ProjectField: React.FC<{ task: Task; style: Record<string, any> }> 
   if (!task.project) return null;
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-      <MaterialCommunityIcons name="folder" size={11} color="#9ca3af" style={{ marginRight: 3 }} />
+      <MaterialCommunityIcons name="folder" size={11} color={colors.text.muted} style={{ marginRight: 3 }} />
       <Text style={{ color: colors.text.muted, fontSize: 11 }}>{task.project.name}</Text>
     </View>
   );
