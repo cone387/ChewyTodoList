@@ -221,14 +221,19 @@ class Project(BaseModel):
 # =========================
 
 class TaskQuerySet(models.QuerySet):
-    """任务查询集"""
+    """任务查询集 — 默认排除重复任务模板（is_recurrence_template=True）"""
+
+    def _exclude_templates(self):
+        """内部：排除模板任务"""
+        return self.filter(is_recurrence_template=False)
 
     def today(self):
         """今日任务"""
         today = timezone.now().date()
         return self.filter(
             models.Q(start_date__date__lte=today) | models.Q(start_date__isnull=True),
-            models.Q(due_date__date__gte=today) | models.Q(due_date__isnull=True)
+            models.Q(due_date__date__gte=today) | models.Q(due_date__isnull=True),
+            is_recurrence_template=False,
         )
 
     def tomorrow(self):
@@ -236,7 +241,8 @@ class TaskQuerySet(models.QuerySet):
         tomorrow = timezone.now().date() + timedelta(days=1)
         return self.filter(
             models.Q(start_date__date__lte=tomorrow) | models.Q(start_date__isnull=True),
-            models.Q(due_date__date__gte=tomorrow) | models.Q(due_date__isnull=True)
+            models.Q(due_date__date__gte=tomorrow) | models.Q(due_date__isnull=True),
+            is_recurrence_template=False,
         )
 
     def this_week(self):
@@ -246,25 +252,32 @@ class TaskQuerySet(models.QuerySet):
         week_end = week_start + timedelta(days=6)
         return self.filter(
             models.Q(start_date__date__lte=week_end) | models.Q(start_date__isnull=True),
-            models.Q(due_date__date__gte=week_start) | models.Q(due_date__isnull=True)
+            models.Q(due_date__date__gte=week_start) | models.Q(due_date__isnull=True),
+            is_recurrence_template=False,
         )
 
     def overdue(self):
         """逾期任务"""
         return self.filter(
             due_date__lt=timezone.now(),
-            status__in=[Task.TaskStatus.UNASSIGNED, Task.TaskStatus.TODO]
+            status__in=[Task.TaskStatus.UNASSIGNED, Task.TaskStatus.TODO],
+            is_recurrence_template=False,
         )
 
     def uncompleted(self):
         """未完成任务"""
         return self.filter(
-            status__in=[Task.TaskStatus.UNASSIGNED, Task.TaskStatus.TODO]
+            status__in=[Task.TaskStatus.UNASSIGNED, Task.TaskStatus.TODO],
+            is_recurrence_template=False,
         )
 
     def completed(self):
         """已完成任务"""
-        return self.filter(status=Task.TaskStatus.COMPLETED)
+        return self.filter(status=Task.TaskStatus.COMPLETED, is_recurrence_template=False)
+
+    def templates(self):
+        """仅返回重复任务模板"""
+        return self.filter(is_recurrence_template=True)
 
 
 # =========================
@@ -352,6 +365,36 @@ class Task(BaseModel):
         verbose_name="附件"
     )
 
+    # === 重复任务（M1 新增）===
+    recurrence_rule = models.CharField(
+        max_length=255, blank=True, null=True,
+        verbose_name="重复规则",
+        help_text="iCalendar RRULE 字符串，如 'FREQ=WEEKLY;BYDAY=MO,WE,FR'",
+    )
+    recurrence_parent = models.ForeignKey(
+        "self", to_field="uid",
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="recurrence_children",
+        verbose_name="重复系列源",
+        help_text="指向系列模板任务；模板任务本身此字段为 null",
+    )
+    recurrence_dtstart = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name="重复起始时间",
+        help_text="RRULE 的 DTSTART；通常等于 start_date 或 due_date",
+    )
+    recurrence_exdates = models.JSONField(
+        default=list, blank=True,
+        verbose_name="排除日期",
+        help_text="被跳过的实例日期 ISO 列表",
+    )
+    is_recurrence_template = models.BooleanField(
+        default=False, db_index=True,
+        verbose_name="是否重复系列模板",
+        help_text="True=模板（不出现在普通列表），False=具体实例",
+    )
+
     objects = TaskQuerySet.as_manager()
 
     class Meta:
@@ -363,6 +406,8 @@ class Task(BaseModel):
             models.Index(fields=['user', 'project', '-updated_at'], name='task_user_project_updated_idx'),
             models.Index(fields=['user', 'due_date'], name='task_user_due_date_idx'),
             models.Index(fields=['user', 'start_date'], name='task_user_start_date_idx'),
+            models.Index(fields=['user', 'recurrence_parent'], name='task_user_recur_parent_idx'),
+            models.Index(fields=['user', 'is_recurrence_template'], name='task_user_recur_tpl_idx'),
         ]
 
     def __str__(self):
@@ -1076,5 +1121,108 @@ class TaskView(BaseModel):
             return {
                 f"{field}__isnull": True
             }
-        
+
         return None
+
+
+# =========================
+# 提醒模型（M1 新增）
+# =========================
+
+class Reminder(BaseModel):
+    """任务提醒 — 支持绝对时间和相对截止时间两种类型"""
+
+    class ReminderType(models.TextChoices):
+        ABSOLUTE = "absolute", "绝对时间"      # 指定具体时间点
+        RELATIVE = "relative", "相对截止时间"  # 相对于 due_date / start_date 偏移
+
+    class ReminderStatus(models.TextChoices):
+        PENDING = "pending", "待触发"
+        TRIGGERED = "triggered", "已触发"
+        DISMISSED = "dismissed", "已忽略"
+        CANCELLED = "cancelled", "已取消"
+
+    class RelativeTo(models.TextChoices):
+        DUE_DATE = "due_date", "截止时间"
+        START_DATE = "start_date", "开始时间"
+
+    uid = models.CharField(
+        max_length=22, unique=True, default=generate_uid, editable=False,
+        verbose_name="UID",
+    )
+    task = models.ForeignKey(
+        Task, to_field="uid",
+        on_delete=models.CASCADE,
+        related_name="reminders",
+        verbose_name="任务",
+    )
+    type = models.CharField(
+        max_length=16, choices=ReminderType.choices,
+        default=ReminderType.RELATIVE,
+        verbose_name="提醒类型",
+    )
+    # ABSOLUTE 类型使用 trigger_at
+    trigger_at = models.DateTimeField(
+        null=True, blank=True, db_index=True,
+        verbose_name="触发时间（绝对）",
+    )
+    # RELATIVE 类型使用 offset_minutes + relative_to
+    # offset_minutes: 正数 = 提前 N 分钟提醒；0 = 到时提醒；负数 = 延后
+    offset_minutes = models.IntegerField(
+        null=True, blank=True,
+        verbose_name="偏移分钟",
+        help_text="正数=提前 N 分钟，0=到时，负数=延后",
+    )
+    relative_to = models.CharField(
+        max_length=16, choices=RelativeTo.choices,
+        default=RelativeTo.DUE_DATE,
+        verbose_name="相对基准字段",
+    )
+
+    status = models.CharField(
+        max_length=16, choices=ReminderStatus.choices,
+        default=ReminderStatus.PENDING, db_index=True,
+        verbose_name="状态",
+    )
+    triggered_at = models.DateTimeField(null=True, blank=True, verbose_name="实际触发时间")
+
+    # 客户端调度 ID（Expo Notifications / Web Notification tag），便于取消
+    client_notification_id = models.CharField(
+        max_length=128, blank=True, default="",
+        verbose_name="客户端通知 ID",
+    )
+
+    class Meta:
+        db_table = "ct_reminders"
+        ordering = ["trigger_at", "-created_at"]
+        verbose_name = verbose_name_plural = "任务提醒"
+        indexes = [
+            models.Index(fields=["user", "status", "trigger_at"], name="reminder_user_status_at_idx"),
+            models.Index(fields=["task", "status"], name="reminder_task_status_idx"),
+        ]
+
+    def __str__(self):
+        return f"Reminder({self.get_type_display()}) for {self.task_id}"
+
+    @property
+    def effective_trigger_at(self):
+        """动态计算最终触发时间"""
+        if self.type == self.ReminderType.ABSOLUTE:
+            return self.trigger_at
+        # RELATIVE
+        base = getattr(self.task, self.relative_to, None)
+        if base is None or self.offset_minutes is None:
+            return None
+        return base - timedelta(minutes=self.offset_minutes)
+
+    def mark_triggered(self):
+        """标记为已触发"""
+        self.status = self.ReminderStatus.TRIGGERED
+        self.triggered_at = timezone.now()
+        self.save(update_fields=["status", "triggered_at", "updated_at"])
+
+    def cancel(self):
+        """取消提醒（任务完成/删除时调用）"""
+        if self.status == self.ReminderStatus.PENDING:
+            self.status = self.ReminderStatus.CANCELLED
+            self.save(update_fields=["status", "updated_at"])
