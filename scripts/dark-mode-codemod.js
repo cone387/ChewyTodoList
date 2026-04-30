@@ -28,6 +28,15 @@ const RULES = [
   [/color:\s*'#9ca3af'/g,                "color: colors.text.muted",       "text muted"],
   [/color:\s*'#d1d5db'/g,                "color: colors.text.muted",       "text muted alt"],
 
+  // Ternary patterns on 'color' / 'backgroundColor' / 'borderColor':
+  // `: '#hex'` followed by `,` or `)` or `}` — typical ternary RHS or object literal value.
+  // Avoids array elements like `['#hex', ...]` because those start with `[` or are preceded by other array context (not `: `)
+  [/:\s*'#111418'(\s*[,})])/g,          ": colors.text.primary$1",      "text primary (ternary/style)"],
+  [/:\s*'#374151'(\s*[,})])/g,          ": colors.text.secondary$1",    "text secondary (ternary/style)"],
+  [/:\s*'#6b7280'(\s*[,})])/g,          ": colors.text.secondary$1",    "text secondary alt (ternary/style)"],
+  [/:\s*'#9ca3af'(\s*[,})])/g,          ": colors.text.muted$1",        "text muted (ternary/style)"],
+  [/:\s*'#d1d5db'(\s*[,})])/g,          ": colors.text.muted$1",        "text muted alt (ternary/style)"],
+
   // borderColor / borderBottomColor / borderTopColor / borderLeftColor / borderRightColor
   [/borderBottomColor:\s*'#f3f4f6'/g,    "borderBottomColor: colors.borderLight", "border light bottom"],
   [/borderBottomColor:\s*'#e5e7eb'/g,    "borderBottomColor: colors.border",      "border bottom"],
@@ -41,11 +50,19 @@ const RULES = [
   [/placeholderTextColor="#6b7280"/g,    'placeholderTextColor={colors.text.secondary}', "placeholder secondary"],
   [/placeholderTextColor='#9ca3af'/g,    "placeholderTextColor={colors.text.muted}", "placeholder muted alt"],
 
-  // Common "color: '#ef4444'" for destructive Text -> colors.error
+  // Destructive / error family — map all red variants to colors.error
   [/color:\s*'#ef4444'/g,                "color: colors.error",                     "destructive text"],
+  [/color:\s*'#dc2626'/g,                "color: colors.error",                     "destructive text alt"],
+  [/backgroundColor:\s*'#ef4444'/g,      "backgroundColor: colors.error",           "destructive bg"],
+  // Success family
+  [/color:\s*'#22c55e'/g,                "color: colors.success",                   "success text"],
+  [/color:\s*'#16a34a'/g,                "color: colors.success",                   "success text alt"],
+  [/backgroundColor:\s*'#22c55e'/g,      "backgroundColor: colors.success",         "success bg"],
 
-  // shadow/elevation on dividers — leave as is
+  // Color attribute (MCI icon color) without `color:` — as ternary RHS
+  [/color=\{'#ef4444'\}/g,               "color={colors.error}",                    "icon destructive"],
 ];
+
 
 function transform(source) {
   let out = source;
@@ -80,13 +97,20 @@ function ensureUseThemeImport(source) {
   );
 
   // Insert `const { colors } = useTheme();` inside the first function component's body
-  // Heuristic: find `export default function X() {` and insert right after.
-  const functionMatch = source.match(/(export\s+default\s+function\s+\w+\s*\([^)]*\)\s*\{)/);
-  if (functionMatch) {
-    source = source.replace(
-      functionMatch[1],
-      `${functionMatch[1]}\n  const { colors } = useTheme();`
-    );
+  // Matches: `export default function X()`, `export function X()`, or `export const X = (..) =>`
+  const patterns = [
+    /(export\s+default\s+function\s+\w+\s*\([^)]*\)\s*\{)/,
+    /(export\s+function\s+\w+\s*\([^)]*\)\s*\{)/,
+    /(export\s+const\s+\w+\s*:\s*[^=]*=\s*\([^)]*\)\s*=>\s*\{)/,
+  ];
+  for (const p of patterns) {
+    const m = source.match(p);
+    if (m) {
+      if (!/const\s*\{\s*colors\s*\}\s*=\s*useTheme/.test(source)) {
+        source = source.replace(m[1], `${m[1]}\n  const { colors } = useTheme();`);
+      }
+      break;
+    }
   }
 
   return { source, added: true };

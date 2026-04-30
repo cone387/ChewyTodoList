@@ -136,8 +136,8 @@ export default function EditViewPage() {
           <TouchableOpacity onPress={() => !ro && setNav(!nav)} disabled={ro}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10,
               backgroundColor: nav ? Colors.primary + '14' : '#f3f4f6', borderWidth: 1, borderColor: nav ? Colors.primary + '30' : '#e5e7eb' }}>
-            <MaterialCommunityIcons name={nav ? 'eye' : 'eye-off'} size={16} color={nav ? Colors.primary : '#9ca3af'} />
-            <Text style={{ fontSize: 12, fontWeight: '600', color: nav ? Colors.primary : '#9ca3af' }}>导航栏</Text>
+            <MaterialCommunityIcons name={nav ? 'eye' : 'eye-off'} size={16} color={nav ? Colors.primary : colors.text.muted} />
+            <Text style={{ fontSize: 12, fontWeight: '600', color: nav ? Colors.primary : colors.text.muted }}>导航栏</Text>
           </TouchableOpacity>
         </View>
 
@@ -149,8 +149,8 @@ export default function EditViewPage() {
               style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginRight: 8,
                 paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16,
                 backgroundColor: vt === t.v ? Colors.primary : '#f3f4f6' }}>
-              <MaterialCommunityIcons name={t.i as any} size={14} color={vt === t.v ? '#fff' : '#6b7280'} />
-              <Text style={{ fontSize: 13, fontWeight: vt === t.v ? '600' : '400', color: vt === t.v ? '#fff' : '#6b7280' }}>{t.l}</Text>
+              <MaterialCommunityIcons name={t.i as any} size={14} color={vt === t.v ? '#fff' : colors.text.secondary} />
+              <Text style={{ fontSize: 13, fontWeight: vt === t.v ? '600' : '400', color: vt === t.v ? '#fff' : colors.text.secondary }}>{t.l}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -161,7 +161,7 @@ export default function EditViewPage() {
             <Lbl text="项目" />
             <TouchableOpacity onPress={() => !ro && setShowPP(true)} disabled={ro}
               style={boxStyle}>
-              <Text style={{ flex: 1, fontSize: 13, color: follow ? Colors.primary : (proj ? '#374151' : '#9ca3af') }} numberOfLines={1}>
+              <Text style={{ flex: 1, fontSize: 13, color: follow ? Colors.primary : (proj ? '#374151' : colors.text.muted) }} numberOfLines={1}>
                 {follow ? '跟随主页选择' : (proj?.name || '不关联')}
               </Text>
               {!ro && <MaterialCommunityIcons name="chevron-down" size={14} color="#9ca3af" />}
@@ -170,7 +170,7 @@ export default function EditViewPage() {
           <View style={{ flex: 1 }}>
             <Lbl text="分组" />
             <TouchableOpacity onPress={() => !ro && setShowGB(true)} disabled={ro} style={boxStyle}>
-              <Text style={{ flex: 1, fontSize: 13, color: gb ? '#374151' : '#9ca3af' }} numberOfLines={1}>{GO.find((o) => o.k === gb)?.l || '不分组'}</Text>
+              <Text style={{ flex: 1, fontSize: 13, color: gb ? '#374151' : colors.text.muted }} numberOfLines={1}>{GO.find((o) => o.k === gb)?.l || '不分组'}</Text>
               {!ro && <MaterialCommunityIcons name="chevron-down" size={14} color="#9ca3af" />}
             </TouchableOpacity>
           </View>
@@ -186,7 +186,7 @@ export default function EditViewPage() {
                 style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14,
                   backgroundColor: on ? Colors.primary + '14' : '#f3f4f6',
                   borderWidth: 1, borderColor: on ? Colors.primary + '30' : 'transparent' }}>
-                <Text style={{ fontSize: 12, color: on ? Colors.primary : '#9ca3af', fontWeight: on ? '600' : '400' }}>{f.l}</Text>
+                <Text style={{ fontSize: 12, color: on ? Colors.primary : colors.text.muted, fontWeight: on ? '600' : '400' }}>{f.l}</Text>
               </TouchableOpacity>
             );
           })}

@@ -72,7 +72,7 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
             >
               {/* Handle bar */}
               <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 4 }}>
-                <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: '#d1d5db' }} />
+                <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.text.muted }} />
               </View>
 
               {title && (

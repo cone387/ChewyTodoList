@@ -212,7 +212,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
             </View>
           )}
           {showDueDate && task.due_date && (
-            <Text style={{ fontSize: 10, color: task.is_overdue ? '#ef4444' : '#9ca3af' }}>
+            <Text style={{ fontSize: 10, color: task.is_overdue ? '#ef4444' : colors.text.muted }}>
               📅 {new Date(task.due_date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
             </Text>
           )}

@@ -86,7 +86,7 @@ export const TitleField: React.FC<{ task: Task; style: Record<string, any> }> = 
       style={{
         fontSize: fontSizes[style.fontSize || 'medium'] || 15,
         fontWeight: fontWeights[style.fontWeight || 'medium'] || '500',
-        color: isCompleted || isAbandoned ? '#9ca3af' : '#111418',
+        color: isCompleted || isAbandoned ? '#9ca3af' : colors.text.primary,
         textDecorationLine: (isCompleted || isAbandoned) && style.showStrikethrough ? 'line-through' : 'none',
         flex: 1,
       }}

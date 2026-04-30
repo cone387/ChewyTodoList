@@ -122,7 +122,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           style={{
             fontSize: 14,
             fontWeight: '500',
-            color: item.is_completed ? '#9ca3af' : '#111418',
+            color: item.is_completed ? '#9ca3af' : colors.text.primary,
             textDecorationLine: item.is_completed ? 'line-through' : 'none',
           }}
           numberOfLines={1}
@@ -211,7 +211,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 <Text style={{
                   fontSize: 13,
                   fontWeight: isTodayDate ? '700' : '400',
-                  color: isTodayDate ? '#fff' : isCurrentMonthDate ? '#111418' : '#d1d5db',
+                  color: isTodayDate ? '#fff' : isCurrentMonthDate ? '#111418' : colors.text.muted,
                 }}>
                   {date.getDate()}
                 </Text>

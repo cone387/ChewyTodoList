@@ -372,7 +372,7 @@ export default function ProjectsPage() {
       <ActionSheet
         visible={showGroupMenu}
         title={groupMenuGroup?.name || '分组'}
-        options={[{ label: '删除分组', value: 'delete', icon: '🗑', color: '#ef4444', destructive: true }]}
+        options={[{ label: '删除分组', value: 'delete', icon: '🗑', color: colors.error, destructive: true }]}
         onSelect={(opt) => {
           if (opt.value === 'delete' && groupMenuGroup) {
             setDeleteConfirm({ type: 'group', uid: groupMenuGroup.uid, name: groupMenuGroup.name });

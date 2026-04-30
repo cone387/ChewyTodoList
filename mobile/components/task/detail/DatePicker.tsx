@@ -143,8 +143,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: value ? (isOverdue ? '#fef2f2' : '#f3f4f6') : '#f3f4f6',
             borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5, alignSelf: 'flex-start' }}
         >
-          <MaterialCommunityIcons name="calendar" size={12} color={isOverdue ? '#ef4444' : '#9ca3af'} />
-          <Text style={{ fontSize: 12, color: value ? (isOverdue ? '#ef4444' : '#374151') : '#9ca3af' }} numberOfLines={1}>
+          <MaterialCommunityIcons name="calendar" size={12} color={isOverdue ? '#ef4444' : colors.text.muted} />
+          <Text style={{ fontSize: 12, color: value ? (isOverdue ? '#ef4444' : colors.text.secondary) : colors.text.muted }} numberOfLines={1}>
             {value ? `${label} ${new Date(value).toLocaleDateString('zh-CN')}` : label}
           </Text>
         </TouchableOpacity>
@@ -161,14 +161,14 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         {value ? (
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
             <TouchableOpacity onPress={() => { setPickerDate(new Date(value)); setShowPicker(true); }}>
-              <Text style={{ fontSize: 14, color: isOverdue ? '#ef4444' : '#374151' }}>
+              <Text style={{ fontSize: 14, color: isOverdue ? '#ef4444' : colors.text.secondary }}>
                 {new Date(value).toLocaleDateString('zh-CN')}
                 {' '}
                 {new Date(value).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
               </Text>
             </TouchableOpacity>
             {relative ? (
-              <Text style={{ fontSize: 12, color: isOverdue ? '#ef4444' : '#9ca3af' }}>{relative}</Text>
+              <Text style={{ fontSize: 12, color: isOverdue ? '#ef4444' : colors.text.muted }}>{relative}</Text>
             ) : null}
             {isOverdue && (
               <View style={{ backgroundColor: '#fef2f2', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>

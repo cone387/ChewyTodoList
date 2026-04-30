@@ -13,7 +13,7 @@ const ICONS: Record<string, { icon: string; color: string; bg: string }> = {
   created: { icon: 'plus-circle', color: colors.text.secondary, bg: '#f3f4f6' },
   updated: { icon: 'pencil', color: '#3b82f6', bg: '#eff6ff' },
   status_changed: { icon: 'swap-horizontal', color: '#8b5cf6', bg: '#f3f0ff' },
-  completed: { icon: 'check-circle', color: '#22c55e', bg: '#f0fdf4' },
+  completed: { icon: 'check-circle', color: colors.success, bg: '#f0fdf4' },
   deleted: { icon: 'delete', color: colors.error, bg: '#fef2f2' },
 };
 

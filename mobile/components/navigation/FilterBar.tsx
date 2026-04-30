@@ -155,7 +155,7 @@ export const HomeFilterBar: React.FC<HomeFilterBarProps> = ({
                   ) : (
                     <View style={{ width: 16 }} />
                   )}
-                  <Text style={{ fontSize: 14, color: selected ? Colors.primary : '#374151', fontWeight: selected ? '600' : '400' }}>
+                  <Text style={{ fontSize: 14, color: selected ? Colors.primary : colors.text.secondary, fontWeight: selected ? '600' : '400' }}>
                     {option.label}
                   </Text>
                 </TouchableOpacity>
@@ -205,7 +205,7 @@ export const HomeFilterBar: React.FC<HomeFilterBarProps> = ({
                   paddingVertical: 12,
                 }}
               >
-                <Text style={{ fontSize: 14, color: selected ? Colors.primary : '#374151', fontWeight: selected ? '600' : '400' }}>
+                <Text style={{ fontSize: 14, color: selected ? Colors.primary : colors.text.secondary, fontWeight: selected ? '600' : '400' }}>
                   {option.label}
                 </Text>
                 {selected && <MaterialCommunityIcons name="check" size={16} color={Colors.primary} />}
@@ -232,7 +232,7 @@ export const HomeFilterBar: React.FC<HomeFilterBarProps> = ({
               <Switch
                 value={displaySettings[option.key]}
                 onValueChange={(value) => onDisplaySettingsChange({ [option.key]: value })}
-                trackColor={{ false: '#d1d5db', true: Colors.primary + '66' }}
+                trackColor={{ false: colors.text.muted, true: Colors.primary + '66' }}
                 thumbColor={displaySettings[option.key] ? Colors.primary : '#fff'}
               />
             </View>
@@ -258,13 +258,13 @@ function TabButton({ label, active, onPress }: { label: string; active: boolean;
         backgroundColor: active ? Colors.primary + '12' : 'transparent',
       }}
     >
-      <Text style={{ fontSize: 13, color: active ? Colors.primary : '#6b7280', fontWeight: active ? '600' : '500' }} numberOfLines={1}>
+      <Text style={{ fontSize: 13, color: active ? Colors.primary : colors.text.secondary, fontWeight: active ? '600' : '500' }} numberOfLines={1}>
         {label}
       </Text>
       <MaterialCommunityIcons
         name={active ? 'chevron-up' : 'chevron-down'}
         size={16}
-        color={active ? Colors.primary : '#9ca3af'}
+        color={active ? Colors.primary : colors.text.muted}
       />
     </TouchableOpacity>
   );
@@ -281,7 +281,7 @@ function DirectionButton({ label, selected, onPress }: { label: string; selected
         backgroundColor: selected ? Colors.primary + '12' : '#f3f4f6',
       }}
     >
-      <Text style={{ fontSize: 12, color: selected ? Colors.primary : '#6b7280', fontWeight: selected ? '600' : '500' }}>
+      <Text style={{ fontSize: 12, color: selected ? Colors.primary : colors.text.secondary, fontWeight: selected ? '600' : '500' }}>
         {label}
       </Text>
     </TouchableOpacity>

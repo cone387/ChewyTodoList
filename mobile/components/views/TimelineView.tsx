@@ -136,7 +136,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                   </Text>
                 </View>
                 <View>
-                  <Text style={{ fontSize: 15, fontWeight: '600', color: isPast ? '#9ca3af' : '#111418' }}>
+                  <Text style={{ fontSize: 15, fontWeight: '600', color: isPast ? '#9ca3af' : colors.text.primary }}>
                     {formatDateHeader(dateKey)}
                   </Text>
                   <Text style={{ fontSize: 11, color: colors.text.muted }}>{dateTasks.length} 个任务</Text>

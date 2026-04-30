@@ -34,7 +34,7 @@ const ACTION_ICONS: Record<string, { icon: string; color: string }> = {
   created: { icon: '➕', color: colors.text.secondary },
   updated: { icon: '✏️', color: '#3b82f6' },
   status_changed: { icon: '🔄', color: '#8b5cf6' },
-  completed: { icon: '✅', color: '#22c55e' },
+  completed: { icon: '✅', color: colors.success },
   deleted: { icon: '🗑', color: colors.error },
 };
 

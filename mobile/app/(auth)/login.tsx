@@ -125,7 +125,7 @@ export default function LoginPage() {
                 flexDirection: 'row', alignItems: 'center', gap: 8,
               }}>
                 <MaterialCommunityIcons name="alert-circle" size={18} color="#ef4444" />
-                <Text style={{ color: '#dc2626', fontSize: 13, flex: 1 }}>{error}</Text>
+                <Text style={{ color: colors.error, fontSize: 13, flex: 1 }}>{error}</Text>
               </View>
             ) : null}
 

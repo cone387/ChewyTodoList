@@ -112,7 +112,7 @@ export const ListView: React.FC<ListViewProps> = ({
                   height: 20,
                   borderRadius: 10,
                   borderWidth: 2,
-                  borderColor: item.is_completed ? Colors.success : '#d1d5db',
+                  borderColor: item.is_completed ? Colors.success : colors.text.muted,
                   backgroundColor: item.is_completed ? Colors.success : 'transparent',
                   alignItems: 'center',
                   justifyContent: 'center',

@@ -19,6 +19,7 @@ import { MarkdownEditor } from './detail/MarkdownEditor';
 import { useToast } from '../../hooks/useToast';
 import { TaskStatus, TaskPriority } from '../../shared/types/index';
 import type { Task, Project, Tag } from '../../shared/types/index';
+import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
 
 const STATUSES = [
@@ -42,6 +43,7 @@ interface TaskDetailModalProps {
 }
 
 export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskDetailModalProps) {
+  const { colors } = useTheme();
   const isCreate = taskUid === 'create';
   const [modalVisible, setModalVisible] = useState(false);
   const { openTask: openParentTask } = useTaskModal();
@@ -220,7 +222,7 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
   if (isLoading && !isCreate) {
     return (
       <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose} onDismiss={handleDismiss}>
-        <View style={{ flex: 1, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ flex: 1, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
       </Modal>
@@ -229,16 +231,16 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
 
   return (
     <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose} onDismiss={handleDismiss}>
-      <View style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View style={{ flex: 1, backgroundColor: colors.card }}>
       {/* Header */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingTop: 8, paddingBottom: 6, borderBottomWidth: 0.5, borderBottomColor: '#f3f4f6' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingTop: 8, paddingBottom: 6, borderBottomWidth: 0.5, borderBottomColor: colors.borderLight }}>
         <TouchableOpacity onPress={handleClose} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
           <MaterialCommunityIcons name={isCreate ? 'close' : 'chevron-down'} size={24} color={Colors.primary} />
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
           <TouchableOpacity onPress={() => setShowProjectPicker(true)}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Text style={{ fontSize: 15, fontWeight: '600', color: '#374151' }} numberOfLines={1}>{curProject?.name || '收集箱'}</Text>
+            <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text.secondary }} numberOfLines={1}>{curProject?.name || '收集箱'}</Text>
             <MaterialCommunityIcons name="chevron-down" size={16} color="#9ca3af" />
           </TouchableOpacity>
         </View>
@@ -272,13 +274,13 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
               {!isCreate && (
                 <TouchableOpacity onPress={handleToggleComplete} style={{ marginRight: 8, height: 22, justifyContent: 'center' }}>
-                  <MaterialCommunityIcons name={task?.is_completed ? 'check-circle' : 'circle-outline'} size={20} color={task?.is_completed ? Colors.success : '#d1d5db'} />
+                  <MaterialCommunityIcons name={task?.is_completed ? 'check-circle' : 'circle-outline'} size={20} color={task?.is_completed ? Colors.success : colors.text.muted} />
                 </TouchableOpacity>
               )}
               <TextInput
-                style={{ flex: 1, fontSize: 17, fontWeight: '600', color: task?.is_completed ? '#9ca3af' : '#111418', lineHeight: 20, paddingTop: 0, paddingBottom: 0,
+                style={{ flex: 1, fontSize: 17, fontWeight: '600', color: task?.is_completed ? '#9ca3af' : colors.text.primary, lineHeight: 20, paddingTop: 0, paddingBottom: 0,
                   textDecorationLine: task?.is_completed ? 'line-through' : 'none', ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}) }}
-                placeholder="任务标题" placeholderTextColor="#9ca3af" value={title} onChangeText={setTitle} multiline autoFocus={isCreate}
+                placeholder="任务标题" placeholderTextColor={colors.text.muted} value={title} onChangeText={setTitle} multiline autoFocus={isCreate}
                 textAlignVertical="top" />
               {saveStatus !== 'idle' && (
                 <Text style={{ fontSize: 11, color: saveStatus === 'saving' ? '#9ca3af' : Colors.success, marginLeft: 8, lineHeight: 22 }}>
@@ -291,7 +293,7 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
             <View style={{ paddingHorizontal: 16, gap: 10, paddingBottom: 10 }}>
               {/* Priority row */}
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text style={{ fontSize: 15, color: '#9ca3af', width: 64 }}>优先级</Text>
+                <Text style={{ fontSize: 15, color: colors.text.muted, width: 64 }}>优先级</Text>
                 <View style={{ flex: 1, flexDirection: 'row', gap: 6, alignItems: 'center' }}>
                   {PRIORITIES.map((p) => {
                     const active = curPriority === p.value;
@@ -306,7 +308,7 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
               </View>
               {/* Tags row */}
               <TouchableOpacity onPress={() => setShowTagPicker(true)} style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text style={{ fontSize: 15, color: '#9ca3af', width: 64 }}>标签</Text>
+                <Text style={{ fontSize: 15, color: colors.text.muted, width: 64 }}>标签</Text>
                 {!isCreate && task && task.tags.length > 0 ? (
                   <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
                     {task.tags.map((t: Tag) => (
@@ -318,11 +320,11 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
                   </View>
                 ) : isCreate && createTagUids.length > 0 ? (
                   <View style={{ flex: 1, alignItems: 'flex-start' }}>
-                    <Text style={{ fontSize: 14, color: '#6b7280' }}>已选择 {createTagUids.length} 个标签</Text>
+                    <Text style={{ fontSize: 14, color: colors.text.secondary }}>已选择 {createTagUids.length} 个标签</Text>
                   </View>
                 ) : (
                   <View style={{ flex: 1, alignItems: 'flex-start' }}>
-                    <Text style={{ fontSize: 14, color: '#d1d5db' }}>点击添加</Text>
+                    <Text style={{ fontSize: 14, color: colors.text.muted }}>点击添加</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -330,7 +332,7 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
               {(isCreate || (!!task && !isCreate)) && (
                 <View style={{ gap: 8 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={{ fontSize: 15, color: '#9ca3af', width: 64 }}>开始</Text>
+                    <Text style={{ fontSize: 15, color: colors.text.muted, width: 64 }}>开始</Text>
                     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <DatePicker label="开始" value={startDateValue} compact
                         onChange={(v) => {
@@ -342,14 +344,14 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
                         <TouchableOpacity onPress={() => handleQuickTime('start_date', 'today')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#dbeafe' }}>
                           <Text style={{ fontSize: 13, color: '#2563eb' }}>今天</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => handleQuickTime('start_date', 'clear')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#f3f4f6' }}>
-                          <Text style={{ fontSize: 13, color: '#6b7280' }}>清空</Text>
+                        <TouchableOpacity onPress={() => handleQuickTime('start_date', 'clear')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: colors.background.tertiary }}>
+                          <Text style={{ fontSize: 13, color: colors.text.secondary }}>清空</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
                   </View>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={{ fontSize: 15, color: '#9ca3af', width: 64 }}>截止</Text>
+                    <Text style={{ fontSize: 15, color: colors.text.muted, width: 64 }}>截止</Text>
                     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <DatePicker label="截止" value={dueDateValue} isOverdue={!!task?.is_overdue} compact
                         onChange={(v) => {
@@ -362,10 +364,10 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
                           <Text style={{ fontSize: 13, color: '#2563eb' }}>今天</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => handleQuickTime('due_date', 'tomorrow')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#dcfce7' }}>
-                          <Text style={{ fontSize: 13, color: '#16a34a' }}>明天</Text>
+                          <Text style={{ fontSize: 13, color: colors.success }}>明天</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => handleQuickTime('due_date', 'clear')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#f3f4f6' }}>
-                          <Text style={{ fontSize: 13, color: '#6b7280' }}>清空</Text>
+                        <TouchableOpacity onPress={() => handleQuickTime('due_date', 'clear')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: colors.background.tertiary }}>
+                          <Text style={{ fontSize: 13, color: colors.text.secondary }}>清空</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -390,7 +392,7 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
           </View>
 
           {/* Content editor */}
-          <View style={{ flex: 1, borderTopWidth: 1, borderTopColor: '#f3f4f6' }}>
+          <View style={{ flex: 1, borderTopWidth: 1, borderTopColor: colors.borderLight }}>
             <MarkdownEditor
               value={content}
               onChange={setContent}
@@ -416,7 +418,7 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
         onCancel={() => setShowProjectPicker(false)} />
       <ActionSheet visible={showMoreMenu} title="更多操作" options={[
         ...(task?.status !== TaskStatus.ABANDONED ? [{ label: '放弃任务', value: 'abandon', icon: '🚫' }] : [{ label: '恢复任务', value: 'restore', icon: '↩️' }]),
-        { label: '删除任务', value: 'delete', icon: '🗑', color: '#ef4444', destructive: true },
+        { label: '删除任务', value: 'delete', icon: '🗑', color: colors.error, destructive: true },
       ]} onSelect={(o) => {
         if (o.value === 'delete') setShowDeleteConfirm(true);
         else if (o.value === 'abandon') setShowAbandonConfirm(true);

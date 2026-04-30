@@ -117,7 +117,7 @@ export const QuickCreateSheet: React.FC<QuickCreateSheetProps> = ({
               >
                 {/* Handle bar */}
                 <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 4 }}>
-                  <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: '#d1d5db' }} />
+                  <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.text.muted }} />
                 </View>
 
                 <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
@@ -165,7 +165,7 @@ export const QuickCreateSheet: React.FC<QuickCreateSheetProps> = ({
                     onPress={() => setShowProjectPicker(!showProjectPicker)}
                   >
                     <Text style={{ color: colors.text.muted, fontSize: 14, marginRight: 8 }}>📁</Text>
-                    <Text style={{ flex: 1, fontSize: 14, color: selectedProject ? '#374151' : '#9ca3af' }}>
+                    <Text style={{ flex: 1, fontSize: 14, color: selectedProject ? '#374151' : colors.text.muted }}>
                       {selectedProject ? selectedProject.name : '选择项目（可选）'}
                     </Text>
                     <Text style={{ color: colors.text.muted }}>{showProjectPicker ? '▲' : '▼'}</Text>
@@ -216,7 +216,7 @@ export const QuickCreateSheet: React.FC<QuickCreateSheetProps> = ({
                           }}
                           onPress={() => setPriority(opt.value)}
                         >
-                          <Text style={{ fontSize: 13, fontWeight: '500', color: priority === opt.value ? opt.color : '#6b7280' }}>
+                          <Text style={{ fontSize: 13, fontWeight: '500', color: priority === opt.value ? opt.color : colors.text.secondary }}>
                             {opt.label}
                           </Text>
                         </TouchableOpacity>

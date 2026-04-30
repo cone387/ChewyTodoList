@@ -62,7 +62,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({
             <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '70%', paddingBottom: 34 }}>
               {/* Handle */}
               <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 4 }}>
-                <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: '#d1d5db' }} />
+                <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.text.muted }} />
               </View>
 
               <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>

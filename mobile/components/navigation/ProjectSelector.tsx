@@ -62,7 +62,7 @@ export const ProjectSelector: React.FC<ProjectSelectorProps> = ({
                 maxHeight: '60%', paddingBottom: 34,
               }}>
                 <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 4 }}>
-                  <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: '#d1d5db' }} />
+                  <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.text.muted }} />
                 </View>
 
                 <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8 }}>
@@ -104,13 +104,13 @@ export const ProjectSelector: React.FC<ProjectSelectorProps> = ({
                         <MaterialCommunityIcons
                           name={item.uid ? 'folder' : 'folder-multiple'}
                           size={18}
-                          color={isSelected ? Colors.primary : '#9ca3af'}
+                          color={isSelected ? Colors.primary : colors.text.muted}
                           style={{ marginRight: 10 }}
                         />
                         <Text style={{
                           flex: 1, fontSize: 15,
                           fontWeight: isSelected ? '600' : '400',
-                          color: isSelected ? Colors.primary : '#374151',
+                          color: isSelected ? Colors.primary : colors.text.secondary,
                         }}>
                           {item.name}
                         </Text>

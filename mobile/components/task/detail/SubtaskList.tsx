@@ -101,7 +101,7 @@ export const SubtaskList: React.FC<Props> = ({ parentTask, subtasks, onRefresh }
             <TouchableWithoutFeedback>
               <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: Platform.OS === 'ios' ? 34 : 16 }}>
                 <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 4 }}>
-                  <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: '#d1d5db' }} />
+                  <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.text.muted }} />
                 </View>
                 <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 }}>
                   <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary, marginBottom: 12 }}>添加子任务</Text>
@@ -161,9 +161,9 @@ export const SubtaskList: React.FC<Props> = ({ parentTask, subtasks, onRefresh }
           onPress={() => openQuickEdit(st)}
           onLongPress={() => { setSelTask(st); setShowAct(true); }}>
           <TouchableOpacity onPress={() => toggleStatus.mutate({ task: st })} style={{ marginRight: 8 }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <MaterialCommunityIcons name={st.is_completed ? 'check-circle' : 'circle-outline'} size={16} color={st.is_completed ? Colors.success : '#d1d5db'} />
+            <MaterialCommunityIcons name={st.is_completed ? 'check-circle' : 'circle-outline'} size={16} color={st.is_completed ? Colors.success : colors.text.muted} />
           </TouchableOpacity>
-          <Text style={{ flex: 1, fontSize: 13, color: st.is_completed ? '#9ca3af' : '#374151', textDecorationLine: st.is_completed ? 'line-through' : 'none' }} numberOfLines={1}>
+          <Text style={{ flex: 1, fontSize: 13, color: st.is_completed ? '#9ca3af' : colors.text.secondary, textDecorationLine: st.is_completed ? 'line-through' : 'none' }} numberOfLines={1}>
             {st.title}
           </Text>
         </TouchableOpacity>
@@ -207,7 +207,7 @@ export const SubtaskList: React.FC<Props> = ({ parentTask, subtasks, onRefresh }
                         onPress={() => setQuickPriority(p)}
                         style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, backgroundColor: quickPriority === p ? Colors.primary + '20' : '#f3f4f6' }}
                       >
-                        <Text style={{ fontSize: 12, color: quickPriority === p ? Colors.primary : '#6b7280' }}>
+                        <Text style={{ fontSize: 12, color: quickPriority === p ? Colors.primary : colors.text.secondary }}>
                           {p === TaskPriority.LOW ? '低' : p === TaskPriority.MEDIUM ? '中' : p === TaskPriority.HIGH ? '高' : '紧急'}
                         </Text>
                       </TouchableOpacity>

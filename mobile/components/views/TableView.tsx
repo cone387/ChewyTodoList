@@ -25,7 +25,7 @@ interface TableViewProps {
 const STATUS_LABELS: Record<number, { label: string; color: string }> = {
   [TaskStatus.UNASSIGNED]: { label: '待分配', color: '#94a3b8' },
   [TaskStatus.TODO]: { label: '待办', color: '#3b82f6' },
-  [TaskStatus.COMPLETED]: { label: '已完成', color: '#22c55e' },
+  [TaskStatus.COMPLETED]: { label: '已完成', color: colors.success },
   [TaskStatus.ABANDONED]: { label: '已放弃', color: colors.error },
 };
 
@@ -121,7 +121,7 @@ export const TableView: React.FC<TableViewProps> = ({
               return (
                 <View key={column.key} style={{ width: column.width, paddingHorizontal: 8, paddingVertical: 12 }}>
                   {item.due_date ? (
-                    <Text style={{ fontSize: 11, color: item.is_overdue ? '#ef4444' : '#6b7280' }}>
+                    <Text style={{ fontSize: 11, color: item.is_overdue ? '#ef4444' : colors.text.secondary }}>
                       {new Date(item.due_date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
                     </Text>
                   ) : (

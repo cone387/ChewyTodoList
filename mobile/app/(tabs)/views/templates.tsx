@@ -163,7 +163,7 @@ export default function ViewTemplateMarketPage() {
         )}
         {template.sorts.length > 0 && (
           <View style={{ backgroundColor: '#f0fdf4', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
-            <Text style={{ fontSize: 10, color: '#22c55e' }}>{template.sorts.length} 个排序</Text>
+            <Text style={{ fontSize: 10, color: colors.success }}>{template.sorts.length} 个排序</Text>
           </View>
         )}
       </View>
@@ -206,7 +206,7 @@ export default function ViewTemplateMarketPage() {
             }}
             onPress={() => setSelectedCategory('all')}
           >
-            <Text style={{ fontSize: 13, fontWeight: '500', color: selectedCategory === 'all' ? '#fff' : '#6b7280' }}>全部</Text>
+            <Text style={{ fontSize: 13, fontWeight: '500', color: selectedCategory === 'all' ? '#fff' : colors.text.secondary }}>全部</Text>
           </TouchableOpacity>
           {TEMPLATE_CATEGORIES.map((cat) => (
             <TouchableOpacity
@@ -218,7 +218,7 @@ export default function ViewTemplateMarketPage() {
               onPress={() => setSelectedCategory(cat.id)}
             >
               <Text style={{ fontSize: 12 }}>{cat.icon}</Text>
-              <Text style={{ fontSize: 13, fontWeight: '500', color: selectedCategory === cat.id ? '#fff' : '#6b7280' }}>{cat.name}</Text>
+              <Text style={{ fontSize: 13, fontWeight: '500', color: selectedCategory === cat.id ? '#fff' : colors.text.secondary }}>{cat.name}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -234,7 +234,7 @@ export default function ViewTemplateMarketPage() {
             }}
             onPress={() => setSelectedViewType('all')}
           >
-            <Text style={{ fontSize: 12, color: selectedViewType === 'all' ? '#3b82f6' : '#9ca3af' }}>全部类型</Text>
+            <Text style={{ fontSize: 12, color: selectedViewType === 'all' ? '#3b82f6' : colors.text.muted }}>全部类型</Text>
           </TouchableOpacity>
           {['list', 'board', 'calendar', 'table', 'timeline', 'gallery'].map((type) => (
             <TouchableOpacity
@@ -246,7 +246,7 @@ export default function ViewTemplateMarketPage() {
               onPress={() => setSelectedViewType(type)}
             >
               <Text style={{ fontSize: 11 }}>{getViewTypeIcon(type)}</Text>
-              <Text style={{ fontSize: 12, color: selectedViewType === type ? '#3b82f6' : '#9ca3af' }}>{getViewTypeLabel(type)}</Text>
+              <Text style={{ fontSize: 12, color: selectedViewType === type ? '#3b82f6' : colors.text.muted }}>{getViewTypeLabel(type)}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>

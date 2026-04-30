@@ -132,7 +132,7 @@ export default function CreateViewPage() {
                 onPress={() => setViewType(vt.value)}
               >
                 <Text style={{ fontSize: 24, marginBottom: 4 }}>{vt.icon}</Text>
-                <Text style={{ fontSize: 13, fontWeight: '600', color: viewType === vt.value ? Colors.primary : '#374151' }}>{vt.label}</Text>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: viewType === vt.value ? Colors.primary : colors.text.secondary }}>{vt.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -145,7 +145,7 @@ export default function CreateViewPage() {
             style={{ backgroundColor: colors.card, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center' }}
             onPress={() => setShowProjectPicker(true)}
           >
-            <Text style={{ flex: 1, fontSize: 14, color: followSelectedProject ? Colors.primary : (selectedProject ? '#374151' : '#9ca3af') }}>
+            <Text style={{ flex: 1, fontSize: 14, color: followSelectedProject ? Colors.primary : (selectedProject ? '#374151' : colors.text.muted) }}>
               {followSelectedProject ? '跟随主页选择（默认）' : (selectedProject ? selectedProject.name : '不关联项目')}
             </Text>
             <Text style={{ color: colors.text.muted }}>▼</Text>

@@ -15,6 +15,7 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   borderRadius = 4,
   style,
 }) => {
+  const { colors } = useTheme();
   const opacity = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -43,7 +44,7 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
           width: width as any,
           height,
           borderRadius,
-          backgroundColor: '#d1d5db',
+          backgroundColor: colors.border,
           opacity,
         },
         style,

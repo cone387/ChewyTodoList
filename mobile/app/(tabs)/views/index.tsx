@@ -234,7 +234,7 @@ export default function ViewsPage() {
         <View style={{ backgroundColor: isActive ? '#f3f0ff' : '#fff' }}>
           <NavCard item={item} dragHandle={
             <TouchableOpacity onLongPress={drag} delayLongPress={150} style={{ paddingRight: 8, paddingTop: 4 }}>
-              <MaterialCommunityIcons name="drag" size={18} color={isActive ? Colors.primary : '#d1d5db'} />
+              <MaterialCommunityIcons name="drag" size={18} color={isActive ? Colors.primary : colors.text.muted} />
             </TouchableOpacity>
           } />
         </View>
@@ -284,7 +284,7 @@ export default function ViewsPage() {
             <TouchableOpacity key={t.key} onPress={() => { setTab(t.key); setSearch(''); }}
               style={{ flex: 1, alignItems: 'center', paddingVertical: 10, borderBottomWidth: 2, borderBottomColor: tab === t.key ? Colors.primary : 'transparent' }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Text style={{ fontSize: 14, fontWeight: tab === t.key ? '600' : '400', color: tab === t.key ? Colors.primary : '#6b7280' }}>{t.label}</Text>
+                <Text style={{ fontSize: 14, fontWeight: tab === t.key ? '600' : '400', color: tab === t.key ? Colors.primary : colors.text.secondary }}>{t.label}</Text>
                 <View style={{ backgroundColor: colors.background.tertiary, borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 }}><Text style={{ fontSize: 10, color: colors.text.secondary }}>{t.n}</Text></View>
               </View>
             </TouchableOpacity>
@@ -371,7 +371,7 @@ export default function ViewsPage() {
                       <Text style={{ fontSize: 13, fontWeight: '500', color: colors.text.secondary }}>创建副本</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => handleCreate(t, true)} disabled={createView.isPending}
-                      style={{ flex: 1, paddingVertical: 8, backgroundColor: '#22c55e', borderRadius: 8, alignItems: 'center' }}>
+                      style={{ flex: 1, paddingVertical: 8, backgroundColor: colors.success, borderRadius: 8, alignItems: 'center' }}>
                       <Text style={{ fontSize: 13, fontWeight: '600', color: '#fff' }}>加入导航栏</Text>
                     </TouchableOpacity>
                   </View>
