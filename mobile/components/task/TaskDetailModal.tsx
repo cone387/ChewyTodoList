@@ -48,10 +48,13 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
   const [modalVisible, setModalVisible] = useState(false);
   const { openTask: openParentTask } = useTaskModal();
 
-  // Sync modal visibility with prop — animate in when visible becomes true
+  // Sync modal visibility with prop — animate in when visible becomes true,
+  // animate out when it becomes false (e.g. parent routing away).
   useEffect(() => {
     if (visible) {
       setModalVisible(true);
+    } else if (modalVisible) {
+      setModalVisible(false);
     }
   }, [visible]);
 
@@ -343,6 +346,9 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
                       <View style={{ flexDirection: 'row', gap: 6 }}>
                         <TouchableOpacity onPress={() => handleQuickTime('start_date', 'today')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#dbeafe' }}>
                           <Text style={{ fontSize: 13, color: '#2563eb' }}>今天</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleQuickTime('start_date', 'tomorrow')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: colors.success + '22' }}>
+                          <Text style={{ fontSize: 13, color: colors.success }}>明天</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => handleQuickTime('start_date', 'clear')} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: colors.background.tertiary }}>
                           <Text style={{ fontSize: 13, color: colors.text.secondary }}>清空</Text>

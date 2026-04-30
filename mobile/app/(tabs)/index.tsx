@@ -84,7 +84,13 @@ export default function HomePage() {
   }, [activeViewIndex, views, fadeAnim]);
 
   const swipeResponder = PanResponder.create({
-    onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy),
+    onMoveShouldSetPanResponder: (_, g) => {
+      // Only capture horizontal swipe when the current view is NOT a horizontally
+      // scrolling one (board/table/calendar). Those views own the horizontal axis.
+      const vt = currentView?.view_type;
+      if (vt === 'board' || vt === 'table' || vt === 'calendar') return false;
+      return Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy);
+    },
     onPanResponderRelease: (_, g) => {
       if (Math.abs(g.dx) < 56) return;
       if (g.dx < 0) switchViewByOffset(1);

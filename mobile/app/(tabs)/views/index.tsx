@@ -193,7 +193,7 @@ export default function ViewsPage() {
   const TABS: { key: Tab; label: string; n: number }[] = [
     { key: 'nav', label: '导航栏', n: navViews.length },
     { key: 'my', label: '我的', n: views.length },
-    { key: 'system', label: '系统', n: PRESETS.length },
+    { key: 'system', label: '模板', n: PRESETS.length },
   ];
 
   // Nav card content (shared between native drag and web)
@@ -270,11 +270,11 @@ export default function ViewsPage() {
             <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text.primary }}>视图管理</Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/views/templates' as any)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <MaterialCommunityIcons name="store" size={16} color={Colors.primary} />
-              <Text style={{ color: Colors.primary, fontSize: 14 }}>广场</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/views/create' as any)}>
+            <TouchableOpacity
+              onPress={() => router.push('/(tabs)/views/create' as any)}
+              accessibilityRole="button"
+              accessibilityLabel="新建视图"
+            >
               <Text style={{ color: Colors.primary, fontSize: 14, fontWeight: '600' }}>+ 新建</Text>
             </TouchableOpacity>
           </View>
@@ -329,6 +329,9 @@ export default function ViewsPage() {
                 return (
                   <TouchableOpacity key={v.uid} onPress={() => router.push(`/(tabs)/views/${v.uid}/edit` as any)}
                     onLongPress={() => { setSelView(v); setShowAct(true); }} activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={`视图 ${v.name}`}
+                    accessibilityHint="点击编辑，点击右侧图标查看更多操作"
                     style={{ paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: i < myFiltered.length - 1 ? 1 : 0, borderBottomColor: colors.borderLight }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <MaterialCommunityIcons name={ic} size={18} color={Colors.primary} style={{ marginRight: 10 }} />
@@ -340,7 +343,15 @@ export default function ViewsPage() {
                         <Text style={{ fontSize: 11, color: colors.text.muted, marginTop: 1 }}>{VTL[v.view_type]}{v.project ? ` · ${v.project.name}` : ''}</Text>
                         <ViewMeta view={v} />
                       </View>
-                      <MaterialCommunityIcons name="chevron-right" size={16} color={colors.text.muted} />
+                      <TouchableOpacity
+                        onPress={(e) => { e.stopPropagation?.(); setSelView(v); setShowAct(true); }}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${v.name} 更多操作`}
+                        style={{ paddingHorizontal: 4, paddingVertical: 4 }}
+                      >
+                        <MaterialCommunityIcons name="dots-vertical" size={18} color={colors.text.muted} />
+                      </TouchableOpacity>
                     </View>
                   </TouchableOpacity>
                 );
@@ -350,6 +361,19 @@ export default function ViewsPage() {
 
           {tab === 'system' && (
             <View style={{ marginTop: 10, paddingHorizontal: 16, gap: 10 }}>
+              <TouchableOpacity
+                onPress={() => router.push('/(tabs)/views/templates' as any)}
+                style={{ backgroundColor: Colors.primary + '14', borderRadius: 12, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: Colors.primary + '30' }}
+                accessibilityRole="button"
+                accessibilityLabel="浏览完整模板广场"
+              >
+                <MaterialCommunityIcons name="store" size={22} color={Colors.primary} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: Colors.primary }}>浏览完整模板广场</Text>
+                  <Text style={{ fontSize: 11, color: colors.text.secondary, marginTop: 2 }}>按场景分类的更多模板</Text>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={18} color={Colors.primary} />
+              </TouchableOpacity>
               {sysFiltered.map((t) => (
                 <View key={t.id} style={{ backgroundColor: colors.card, borderRadius: 12, padding: 14 }}>
                   <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>

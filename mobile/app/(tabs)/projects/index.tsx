@@ -228,10 +228,19 @@ export default function ProjectsPage() {
                           <Text style={{ fontSize: 12, color: colors.text.muted, marginTop: 2 }} numberOfLines={1}>{project.desc}</Text>
                         ) : null}
                       </View>
-                      <View style={{ alignItems: 'flex-end' }}>
+                      <View style={{ alignItems: 'flex-end', marginRight: 4 }}>
                         <Text style={{ fontSize: 13, color: colors.text.muted }}>{project.tasks_count || 0}</Text>
                         <Text style={{ fontSize: 11, color: colors.text.muted }}>任务</Text>
                       </View>
+                      <TouchableOpacity
+                        onPress={(e) => { e.stopPropagation?.(); setDeleteConfirm({ type: 'project', uid: project.uid, name: project.name }); }}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        accessibilityRole="button"
+                        accessibilityLabel="删除项目"
+                        style={{ paddingHorizontal: 4, paddingVertical: 4 }}
+                      >
+                        <MaterialCommunityIcons name="dots-vertical" size={18} color={colors.text.muted} />
+                      </TouchableOpacity>
                     </TouchableOpacity>
                     );
                   })}

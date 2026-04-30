@@ -1,15 +1,7 @@
 import '../global.css';
 import { useEffect } from 'react';
-import { View, TextInput, Platform } from 'react-native';
+import { View } from 'react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
-
-// Globally disable the iOS blue/purple focus ring on all TextInputs
-const defaultProps = (TextInput as any).defaultProps || {};
-defaultProps.underlineColorAndroid = 'transparent';
-defaultProps.selectionColor = '#9ca3af';
-defaultProps.cursorColor = '#9ca3af';
-defaultProps.tintColor = '#9ca3af';
-(TextInput as any).defaultProps = defaultProps;
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
@@ -52,10 +44,12 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     const inAuthGroup = segments[0] === '(auth)' ||
       segments.some(s => s === 'login' || s === 'register');
 
+    // Use microtask deferral via Promise.resolve — ensures navigation happens
+    // after current render commit without the brittle fixed-ms delays.
     if (!isAuthenticated && !inAuthGroup) {
-      setTimeout(() => router.replace('/(auth)/login'), 50);
+      Promise.resolve().then(() => router.replace('/(auth)/login'));
     } else if (isAuthenticated && inAuthGroup) {
-      setTimeout(() => router.replace('/(tabs)'), 100);
+      Promise.resolve().then(() => router.replace('/(tabs)'));
     }
   }, [isAuthenticated, segments]);
 
