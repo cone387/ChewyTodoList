@@ -19,15 +19,16 @@ interface EmptyStateProps {
 export const EmptyState: React.FC<EmptyStateProps> = ({
   icon,
   iconSize = 48,
-  iconColor = '#d1d5db',
+  iconColor,
   message,
   description,
   action,
 }) => {
   const { colors } = useTheme();
+  const effectiveIconColor = iconColor ?? colors.text.muted;
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 60, paddingHorizontal: 24 }}>
-      <MaterialCommunityIcons name={icon} size={iconSize} color={iconColor} />
+      <MaterialCommunityIcons name={icon} size={iconSize} color={effectiveIconColor} />
       <Text style={{ fontSize: 16, color: colors.text.muted, marginTop: 12, textAlign: 'center' }}>
         {message}
       </Text>

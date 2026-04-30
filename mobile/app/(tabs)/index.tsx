@@ -340,13 +340,21 @@ export default function HomePage() {
               style={{
                 flexDirection: 'row', alignItems: 'center', gap: 4,
                 paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16,
-                backgroundColor: showFilterBar || hasActiveViewControls ? colors.primary + '22' : colors.background.tertiary,
+                backgroundColor: showFilterBar ? colors.primary + '22' : colors.background.tertiary,
+                position: 'relative',
               }}
               accessibilityRole="button"
               accessibilityLabel={showFilterBar ? '收起筛选栏' : (hasActiveViewControls ? '筛选栏 (有激活规则)' : '筛选栏')}
               accessibilityState={{ expanded: showFilterBar }}
             >
               <MaterialCommunityIcons name="filter-variant" size={16} color={showFilterBar || hasActiveViewControls ? colors.primary : colors.text.secondary} />
+              {hasActiveViewControls && (
+                <View style={{
+                  position: 'absolute', top: 3, right: 3,
+                  width: 6, height: 6, borderRadius: 3,
+                  backgroundColor: colors.primary,
+                }} />
+              )}
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => router.push('/(tabs)/views' as any)}

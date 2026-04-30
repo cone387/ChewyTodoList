@@ -85,18 +85,15 @@ export default function SettingsPage() {
         {/* Profile section */}
         <View style={{ marginTop: 16, marginHorizontal: 16, backgroundColor: colors.card, borderRadius: 12, overflow: 'hidden' }}>
           <View style={{ paddingHorizontal: 16, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-            {/* Avatar with gradient background */}
-            <View style={{ width: 48, height: 48, borderRadius: 24, overflow: 'hidden' }}>
-              <View style={{ width: 48, height: 48, position: 'relative' }}>
-                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Colors.primary, opacity: 0.8 }} />
-                <View style={{ position: 'absolute', top: 0, left: 0, width: 24, bottom: 0, backgroundColor: '#6366f1', opacity: 0.5 }} />
-                <View style={{ position: 'absolute', top: 0, right: 0, width: 24, bottom: 0, backgroundColor: '#a855f7', opacity: 0.4 }} />
-                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ fontSize: 20, color: '#fff', fontWeight: '700' }}>
-                    {profile?.username?.[0]?.toUpperCase() || '?'}
-                  </Text>
-                </View>
-              </View>
+            {/* Avatar */}
+            <View style={{
+              width: 48, height: 48, borderRadius: 24,
+              backgroundColor: Colors.primary,
+              alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Text style={{ fontSize: 20, color: '#fff', fontWeight: '700' }}>
+                {profile?.username?.[0]?.toUpperCase() || '?'}
+              </Text>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary }}>{profile?.username || '加载中...'}</Text>
@@ -157,11 +154,14 @@ export default function SettingsPage() {
           <TouchableOpacity
             style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 }}
             onPress={() => setShowChangePassword(!showChangePassword)}
+            accessibilityRole="button"
+            accessibilityLabel="修改密码"
+            accessibilityState={{ expanded: showChangePassword }}
           >
             <MaterialCommunityIcons name={SettingsIcons.password} size={20} color={colors.text.secondary} style={{ marginRight: 12 }} />
             <Text style={{ fontSize: 15, color: colors.text.secondary, flex: 1 }}>修改密码</Text>
             <MaterialCommunityIcons
-              name={showChangePassword ? 'chevron-up' : 'chevron-right'}
+              name={showChangePassword ? 'chevron-up' : 'chevron-down'}
               size={20}
               color={colors.text.muted}
             />

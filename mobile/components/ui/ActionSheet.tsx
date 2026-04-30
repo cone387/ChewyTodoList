@@ -9,13 +9,17 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
 
 export interface ActionSheetOption {
   label: string;
   value: string | number;
   color?: string;
+  /** Emoji or short-glyph icon (legacy). Prefer `mci` for consistent cross-platform rendering. */
   icon?: string;
+  /** Material Community Icons name — when provided, overrides `icon`. */
+  mci?: string;
   destructive?: boolean;
 }
 
@@ -97,14 +101,21 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
                       onCancel();
                     }}
                   >
-                    {option.icon && (
-                      <Text style={{ fontSize: 18, marginRight: 12 }}>{option.icon}</Text>
-                    )}
+                    {option.mci ? (
+                      <MaterialCommunityIcons
+                        name={option.mci as any}
+                        size={20}
+                        color={option.destructive ? colors.error : option.color || colors.text.secondary}
+                        style={{ marginRight: 12, width: 20, textAlign: 'center' }}
+                      />
+                    ) : option.icon ? (
+                      <Text style={{ fontSize: 18, marginRight: 12, width: 20, textAlign: 'center' }}>{option.icon}</Text>
+                    ) : null}
                     <Text
                       style={{
                         fontSize: 16,
                         flex: 1,
-                        color: option.destructive ? '#ef4444' : option.color || '#111418',
+                        color: option.destructive ? colors.error : option.color || colors.text.primary,
                       }}
                     >
                       {option.label}

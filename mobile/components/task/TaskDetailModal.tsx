@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTask, useUpdateTask, useDeleteTask, useCreateTask } from '../../hooks/useTasks';
 import { useProjects } from '../../hooks/useProjects';
+import { useTags } from '../../hooks/useTags';
 import { useSubtasks } from '../../hooks/useSubtasks';
 import { useTaskModal } from '../../hooks/useTaskModal';
 import { ActionSheet } from '../ui/ActionSheet';
@@ -68,8 +69,10 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
   const deleteTask = useDeleteTask();
   const createTask = useCreateTask();
   const { data: projectsData } = useProjects();
+  const { data: tagsData } = useTags();
   const { showToast } = useToast();
   const projects: Project[] = (projectsData as Project[]) || [];
+  const allTags: Tag[] = (tagsData as Tag[]) || [];
   const { data: subtasksData, refetch: refetchSubtasks } = useSubtasks(!isCreate && task ? taskUid : '');
   const subtasks = (subtasksData as Task[]) || [];
 
@@ -322,8 +325,17 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
                     ))}
                   </View>
                 ) : isCreate && createTagUids.length > 0 ? (
-                  <View style={{ flex: 1, alignItems: 'flex-start' }}>
-                    <Text style={{ fontSize: 14, color: colors.text.secondary }}>已选择 {createTagUids.length} 个标签</Text>
+                  <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+                    {createTagUids.map((uid) => {
+                      const t = allTags.find((tg) => tg.uid === uid);
+                      if (!t) return null;
+                      return (
+                        <View key={t.uid} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: t.color + '18', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
+                          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.color }} />
+                          <Text style={{ fontSize: 12, color: t.color, fontWeight: '500' }}>{t.name}</Text>
+                        </View>
+                      );
+                    })}
                   </View>
                 ) : (
                   <View style={{ flex: 1, alignItems: 'flex-start' }}>
@@ -419,12 +431,12 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
         onSelect={(o) => handleStatusChange({ ...o, value: parseInt(o.value as string) })}
         onCancel={() => setShowStatusSheet(false)} />
       <ActionSheet visible={showProjectPicker} title="选择项目"
-        options={[{ label: '收集箱', value: '__none__', icon: '📥' }, ...projects.map((p: Project) => ({ label: p.name, value: p.uid, icon: '📁' }))]}
+        options={[{ label: '收集箱', value: '__none__', mci: 'inbox-outline' }, ...projects.map((p: Project) => ({ label: p.name, value: p.uid, mci: 'folder-outline' }))]}
         onSelect={(o) => handleProjectChange(o.value === '__none__' ? null : o.value as string)}
         onCancel={() => setShowProjectPicker(false)} />
       <ActionSheet visible={showMoreMenu} title="更多操作" options={[
-        ...(task?.status !== TaskStatus.ABANDONED ? [{ label: '放弃任务', value: 'abandon', icon: '🚫' }] : [{ label: '恢复任务', value: 'restore', icon: '↩️' }]),
-        { label: '删除任务', value: 'delete', icon: '🗑', color: colors.error, destructive: true },
+        ...(task?.status !== TaskStatus.ABANDONED ? [{ label: '放弃任务', value: 'abandon', mci: 'cancel' }] : [{ label: '恢复任务', value: 'restore', mci: 'backup-restore' }]),
+        { label: '删除任务', value: 'delete', mci: 'trash-can-outline', color: colors.error, destructive: true },
       ]} onSelect={(o) => {
         if (o.value === 'delete') setShowDeleteConfirm(true);
         else if (o.value === 'abandon') setShowAbandonConfirm(true);

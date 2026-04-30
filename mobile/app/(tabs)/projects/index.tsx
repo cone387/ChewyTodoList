@@ -7,7 +7,9 @@ import {
   TextInput,
   ActivityIndicator,
   TouchableWithoutFeedback,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -138,7 +140,7 @@ export default function ProjectsPage() {
             <MaterialCommunityIcons name="plus" size={22} color={Colors.primary} />
           </TouchableOpacity>
           {showCreateMenu && (
-            <View style={{ position: 'absolute', right: 0, top: 28, width: 152, backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.border, paddingVertical: 4, zIndex: 20, ...Shadows.low }}>
+            <View style={{ position: 'absolute', right: 0, top: 28, width: 152, backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.border, paddingVertical: 4, zIndex: 20, elevation: 8, ...Shadows.low }}>
               <TouchableOpacity
                 onPress={() => {
                   setShowCreateMenu(false);
@@ -253,7 +255,11 @@ export default function ProjectsPage() {
             <EmptyState
               icon="folder-multiple-outline"
               message="暂无项目"
-              description="点击右上角创建分组和项目"
+              description="创建分组后可以在里面添加清单"
+              action={{
+                label: '新建分组',
+                onPress: () => setShowCreateGroup(true),
+              }}
             />
           )}
         </ScrollView>
@@ -262,8 +268,9 @@ export default function ProjectsPage() {
       <Modal visible={showCreateProject} transparent animationType="slide" onRequestClose={() => setShowCreateProject(false)}>
         <TouchableWithoutFeedback onPress={() => setShowCreateProject(false)}>
           <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' }}>
-            <TouchableWithoutFeedback>
-              <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, gap: 12, maxHeight: '75%' }}>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+              <TouchableWithoutFeedback>
+                <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, gap: 12, maxHeight: '75%' }}>
                 <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary }}>新建清单</Text>
                 <TextInput
                   style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: colors.text.primary, backgroundColor: colors.background.secondary }}
@@ -305,7 +312,8 @@ export default function ProjectsPage() {
                   </TouchableOpacity>
                 </View>
               </View>
-            </TouchableWithoutFeedback>
+              </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
           </View>
         </TouchableWithoutFeedback>
       </Modal>
@@ -313,27 +321,29 @@ export default function ProjectsPage() {
       <Modal visible={showCreateGroup} transparent animationType="slide" onRequestClose={() => setShowCreateGroup(false)}>
         <TouchableWithoutFeedback onPress={() => setShowCreateGroup(false)}>
           <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' }}>
-            <TouchableWithoutFeedback>
-              <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, gap: 12 }}>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary }}>新建分组</Text>
-                <TextInput
-                  style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: colors.text.primary, backgroundColor: colors.background.secondary }}
-                  placeholder="输入分组名称..."
-                  placeholderTextColor={colors.text.muted}
-                  value={newGroupName}
-                  onChangeText={setNewGroupName}
-                  autoFocus
-                />
-                <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'flex-end' }}>
-                  <TouchableOpacity onPress={() => setShowCreateGroup(false)} style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                    <Text style={{ color: colors.text.secondary, fontSize: 14 }}>取消</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={handleCreateGroup} style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: Colors.primary, borderRadius: 10 }}>
-                    <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>创建分组</Text>
-                  </TouchableOpacity>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+              <TouchableWithoutFeedback>
+                <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, gap: 12 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary }}>新建分组</Text>
+                  <TextInput
+                    style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: colors.text.primary, backgroundColor: colors.background.secondary }}
+                    placeholder="输入分组名称..."
+                    placeholderTextColor={colors.text.muted}
+                    value={newGroupName}
+                    onChangeText={setNewGroupName}
+                    autoFocus
+                  />
+                  <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'flex-end' }}>
+                    <TouchableOpacity onPress={() => setShowCreateGroup(false)} style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
+                      <Text style={{ color: colors.text.secondary, fontSize: 14 }}>取消</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleCreateGroup} style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: Colors.primary, borderRadius: 10 }}>
+                      <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>创建分组</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            </TouchableWithoutFeedback>
+              </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
           </View>
         </TouchableWithoutFeedback>
       </Modal>
@@ -381,7 +391,7 @@ export default function ProjectsPage() {
       <ActionSheet
         visible={showGroupMenu}
         title={groupMenuGroup?.name || '分组'}
-        options={[{ label: '删除分组', value: 'delete', icon: '🗑', color: colors.error, destructive: true }]}
+        options={[{ label: '删除分组', value: 'delete', mci: 'trash-can-outline', color: colors.error, destructive: true }]}
         onSelect={(opt) => {
           if (opt.value === 'delete' && groupMenuGroup) {
             setDeleteConfirm({ type: 'group', uid: groupMenuGroup.uid, name: groupMenuGroup.name });

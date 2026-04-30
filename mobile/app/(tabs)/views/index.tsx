@@ -217,9 +217,13 @@ export default function ViewsPage() {
             </Text>
             <ViewMeta view={item} />
           </View>
-          <TouchableOpacity onPress={() => handleRemove(item)}
-            style={{ paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: colors.error + '14', marginTop: 2 }}>
-            <Text style={{ fontSize: 11, fontWeight: '500', color: colors.error }}>移除</Text>
+          <TouchableOpacity
+            onPress={() => handleRemove(item)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel="从导航栏移除"
+            style={{ paddingHorizontal: 6, paddingVertical: 6, marginTop: 2 }}>
+            <MaterialCommunityIcons name="eye-off-outline" size={18} color={colors.text.muted} />
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -407,9 +411,9 @@ export default function ViewsPage() {
       )}
 
       <ActionSheet visible={showAct} title={selView?.name || ''} options={[
-        ...(selView?.is_visible_in_nav ? [{ label: '从导航栏移除', value: 'rm', icon: '👁‍🗨' }] : [{ label: '加入导航栏', value: 'add', icon: '👁' }]),
-        { label: '复制', value: 'dup', icon: '📋' },
-        ...(!selView?.is_system ? [{ label: '删除', value: 'del', icon: '🗑', color: colors.error, destructive: true }] : []),
+        ...(selView?.is_visible_in_nav ? [{ label: '从导航栏移除', value: 'rm', mci: 'eye-off-outline' }] : [{ label: '加入导航栏', value: 'add', mci: 'eye-outline' }]),
+        { label: '复制', value: 'dup', mci: 'content-copy' },
+        ...(!selView?.is_system ? [{ label: '删除', value: 'del', mci: 'trash-can-outline', color: colors.error, destructive: true }] : []),
       ]} onSelect={(o) => {
         if (o.value === 'rm' && selView) handleRemove(selView);
         else if (o.value === 'add' && selView) handleAdd(selView);

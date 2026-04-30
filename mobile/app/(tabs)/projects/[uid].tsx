@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useProject, useUpdateProject, useDeleteProject } from '../../../hooks/useProjects';
 import { useTasks } from '../../../hooks/useTasks';
 import { ListView } from '../../../components/views/ListView';
@@ -85,27 +86,45 @@ export default function ProjectDetailPage() {
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background.secondary }}>
       {/* Header */}
       <View style={{ backgroundColor: colors.card, paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', alignItems: 'center' }}>
-        <TouchableOpacity onPress={() => router.back()} style={{ padding: 6 }}>
-          <Text style={{ color: Colors.primary, fontSize: 16 }}>← 返回</Text>
+        <TouchableOpacity onPress={() => router.back()} style={{ padding: 6 }} accessibilityRole="button" accessibilityLabel="返回">
+          <MaterialCommunityIcons name="chevron-left" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
           {isEditingName ? (
-            <TextInput
-              style={{ fontSize: 17, fontWeight: '600', color: colors.text.primary, textAlign: 'center', borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 2, minWidth: 120 }}
-              value={editName}
-              onChangeText={setEditName}
-              onBlur={handleSaveName}
-              onSubmitEditing={handleSaveName}
-              autoFocus
-            />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <TextInput
+                style={{ fontSize: 17, fontWeight: '600', color: colors.text.primary, textAlign: 'center', borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 2, minWidth: 120 }}
+                value={editName}
+                onChangeText={setEditName}
+                onSubmitEditing={handleSaveName}
+                autoFocus
+              />
+              <TouchableOpacity
+                onPress={() => setIsEditingName(false)}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                accessibilityRole="button"
+                accessibilityLabel="取消编辑"
+              >
+                <MaterialCommunityIcons name="close" size={18} color={colors.text.muted} />
+              </TouchableOpacity>
+            </View>
           ) : (
-            <TouchableOpacity onPress={() => { setEditName(project.name); setIsEditingName(true); }}>
+            <TouchableOpacity
+              onPress={() => { setEditName(project.name); setIsEditingName(true); }}
+              accessibilityRole="button"
+              accessibilityLabel="编辑项目名称"
+            >
               <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text.primary }}>{project.name}</Text>
             </TouchableOpacity>
           )}
         </View>
-        <TouchableOpacity onPress={() => setShowDeleteConfirm(true)} style={{ padding: 6 }}>
-          <Text style={{ color: colors.error, fontSize: 14 }}>删除</Text>
+        <TouchableOpacity
+          onPress={() => setShowDeleteConfirm(true)}
+          style={{ padding: 6 }}
+          accessibilityRole="button"
+          accessibilityLabel="删除项目"
+        >
+          <MaterialCommunityIcons name="trash-can-outline" size={22} color={colors.error} />
         </TouchableOpacity>
       </View>
 
