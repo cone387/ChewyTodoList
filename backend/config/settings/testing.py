@@ -3,6 +3,15 @@ Testing settings
 """
 from .base import *
 
+# Remove chewy_attachment in tests — python-magic hangs on Windows when libmagic DLL is absent
+INSTALLED_APPS = [a for a in INSTALLED_APPS if 'chewy_attachment' not in a]
+
+# Use a URL conf that doesn't include chewy_attachment URLs
+ROOT_URLCONF = 'config.urls_testing'
+
+# Allow Django test client's default host
+ALLOWED_HOSTS = ['*']
+
 # Use in-memory database for tests
 DATABASES = {
     'default': {

@@ -357,3 +357,299 @@ class TimezoneEdgeCasesTests(TestCase):
         third = generate_next_instance(tpl, after=second.due_date)
         self.assertLess(first.due_date, second.due_date)
         self.assertLess(second.due_date, third.due_date)
+
+
+# =========================
+# API-Level Tests（M2）
+# =========================
+
+from rest_framework.test import APITestCase, APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
+def _api_client(user):
+    client = APIClient()
+    token = RefreshToken.for_user(user)
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {token.access_token}")
+    return client
+
+
+class RecurrenceAPITests(APITestCase):
+    """通过 HTTP 接口测试重复任务 scope 编辑、skip、完成生成下一实例"""
+
+    def setUp(self):
+        self.user = _make_user("api_recur")
+        self.client = _api_client(self.user)
+        self.dtstart = timezone.now().replace(microsecond=0) + timedelta(days=1)
+        self.template, self.first = create_recurring_task(
+            self.user,
+            title="API 每日",
+            recurrence_rule="FREQ=DAILY",
+            dtstart=self.dtstart,
+            due_date=self.dtstart,
+        )
+
+    def _url(self, uid):
+        return f"/api/tasks/{uid}/"
+
+    # --- complete generates next ---
+    def test_complete_instance_generates_next(self):
+        resp = self.client.patch(
+            self._url(self.first.uid),
+            {'status': Task.TaskStatus.COMPLETED},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        # 应该多出一个实例
+        instances = Task.objects.filter(
+            recurrence_parent=self.template,
+            is_recurrence_template=False,
+        )
+        self.assertEqual(instances.count(), 2)
+
+    # --- skip ---
+    def test_skip_via_action(self):
+        resp = self.client.post(f"/api/tasks/{self.first.uid}/skip/")
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()['data']
+        self.assertEqual(data['skipped']['status'], Task.TaskStatus.ABANDONED)
+        self.assertIsNotNone(data['next'])
+
+    def test_skip_non_recurring_returns_400(self):
+        plain = Task.objects.create(user=self.user, title="普通")
+        resp = self.client.post(f"/api/tasks/{plain.uid}/skip/")
+        self.assertEqual(resp.status_code, 400)
+
+    # --- X-Edit-Scope: series ---
+    def test_update_series_propagates_title(self):
+        resp = self.client.patch(
+            self._url(self.first.uid),
+            {'title': '改名系列'},
+            format='json',
+            HTTP_X_EDIT_SCOPE='series',
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.template.refresh_from_db()
+        self.first.refresh_from_db()
+        self.assertEqual(self.template.title, '改名系列')
+        self.assertEqual(self.first.title, '改名系列')
+
+    # --- X-Edit-Scope: instance (detach) ---
+    def test_update_instance_scope_detaches(self):
+        resp = self.client.patch(
+            self._url(self.first.uid),
+            {'title': '独立'},
+            format='json',
+            HTTP_X_EDIT_SCOPE='instance',
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.first.refresh_from_db()
+        self.assertIsNone(self.first.recurrence_parent)
+        self.assertEqual(self.first.title, '独立')
+
+    # --- X-Edit-Scope: following (split) ---
+    def test_update_following_splits_series(self):
+        # 先生成多个实例
+        from .services.recurrence import generate_next_instance
+        second = generate_next_instance(self.template, after=self.first.due_date)
+        third = generate_next_instance(self.template, after=second.due_date)
+
+        resp = self.client.patch(
+            self._url(second.uid),
+            {'title': '新系列'},
+            format='json',
+            HTTP_X_EDIT_SCOPE='following',
+        )
+        self.assertEqual(resp.status_code, 200)
+        # 新模板应被创建
+        new_tpl = Task.objects.filter(
+            is_recurrence_template=True, title='新系列',
+        ).first()
+        self.assertIsNotNone(new_tpl)
+
+    # --- scope: series 非重复任务 → 400 ---
+    def test_scope_series_on_non_recurring_returns_400(self):
+        plain = Task.objects.create(user=self.user, title="普通")
+        resp = self.client.patch(
+            self._url(plain.uid),
+            {'title': 'X'},
+            format='json',
+            HTTP_X_EDIT_SCOPE='series',
+        )
+        self.assertEqual(resp.status_code, 400)
+
+    # --- destroy scope=series ---
+    def test_destroy_series(self):
+        resp = self.client.delete(f"/api/tasks/{self.first.uid}/?scope=series")
+        self.assertEqual(resp.status_code, 204)
+        self.assertFalse(Task.objects.filter(pk=self.template.pk).exists())
+
+    # --- destroy scope=following ---
+    def test_destroy_following(self):
+        from .services.recurrence import generate_next_instance
+        second = generate_next_instance(self.template, after=self.first.due_date)
+        resp = self.client.delete(f"/api/tasks/{second.uid}/?scope=following")
+        self.assertEqual(resp.status_code, 204)
+        # second 被删
+        self.assertFalse(Task.objects.filter(pk=second.pk).exists())
+        # first 仍在
+        self.assertTrue(Task.objects.filter(pk=self.first.pk).exists())
+
+    # --- 创建重复任务 via API (recurrence_input) ---
+    def test_create_recurring_via_api(self):
+        due = (timezone.now() + timedelta(days=3)).isoformat()
+        resp = self.client.post(
+            '/api/tasks/',
+            {
+                'title': 'API重复',
+                'due_date': due,
+                'recurrence_input': {'freq': 'weekly', 'byday': ['MO', 'WE', 'FR']},
+            },
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 201)
+        data = resp.json()['data']
+        self.assertFalse(data.get('is_recurrence_template', True))
+        self.assertIsNotNone(data.get('recurrence'))
+
+
+class ReminderAPITests(APITestCase):
+    """测试 /api/reminders/ CRUD + /upcoming/ + /mark-triggered/"""
+
+    def setUp(self):
+        self.user = _make_user("api_reminder")
+        self.client = _api_client(self.user)
+        self.task = Task.objects.create(
+            user=self.user, title="提醒任务",
+            due_date=timezone.now() + timedelta(hours=1),
+        )
+
+    def test_create_reminder(self):
+        resp = self.client.post('/api/reminders/', {
+            'task_uid': str(self.task.uid),
+            'type': Reminder.ReminderType.RELATIVE,
+            'offset_minutes': 15,
+        }, format='json')
+        self.assertEqual(resp.status_code, 201)
+        data = resp.json()['data']
+        self.assertEqual(data['offset_minutes'], 15)
+        self.assertEqual(data['task_uid'], str(self.task.uid))
+
+    def test_create_absolute_reminder(self):
+        trigger = (timezone.now() + timedelta(minutes=30)).isoformat()
+        resp = self.client.post('/api/reminders/', {
+            'task_uid': str(self.task.uid),
+            'type': Reminder.ReminderType.ABSOLUTE,
+            'trigger_at': trigger,
+        }, format='json')
+        self.assertEqual(resp.status_code, 201)
+
+    def test_create_reminder_missing_task_uid(self):
+        resp = self.client.post('/api/reminders/', {
+            'type': Reminder.ReminderType.RELATIVE,
+            'offset_minutes': 10,
+        }, format='json')
+        self.assertEqual(resp.status_code, 400)
+
+    def test_list_reminders(self):
+        Reminder.objects.create(
+            user=self.user, task=self.task,
+            type=Reminder.ReminderType.RELATIVE, offset_minutes=5,
+        )
+        resp = self.client.get('/api/reminders/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertGreaterEqual(len(resp.json()['data']), 1)
+
+    def test_update_reminder(self):
+        r = Reminder.objects.create(
+            user=self.user, task=self.task,
+            type=Reminder.ReminderType.RELATIVE, offset_minutes=5,
+        )
+        resp = self.client.patch(f'/api/reminders/{r.uid}/', {
+            'offset_minutes': 30,
+        }, format='json')
+        self.assertEqual(resp.status_code, 200)
+        r.refresh_from_db()
+        self.assertEqual(r.offset_minutes, 30)
+
+    def test_delete_reminder(self):
+        r = Reminder.objects.create(
+            user=self.user, task=self.task,
+            type=Reminder.ReminderType.RELATIVE, offset_minutes=5,
+        )
+        resp = self.client.delete(f'/api/reminders/{r.uid}/')
+        self.assertEqual(resp.status_code, 204)
+        self.assertFalse(Reminder.objects.filter(pk=r.pk).exists())
+
+    def test_upcoming(self):
+        Reminder.objects.create(
+            user=self.user, task=self.task,
+            type=Reminder.ReminderType.RELATIVE,
+            offset_minutes=15,
+        )
+        resp = self.client.get('/api/reminders/upcoming/?within_minutes=120')
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()['data']
+        self.assertGreaterEqual(len(data), 1)
+
+    def test_mark_triggered(self):
+        r = Reminder.objects.create(
+            user=self.user, task=self.task,
+            type=Reminder.ReminderType.RELATIVE,
+            offset_minutes=15,
+        )
+        resp = self.client.post(f'/api/reminders/{r.uid}/mark-triggered/')
+        self.assertEqual(resp.status_code, 200)
+        r.refresh_from_db()
+        self.assertEqual(r.status, Reminder.ReminderStatus.TRIGGERED)
+        self.assertIsNotNone(r.triggered_at)
+
+    def test_mark_triggered_idempotent(self):
+        r = Reminder.objects.create(
+            user=self.user, task=self.task,
+            type=Reminder.ReminderType.RELATIVE,
+            offset_minutes=5,
+        )
+        r.mark_triggered()
+        first_triggered = r.triggered_at
+        resp = self.client.post(f'/api/reminders/{r.uid}/mark-triggered/')
+        self.assertEqual(resp.status_code, 200)
+        r.refresh_from_db()
+        self.assertEqual(r.triggered_at, first_triggered)
+
+    def test_reminder_via_task_create(self):
+        """通过 task reminders_input 创建提醒"""
+        due = (timezone.now() + timedelta(hours=2)).isoformat()
+        resp = self.client.post('/api/tasks/', {
+            'title': '带提醒的任务',
+            'due_date': due,
+            'reminders_input': [
+                {'type': 'relative', 'offset_minutes': 10},
+                {'type': 'relative', 'offset_minutes': 30},
+            ],
+        }, format='json')
+        self.assertEqual(resp.status_code, 201)
+        task_uid = resp.json()['data']['uid']
+        task = Task.objects.get(uid=task_uid)
+        self.assertEqual(task.reminders.count(), 2)
+
+    def test_reminder_via_task_update(self):
+        """通过 task reminders_input 替换提醒"""
+        Reminder.objects.create(
+            user=self.user, task=self.task,
+            type=Reminder.ReminderType.RELATIVE, offset_minutes=5,
+        )
+        resp = self.client.patch(f'/api/tasks/{self.task.uid}/', {
+            'reminders_input': [
+                {'type': 'relative', 'offset_minutes': 60},
+            ],
+        }, format='json')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(
+            self.task.reminders.filter(status=Reminder.ReminderStatus.PENDING).count(), 1,
+        )
+        self.assertEqual(
+            self.task.reminders.filter(
+                status=Reminder.ReminderStatus.PENDING,
+            ).first().offset_minutes, 60,
+        )

@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils import timezone
-from .models import Tag, Group, Project, Task, ActivityLog, TaskView, TaskCardConfig
+from .models import Tag, Group, Project, Task, ActivityLog, TaskView, TaskCardConfig, Reminder
 
 User = get_user_model()
 
@@ -299,12 +299,120 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 # =========================
+# 重复任务 & 提醒 序列化器 (M2)
+# =========================
+
+_RRULE_FREQ_LABEL = {
+    'DAILY': '每天',
+    'WEEKLY': '每周',
+    'MONTHLY': '每月',
+    'YEARLY': '每年',
+}
+_RRULE_BYDAY_LABEL = {'MO': '一', 'TU': '二', 'WE': '三', 'TH': '四', 'FR': '五', 'SA': '六', 'SU': '日'}
+
+
+def _rrule_to_human(rule: str) -> str:
+    """把 RRULE 字符串转成中文人类可读"""
+    parts = {}
+    for seg in (rule or '').split(';'):
+        if '=' in seg:
+            k, v = seg.split('=', 1)
+            parts[k.upper()] = v.upper()
+    freq = _RRULE_FREQ_LABEL.get(parts.get('FREQ', ''), parts.get('FREQ', '自定义'))
+    interval = parts.get('INTERVAL')
+    prefix = f"每 {interval} {freq[1:]}" if interval and interval != '1' else freq
+    byday = parts.get('BYDAY')
+    if byday:
+        days = ', '.join(f"周{_RRULE_BYDAY_LABEL.get(d, d)}" for d in byday.split(','))
+        prefix += f" {days}"
+    bymonthday = parts.get('BYMONTHDAY')
+    if bymonthday:
+        prefix += f" {bymonthday} 号"
+    count = parts.get('COUNT')
+    until = parts.get('UNTIL')
+    if count:
+        prefix += f"，共 {count} 次"
+    elif until:
+        prefix += f"，截止 {until[:8]}"
+    return prefix
+
+
+def _build_rrule(recurrence: dict) -> str:
+    """把结构化 dict 转成 RRULE 字符串"""
+    if not recurrence:
+        return ''
+    parts = []
+    freq = (recurrence.get('freq') or '').upper()
+    if freq not in ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'):
+        raise serializers.ValidationError({'recurrence': "freq 必须是 DAILY/WEEKLY/MONTHLY/YEARLY 之一"})
+    parts.append(f"FREQ={freq}")
+    interval = recurrence.get('interval')
+    if interval and int(interval) > 1:
+        parts.append(f"INTERVAL={int(interval)}")
+    byday = recurrence.get('byday')
+    if byday:
+        if not isinstance(byday, list):
+            raise serializers.ValidationError({'recurrence': "byday 必须是数组"})
+        parts.append("BYDAY=" + ",".join(d.upper() for d in byday))
+    bymonthday = recurrence.get('bymonthday')
+    if bymonthday:
+        parts.append(f"BYMONTHDAY={int(bymonthday)}")
+    count = recurrence.get('count')
+    until = recurrence.get('until')
+    if count and until:
+        raise serializers.ValidationError({'recurrence': "count 和 until 不能同时指定"})
+    if count:
+        parts.append(f"COUNT={int(count)}")
+    if until:
+        # until 必须是 ISO 或 YYYYMMDDTHHMMSSZ 格式
+        if isinstance(until, str) and 'T' not in until and len(until) == 10:
+            # YYYY-MM-DD → 当天 23:59:59 UTC
+            until = until.replace('-', '') + 'T235959Z'
+        parts.append(f"UNTIL={until}")
+    return ";".join(parts)
+
+
+class ReminderSerializer(serializers.ModelSerializer):
+    """提醒序列化器"""
+
+    effective_trigger_at = serializers.SerializerMethodField()
+    task_uid = serializers.CharField(source='task.uid', read_only=True)
+
+    class Meta:
+        model = Reminder
+        fields = [
+            'uid', 'task_uid',
+            'type', 'trigger_at',
+            'offset_minutes', 'relative_to',
+            'status',
+            'triggered_at', 'client_notification_id',
+            'effective_trigger_at',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = ['uid', 'task_uid', 'triggered_at', 'created_at', 'updated_at']
+
+    def get_effective_trigger_at(self, obj):
+        v = obj.effective_trigger_at
+        return v.isoformat() if v else None
+
+    def validate(self, attrs):
+        t = attrs.get('type') or getattr(self.instance, 'type', None)
+        if t == Reminder.ReminderType.ABSOLUTE:
+            if not attrs.get('trigger_at') and (not self.instance or not self.instance.trigger_at):
+                raise serializers.ValidationError({'trigger_at': "absolute 类型必须提供 trigger_at"})
+        elif t == Reminder.ReminderType.RELATIVE:
+            if attrs.get('offset_minutes') is None and (not self.instance or self.instance.offset_minutes is None):
+                raise serializers.ValidationError({'offset_minutes': "relative 类型必须提供 offset_minutes"})
+        return attrs
+
+
+# =========================
 # 任务序列化器
 # =========================
 
 class TaskListSerializer(serializers.ModelSerializer):
     """任务列表序列化器"""
-    
+
     project = ProjectListSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
@@ -335,7 +443,7 @@ class TaskListSerializer(serializers.ModelSerializer):
 
 class TaskSerializer(serializers.ModelSerializer):
     """任务详情序列化器"""
-    
+
     project = ProjectListSerializer(read_only=True)
     project_uid = serializers.CharField(write_only=True, required=False, allow_null=True, allow_blank=True)
     parent = serializers.CharField(source='parent.uid', read_only=True)
@@ -353,6 +461,20 @@ class TaskSerializer(serializers.ModelSerializer):
     subtasks_count = serializers.SerializerMethodField()
     completed_subtasks_count = serializers.SerializerMethodField()
 
+    # === M2: 重复任务 + 提醒 ===
+    reminders = ReminderSerializer(many=True, read_only=True)
+    reminders_input = serializers.ListField(
+        child=serializers.DictField(), write_only=True, required=False, allow_empty=True,
+        help_text="创建/更新时的 reminders 列表（会替换现有 pending 提醒）",
+    )
+    recurrence = serializers.SerializerMethodField(read_only=True)
+    recurrence_input = serializers.DictField(
+        write_only=True, required=False, allow_null=True,
+        help_text="{ freq, interval, byday, bymonthday, count, until }",
+    )
+    recurrence_parent = serializers.CharField(source='recurrence_parent.uid', read_only=True)
+    is_recurrence_template = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = Task
         fields = [
@@ -361,9 +483,27 @@ class TaskSerializer(serializers.ModelSerializer):
             'parent', 'parent_uid', 'tags', 'tag_uids', 'is_all_day',
             'start_date', 'due_date', 'completed_time', 'time_zone',
             'sort_order', 'custom_group', 'attachments', 'created_at', 'updated_at',
-            'is_completed', 'is_overdue', 'subtasks_count', 'completed_subtasks_count'
+            'is_completed', 'is_overdue', 'subtasks_count', 'completed_subtasks_count',
+            # M2 new
+            'reminders', 'reminders_input',
+            'recurrence', 'recurrence_input',
+            'recurrence_parent', 'is_recurrence_template',
         ]
         read_only_fields = ['uid', 'created_at', 'updated_at', 'completed_time']
+
+    def get_recurrence(self, obj):
+        """读取时渲染 recurrence_rule 为结构化 dict"""
+        if not obj.recurrence_rule and not obj.recurrence_parent_id:
+            return None
+        # 对实例任务，读取模板的 rule
+        source = obj if obj.recurrence_rule else obj.recurrence_parent
+        if source is None or not source.recurrence_rule:
+            return None
+        return {
+            'rule': source.recurrence_rule,
+            'dtstart': source.recurrence_dtstart.isoformat() if source.recurrence_dtstart else None,
+            'human': _rrule_to_human(source.recurrence_rule),
+        }
 
     def get_subtasks_count(self, obj):
         """获取子任务数量"""
@@ -439,23 +579,60 @@ class TaskSerializer(serializers.ModelSerializer):
         """创建任务"""
         user = self.context['request'].user
         project = validated_data.pop('project_uid', None)
-        
+
         # 项目是可选的，允许为 None（收集箱模式）
         # 不再强制要求用户必须有项目才能创建任务
-        
+
         parent = validated_data.pop('parent_uid', None)
         tag_uids = validated_data.pop('tag_uids', [])
-        
+        reminders_input = validated_data.pop('reminders_input', None)
+        recurrence_input = validated_data.pop('recurrence_input', None)
+
         validated_data['project'] = project
         validated_data['parent'] = parent
         validated_data['user'] = user
-        
+
+        # 若指定 recurrence_input，走 create_recurring_task 生成模板 + 首实例；
+        # 否则走常规创建流程
+        if recurrence_input:
+            from .services.recurrence import create_recurring_task
+            rule = _build_rrule(recurrence_input)
+            dtstart = validated_data.get('due_date') or validated_data.get('start_date')
+            if not dtstart:
+                raise serializers.ValidationError(
+                    {'recurrence': "创建重复任务必须同时提供 start_date 或 due_date 作为 DTSTART"}
+                )
+            # 剥离无法传给 create_recurring_task 的字段
+            extra = {k: v for k, v in validated_data.items() if k not in (
+                'user', 'project', 'title', 'is_all_day', 'start_date', 'due_date',
+            )}
+            template, first = create_recurring_task(
+                user,
+                title=validated_data['title'],
+                recurrence_rule=rule,
+                dtstart=dtstart,
+                project=project,
+                is_all_day=validated_data.get('is_all_day', True),
+                start_date=validated_data.get('start_date'),
+                due_date=validated_data.get('due_date'),
+                **extra,
+            )
+            # tags 绑定到 template，新实例已在 create_recurring_task 中继承
+            if tag_uids:
+                template.tags.set(tag_uids)
+                first.tags.set(tag_uids)
+            # reminders 绑定到 template（未来实例会继承 pending）
+            if reminders_input:
+                self._sync_reminders(template, reminders_input, user)
+                # 首个实例也立即同步一份，防止用户此刻就想收到
+                self._sync_reminders(first, reminders_input, user)
+            return first
+
         task = super().create(validated_data)
-        
-        # 设置标签
         if tag_uids:
             task.tags.set(tag_uids)
-        
+        if reminders_input:
+            self._sync_reminders(task, reminders_input, user)
         return task
 
     def update(self, instance, validated_data):
@@ -463,20 +640,41 @@ class TaskSerializer(serializers.ModelSerializer):
         if 'project_uid' in validated_data:
             project = validated_data.pop('project_uid')
             validated_data['project'] = project
-        
+
         if 'parent_uid' in validated_data:
             parent = validated_data.pop('parent_uid')
             validated_data['parent'] = parent
-        
+
         tag_uids = validated_data.pop('tag_uids', None)
-        
+        reminders_input = validated_data.pop('reminders_input', None)
+        # recurrence_input 在 update 时忽略（应通过 /tasks/{uid}/ + scope 头处理，见 viewset）
+        validated_data.pop('recurrence_input', None)
+
         task = super().update(instance, validated_data)
-        
+
         # 更新标签
         if tag_uids is not None:
             task.tags.set(tag_uids)
-        
+
+        if reminders_input is not None:
+            user = self.context['request'].user
+            self._sync_reminders(task, reminders_input, user)
+
         return task
+
+    def _sync_reminders(self, task, reminders_input, user):
+        """替换任务当前 pending 的 reminders；保留已触发/已取消的"""
+        task.reminders.filter(status=Reminder.ReminderStatus.PENDING).delete()
+        for item in reminders_input:
+            Reminder.objects.create(
+                user=user,
+                task=task,
+                type=item.get('type', Reminder.ReminderType.RELATIVE),
+                trigger_at=item.get('trigger_at'),
+                offset_minutes=item.get('offset_minutes'),
+                relative_to=item.get('relative_to', Reminder.RelativeTo.DUE_DATE),
+                client_notification_id=item.get('client_notification_id', ''),
+            )
 
 
 # =========================

@@ -18,6 +18,7 @@ from .views import (
     ActivityLogViewSet,
     TaskViewViewSet,
     TaskCardConfigViewSet,
+    ReminderViewSet,
 )
 
 # 创建路由器
@@ -29,6 +30,7 @@ router.register(r'tasks', TaskViewSet, basename='task')
 router.register(r'activity-logs', ActivityLogViewSet, basename='activity-log')
 router.register(r'views', TaskViewViewSet, basename='task-view')
 router.register(r'card-configs', TaskCardConfigViewSet, basename='card-config')
+router.register(r'reminders', ReminderViewSet, basename='reminder')
 
 urlpatterns = [
     # 认证相关URL

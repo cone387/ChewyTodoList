@@ -12,7 +12,7 @@ from django.db import transaction
 from django.http import JsonResponse
 from copy import deepcopy
 
-from .models import Tag, Group, Project, Task, ActivityLog, TaskView, TaskCardConfig
+from .models import Tag, Group, Project, Task, ActivityLog, TaskView, TaskCardConfig, Reminder
 from .serializers import (
     UserRegistrationSerializer,
     UserSerializer,
@@ -30,6 +30,7 @@ from .serializers import (
     TaskViewListSerializer,
     TaskCardConfigSerializer,
     TaskCardConfigListSerializer,
+    ReminderSerializer,
 )
 from .filters import TagFilter, GroupFilter, ProjectFilter, TaskFilter, ActivityLogFilter, TaskViewFilter, TaskCardConfigFilter
 
@@ -731,19 +732,108 @@ class TaskViewSet(viewsets.ModelViewSet):
         })
 
     def update(self, request, *args, **kwargs):
-        """更新任务"""
+        """更新任务（支持 X-Edit-Scope: instance | series | following）"""
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         old_status = instance.status
-        
+        scope = (request.headers.get('X-Edit-Scope') or 'instance').lower()
+        if scope not in ('instance', 'series', 'following'):
+            return Response({
+                'success': False,
+                'error': {
+                    'code': 'VALIDATION_002',
+                    'message': "X-Edit-Scope 必须是 instance | series | following",
+                    'details': {},
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # 判断是否为"纯状态改动"（避免完成时意外脱离系列）
+        data_keys = set(request.data.keys())
+        non_status_keys = data_keys - {'status', 'completed_time'}
+        is_status_only = not non_status_keys
+        is_recurring_instance = bool(instance.recurrence_parent_id)
+
+        from .services.recurrence import (
+            detach_instance as _detach_instance,
+            update_series as _update_series,
+            split_series_from as _split_series_from,
+            handle_instance_completed,
+        )
+
+        # series / following scope 必须作用于重复任务（模板或实例）
+        if scope in ('series', 'following') and not (
+            instance.is_recurrence_template or is_recurring_instance
+        ):
+            return Response({
+                'success': False,
+                'error': {
+                    'code': 'BUSINESS_010',
+                    'message': "非重复任务不支持 series / following scope",
+                    'details': {},
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # 非纯状态改动才触发 scope 特殊流程
+        if not is_status_only and (instance.is_recurrence_template or is_recurring_instance):
+            if scope == 'series':
+                target = instance.recurrence_parent if is_recurring_instance else instance
+                serializer = self.get_serializer(target, data=request.data, partial=partial)
+                serializer.is_valid(raise_exception=True)
+                validated = dict(serializer.validated_data)
+                tag_uids = validated.pop('tag_uids', None)
+                reminders_input = validated.pop('reminders_input', None)
+                validated.pop('recurrence_input', None)
+                validated.pop('parent_uid', None)
+                _update_series(target, validated, tag_uids=tag_uids)
+                if reminders_input is not None:
+                    serializer._sync_reminders(target, reminders_input, request.user)
+                target.refresh_from_db()
+                out = TaskSerializer(target, context={'request': request}).data
+                self._log_activity(target, ActivityLog.ActionType.UPDATED, "系列任务已更新 (series)")
+                return Response({'success': True, 'data': out, 'message': '任务更新成功'})
+
+            if scope == 'following':
+                if not is_recurring_instance:
+                    return Response({
+                        'success': False,
+                        'error': {
+                            'code': 'BUSINESS_011',
+                            'message': "following scope 需要作用于重复实例",
+                            'details': {},
+                        }
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                serializer = self.get_serializer(instance, data=request.data, partial=partial)
+                serializer.is_valid(raise_exception=True)
+                validated = dict(serializer.validated_data)
+                tag_uids = validated.pop('tag_uids', None)
+                reminders_input = validated.pop('reminders_input', None)
+                validated.pop('recurrence_input', None)
+                validated.pop('parent_uid', None)
+                new_tpl = _split_series_from(instance, validated, tag_uids=tag_uids)
+                if reminders_input is not None:
+                    serializer._sync_reminders(new_tpl, reminders_input, request.user)
+                instance.refresh_from_db()
+                out = TaskSerializer(instance, context={'request': request}).data
+                self._log_activity(instance, ActivityLog.ActionType.UPDATED, "系列已拆分 (following)")
+                return Response({'success': True, 'data': out, 'message': '任务更新成功'})
+
+            if scope == 'instance' and is_recurring_instance:
+                instance = _detach_instance(instance)
+
+        # 常规 update（也适用于 status-only 的完成路径）
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         task = serializer.save()
-        
-        # 记录活动日志
+
+        # 重复实例：完成时自动生成下一实例
+        if (task.status == Task.TaskStatus.COMPLETED and
+                old_status != Task.TaskStatus.COMPLETED and
+                task.recurrence_parent_id):
+            handle_instance_completed(task)
+
         if 'status' in request.data and task.status != old_status:
             self._log_activity(
-                task, 
+                task,
                 ActivityLog.ActionType.STATUS_CHANGED,
                 f"任务状态从 '{Task.TaskStatus(old_status).label}' 变更为 '{task.get_status_display()}'"
             )
@@ -757,9 +847,19 @@ class TaskViewSet(viewsets.ModelViewSet):
         })
 
     def destroy(self, request, *args, **kwargs):
-        """删除任务"""
+        """删除任务（支持 ?scope=instance|series|following）"""
         instance = self.get_object()
-        
+        scope = (request.query_params.get('scope') or 'instance').lower()
+        if scope not in ('instance', 'series', 'following'):
+            return Response({
+                'success': False,
+                'error': {
+                    'code': 'VALIDATION_002',
+                    'message': "scope 必须是 instance | series | following",
+                    'details': {},
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         # 检查是否有子任务
         if instance.subtasks.exists():
             return Response({
@@ -772,17 +872,91 @@ class TaskViewSet(viewsets.ModelViewSet):
                     }
                 }
             }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # 记录活动日志
+
+        is_recurring_instance = bool(instance.recurrence_parent_id)
+        is_recurring_template = instance.is_recurrence_template
+
+        # series：删除模板 + 所有未完成实例（已完成保留作历史）
+        if scope == 'series' and (is_recurring_instance or is_recurring_template):
+            template = instance.recurrence_parent if is_recurring_instance else instance
+            open_statuses = [Task.TaskStatus.TODO, Task.TaskStatus.UNASSIGNED]
+            with transaction.atomic():
+                Task.objects.filter(
+                    recurrence_parent=template, status__in=open_statuses,
+                ).delete()
+                self._log_activity(template, ActivityLog.ActionType.DELETED, "系列已删除 (series)")
+                template.delete()
+            return Response({
+                'success': True,
+                'data': {},
+                'message': '任务删除成功'
+            }, status=status.HTTP_204_NO_CONTENT)
+
+        # following：从当前实例开始往后删除
+        if scope == 'following' and is_recurring_instance:
+            template = instance.recurrence_parent
+            pivot = instance.due_date or instance.start_date
+            open_statuses = [Task.TaskStatus.TODO, Task.TaskStatus.UNASSIGNED]
+            with transaction.atomic():
+                qs = Task.objects.filter(
+                    recurrence_parent=template, status__in=open_statuses,
+                )
+                if pivot is not None:
+                    qs = qs.filter(due_date__gte=pivot)
+                qs.delete()
+                # 在模板 RRULE 上追加 UNTIL=pivot-1us，让系列截止
+                if pivot is not None and template.recurrence_rule:
+                    from .services.recurrence import _apply_rule_until
+                    from datetime import timedelta
+                    template.recurrence_rule = _apply_rule_until(
+                        template.recurrence_rule, pivot - timedelta(microseconds=1),
+                    )
+                    template.save(update_fields=['recurrence_rule', 'updated_at'])
+                self._log_activity(template, ActivityLog.ActionType.DELETED, "本次及后续已删除 (following)")
+            return Response({
+                'success': True,
+                'data': {},
+                'message': '任务删除成功'
+            }, status=status.HTTP_204_NO_CONTENT)
+
+        # instance（默认）：仅删当前
         self._log_activity(instance, ActivityLog.ActionType.DELETED, "任务已删除")
-        
         self.perform_destroy(instance)
-        
+
         return Response({
             'success': True,
             'data': {},
             'message': '任务删除成功'
         }, status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post'])
+    def skip(self, request, uid=None):
+        """跳过重复任务实例的本次：标记 ABANDONED、加入 exdates、生成下一实例"""
+        instance = self.get_object()
+        if not instance.recurrence_parent_id:
+            return Response({
+                'success': False,
+                'error': {
+                    'code': 'BUSINESS_012',
+                    'message': "非重复任务实例不支持 skip",
+                    'details': {},
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        from .services.recurrence import skip_instance
+        nxt = skip_instance(instance)
+        instance.refresh_from_db()
+
+        self._log_activity(instance, ActivityLog.ActionType.UPDATED, "已跳过本次重复")
+
+        return Response({
+            'success': True,
+            'data': {
+                'skipped': TaskSerializer(instance, context={'request': request}).data,
+                'next': TaskSerializer(nxt, context={'request': request}).data if nxt else None,
+            },
+            'message': '已跳过本次',
+        })
 
     @action(detail=False, methods=['get'])
     def today(self, request):
@@ -1361,4 +1535,124 @@ class TaskCardConfigViewSet(viewsets.ModelViewSet):
             'success': True,
             'data': TaskCardConfig.AVAILABLE_FIELDS,
             'message': '获取可用字段成功',
+        })
+
+
+# =========================
+# 提醒视图（M2）
+# =========================
+
+class ReminderViewSet(viewsets.ModelViewSet):
+    """提醒 CRUD + 触发管理
+
+    独立端点主要用于客户端调度：
+    - GET  /reminders/upcoming/?within_minutes=60
+    - POST /reminders/{uid}/mark-triggered/
+    常规 reminders 的创建 / 读取推荐嵌套在 Task.reminders_input 字段一起完成。
+    """
+
+    lookup_field = 'uid'
+    serializer_class = ReminderSerializer
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    ordering_fields = ['trigger_at', 'created_at']
+    ordering = ['trigger_at', '-created_at']
+
+    def get_queryset(self):
+        return Reminder.objects.filter(user=self.request.user).select_related('task')
+
+    def create(self, request, *args, **kwargs):
+        task_uid = request.data.get('task_uid') or request.data.get('task')
+        if not task_uid:
+            return Response({
+                'success': False,
+                'error': {'code': 'VALIDATION_001', 'message': "缺少 task_uid", 'details': {}},
+            }, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            task = Task.objects.get(uid=task_uid, user=request.user)
+        except Task.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': {'code': 'BUSINESS_001', 'message': "任务不存在", 'details': {}},
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        reminder = Reminder.objects.create(
+            user=request.user,
+            task=task,
+            type=serializer.validated_data.get('type', Reminder.ReminderType.RELATIVE),
+            trigger_at=serializer.validated_data.get('trigger_at'),
+            offset_minutes=serializer.validated_data.get('offset_minutes'),
+            relative_to=serializer.validated_data.get('relative_to', Reminder.RelativeTo.DUE_DATE),
+            client_notification_id=serializer.validated_data.get('client_notification_id', ''),
+        )
+        return Response({
+            'success': True,
+            'data': self.get_serializer(reminder).data,
+            'message': '提醒创建成功',
+        }, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response({
+            'success': True,
+            'data': serializer.data,
+            'message': '提醒更新成功',
+        })
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({
+            'success': True, 'data': {}, 'message': '提醒已删除',
+        }, status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['get'])
+    def upcoming(self, request):
+        """未来 within_minutes 分钟内将要触发的 pending 提醒（供客户端调度 / 追赶）"""
+        try:
+            within = int(request.query_params.get('within_minutes', 60))
+        except (TypeError, ValueError):
+            within = 60
+        within = max(1, min(within, 60 * 24 * 7))  # 上限 7 天
+        from datetime import timedelta as _td
+        now = timezone.now()
+        horizon = now + _td(minutes=within)
+
+        # PENDING + task 未完成 + effective_trigger_at 落在 [now, horizon]
+        pending = self.get_queryset().filter(
+            status=Reminder.ReminderStatus.PENDING,
+        ).exclude(task__status=Task.TaskStatus.COMPLETED)
+
+        # 绝对提醒直接用 trigger_at；相对提醒需动态计算 — 在内存过滤以保持简单
+        results = []
+        for r in pending:
+            eff = r.effective_trigger_at
+            if eff is None:
+                continue
+            if now - _td(minutes=5) <= eff <= horizon:
+                results.append(r)
+        results.sort(key=lambda x: x.effective_trigger_at or now)
+
+        serializer = self.get_serializer(results, many=True)
+        return Response({
+            'success': True,
+            'data': serializer.data,
+            'message': '获取即将到来的提醒成功',
+        })
+
+    @action(detail=True, methods=['post'], url_path='mark-triggered')
+    def mark_triggered(self, request, uid=None):
+        """客户端上报：此提醒已在本地触发（幂等）"""
+        reminder = self.get_object()
+        if reminder.status == Reminder.ReminderStatus.PENDING:
+            reminder.mark_triggered()
+        return Response({
+            'success': True,
+            'data': self.get_serializer(reminder).data,
+            'message': '已标记触发',
         })
