@@ -187,7 +187,7 @@ export const QuickCreateSheet: React.FC<QuickCreateSheetProps> = ({
                             paddingVertical: 10,
                             borderBottomWidth: 1,
                             borderBottomColor: colors.borderLight,
-                            backgroundColor: p.uid === selectedProjectUid ? '#f3f0ff' : '#fff',
+                            backgroundColor: p.uid === selectedProjectUid ? Colors.primary + '12' : colors.card,
                           }}
                           onPress={() => { setSelectedProjectUid(p.uid); setShowProjectPicker(false); }}
                         >

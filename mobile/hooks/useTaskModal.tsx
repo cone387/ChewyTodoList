@@ -1,4 +1,7 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+
+// Simple global signal for deep link — set by /task/[uid] route, consumed by TaskModalProvider
+export const pendingDeepLink: { taskUid: string | null } = { taskUid: null };
 
 interface TaskModalState {
   visible: boolean;
@@ -32,6 +35,21 @@ export function TaskModalProvider({ children }: { children: React.ReactNode }) {
 
   const closeTask = useCallback(() => {
     setState({ visible: false, taskUid: '' });
+  }, []);
+
+  // Check for pending deep link on mount and periodically
+  useEffect(() => {
+    const check = () => {
+      if (pendingDeepLink.taskUid) {
+        const uid = pendingDeepLink.taskUid;
+        pendingDeepLink.taskUid = null;
+        openTask(uid);
+      }
+    };
+    check();
+    // Also check after a short delay in case redirect hasn't settled
+    const timer = setTimeout(check, 300);
+    return () => clearTimeout(timer);
   }, []);
 
   return (

@@ -360,7 +360,7 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
                     const active = curPriority === p.value;
                     return (
                       <TouchableOpacity key={p.value} onPress={() => handlePriorityChange(p.value)}
-                        style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, backgroundColor: active ? p.color + '18' : '#f9fafb' }}>
+                        style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, backgroundColor: active ? p.color + '18' : colors.background.tertiary }}>
                         <Text style={{ fontSize: 14, fontWeight: active ? '600' : '400', color: active ? p.color : '#c4c4c4' }}>{p.label}</Text>
                       </TouchableOpacity>
                     );
@@ -500,7 +500,7 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
               value={content}
               onChange={setContent}
               placeholder="输入任务内容... (支持 Markdown)"
-              autoFocus={!isCreate}
+              autoFocus={false}
               footerText={!isCreate && task ? (
                 (task.completed_time ? `完成于 ${new Date(task.completed_time).toLocaleString('zh-CN')} · ` : '') +
                 `创建于 ${new Date(task.created_at).toLocaleString('zh-CN')}`

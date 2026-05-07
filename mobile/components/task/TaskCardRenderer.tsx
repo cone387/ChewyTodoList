@@ -73,6 +73,7 @@ export const StatusField: React.FC<{ task: Task; style: Record<string, any> }> =
 // 标题字段
 // ========================
 export const TitleField: React.FC<{ task: Task; style: Record<string, any> }> = ({ task, style }) => {
+  const { colors } = useTheme();
   const fontSizes: Record<string, number> = { small: 13, medium: 15, large: 17 };
   const fontWeights: Record<string, any> = {
     normal: '400', medium: '500', semibold: '600', bold: '700',
@@ -127,6 +128,7 @@ export const DueDateField: React.FC<{ task: Task; style: Record<string, any> }> 
 // 标签字段
 // ========================
 export const TagsField: React.FC<{ task: Task; style: Record<string, any> }> = ({ task, style }) => {
+  const { colors } = useTheme();
   if (!task.tags || task.tags.length === 0) return null;
   const maxCount = style.maxCount || 3;
   const variant = style.variant || 'pill';
@@ -167,6 +169,7 @@ export const TagsField: React.FC<{ task: Task; style: Record<string, any> }> = (
 // 项目字段
 // ========================
 export const ProjectField: React.FC<{ task: Task; style: Record<string, any> }> = ({ task }) => {
+  const { colors } = useTheme();
   if (!task.project) return null;
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -180,6 +183,7 @@ export const ProjectField: React.FC<{ task: Task; style: Record<string, any> }> 
 // 子任务进度字段
 // ========================
 export const SubtasksProgressField: React.FC<{ task: Task; style: Record<string, any> }> = ({ task, style }) => {
+  const { colors } = useTheme();
   if (!task.subtasks_count || task.subtasks_count === 0) return null;
   const ratio = task.completed_subtasks_count / task.subtasks_count;
 
@@ -245,7 +249,6 @@ export const FieldRenderer: React.FC<{ field: string; task: Task; fieldStyle: Re
 // 按 position 分组渲染
 // ========================
 export function groupFieldsByPosition(fieldConfigs: CardFieldConfig[]) {
-  const { colors } = useTheme();
   const groups: Record<string, CardFieldConfig[]> = {
     header_left: [],
     header: [],

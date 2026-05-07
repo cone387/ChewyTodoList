@@ -3,19 +3,21 @@ import { View, ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
+import { pendingDeepLink } from '../../hooks/useTaskModal';
 
 /**
- * Fallback route for deep linking (e.g. /task/xxx).
- * Redirects to the tabs home page which will use the context-based modal.
- * The task modal is rendered via TaskModalProvider in (tabs)/_layout.
+ * Deep link route for /task/xxx (push notification, shared link).
+ * Sets a pending deep link UID and redirects to tabs home,
+ * which picks it up and opens the task modal.
  */
 export default function TaskRouteRedirect() {
   const { colors } = useTheme();
   const { uid } = useLocalSearchParams<{ uid: string }>();
 
   useEffect(() => {
-    // Replace with tabs home — the deep link task opening
-    // will be handled via URL params in the future if needed
+    if (uid) {
+      pendingDeepLink.taskUid = uid;
+    }
     router.replace('/(tabs)');
   }, [uid]);
 

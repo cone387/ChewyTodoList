@@ -25,7 +25,7 @@ const APP_VERSION: string = appJson?.expo?.version || '0.0.0';
 export default function SettingsPage() {
   const { logout } = useAuth();
   const { showToast } = useToast();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme, colors } = useTheme();
 
   const [profile, setProfile] = useState<{ username: string; email: string } | null>(null);
   const [showChangePassword, setShowChangePassword] = useState(false);

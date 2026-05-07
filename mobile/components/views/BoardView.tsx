@@ -32,7 +32,7 @@ const PRIORITY_COLUMNS = [
   { priority: TaskPriority.LOW, label: '低', color: '#94a3b8', bg: '#f8fafc' },
   { priority: TaskPriority.MEDIUM, label: '中', color: '#f59e0b', bg: '#fffbeb' },
   { priority: TaskPriority.HIGH, label: '高', color: '#f97316', bg: '#fff7ed' },
-  { priority: TaskPriority.URGENT, label: '紧急', color: colors.error, bg: '#fef2f2' },
+  { priority: TaskPriority.URGENT, label: '紧急', color: '#ef4444', bg: '#fef2f2' },
 ];
 
 const PRIORITY_COLORS: Record<number, string> = {

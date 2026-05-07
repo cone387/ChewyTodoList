@@ -25,15 +25,15 @@ interface TableViewProps {
 const STATUS_LABELS: Record<number, { label: string; color: string }> = {
   [TaskStatus.UNASSIGNED]: { label: '待分配', color: '#94a3b8' },
   [TaskStatus.TODO]: { label: '待办', color: '#3b82f6' },
-  [TaskStatus.COMPLETED]: { label: '已完成', color: colors.success },
-  [TaskStatus.ABANDONED]: { label: '已放弃', color: colors.error },
+  [TaskStatus.COMPLETED]: { label: '已完成', color: '#22c55e' },
+  [TaskStatus.ABANDONED]: { label: '已放弃', color: '#ef4444' },
 };
 
 const PRIORITY_LABELS: Record<number, { label: string; color: string }> = {
   [TaskPriority.LOW]: { label: '低', color: '#94a3b8' },
   [TaskPriority.MEDIUM]: { label: '中', color: '#f59e0b' },
   [TaskPriority.HIGH]: { label: '高', color: '#f97316' },
-  [TaskPriority.URGENT]: { label: '紧急', color: colors.error },
+  [TaskPriority.URGENT]: { label: '紧急', color: '#ef4444' },
 };
 
 const COL_WIDTHS = { title: 180, status: 70, priority: 60, project: 100, dueDate: 90, tags: 120 };
