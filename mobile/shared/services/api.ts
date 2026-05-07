@@ -31,6 +31,8 @@ import type {
 
 const BASE_URL = config.apiUrl;
 
+console.log('[API] BASE_URL =', BASE_URL);
+
 const api = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
@@ -63,7 +65,12 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // 登录/注册请求不走 token 刷新逻辑
+    const isAuthRequest = originalRequest.url?.includes('/auth/login') ||
+      originalRequest.url?.includes('/auth/register') ||
+      originalRequest.url?.includes('/auth/refresh');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });

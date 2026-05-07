@@ -75,6 +75,13 @@ source .venv/bin/activate
 uv run python manage.py runserver 8400
 ```
 
+> **首次启动**：服务器检测到数据库无用户时会自动创建演示账户：
+> - 用户名: `demo`
+> - 密码: `demo123456`
+> - 包含完整的示例项目、任务、标签数据
+>
+> 也可手动执行: `uv run python manage.py seed_demo`
+
 ## API 端点
 
 ### 认证 (`/api/v1/auth/`)
