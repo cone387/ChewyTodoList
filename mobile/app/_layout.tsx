@@ -14,6 +14,7 @@ import type { EventSubscription } from 'expo-modules-core';
 import { useAuth, AuthContext, useAuthProvider } from '../hooks/useAuth';
 import { authApi } from '../shared/services/api';
 import { ToastContainer } from '../components/ui/Toast';
+import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 import { ToastContext, useToastProvider } from '../hooks/useToast';
 import { ThemeContext, useThemeProvider } from '../hooks/useTheme';
 import { useReminderScheduler } from '../hooks/useReminderScheduler';
@@ -148,6 +149,7 @@ export default function RootLayout() {
   }, []);
 
   return (
+    <ErrorBoundary>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <PersistQueryClientProvider
@@ -170,5 +172,6 @@ export default function RootLayout() {
         </PersistQueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
