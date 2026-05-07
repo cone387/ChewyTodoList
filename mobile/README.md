@@ -42,10 +42,10 @@ npm install
 
 ```bash
 # 后端 API 地址
-EXPO_PUBLIC_API_URL=http://localhost:8000/api
+EXPO_PUBLIC_API_URL=http://localhost:8400/api
 
 # 如果使用真机调试，替换为电脑的局域网 IP
-# EXPO_PUBLIC_API_URL=http://192.168.1.100:8000/api
+# EXPO_PUBLIC_API_URL=http://192.168.1.100:8400/api
 ```
 
 ### 启动开发服务器

@@ -77,11 +77,11 @@ export default defineConfig({
     port: 4030,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://localhost:8400',
         changeOrigin: true,
       },
       '/attachments': {
-        target: 'http://localhost:8000',
+        target: 'http://localhost:8400',
         changeOrigin: true,
       },
     },

@@ -2,7 +2,7 @@
 name = "todo-app-backend"
 version = "0.1.0"
 description = "Self-hosted Todo Application Backend"
-requires-python = ">=3.13"
+requires-python = ">=3.13,<3.14"
 dependencies = [
     "django>=5.0,<6.0",
     "djangorestframework>=3.14",

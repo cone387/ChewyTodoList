@@ -72,7 +72,7 @@ cd backend
 
 # 或手动启动
 source .venv/bin/activate
-uv run python manage.py runserver
+uv run python manage.py runserver 8400
 ```
 
 ## API 端点
