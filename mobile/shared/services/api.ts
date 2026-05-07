@@ -3,12 +3,12 @@
  * 主要变更：
  *   - localStorage → expo-secure-store
  *   - window.location.replace → Expo Router router.replace
- *   - baseURL 从 app.config.ts extra.apiUrl 读取（通过 expo-constants）
+ *   - baseURL 从 config.json 读取
  */
 import axios from 'axios';
-import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { storage } from './storage';
+import config from '../../config.json';
 import type {
   AuthResponse,
   ApiResponse,
@@ -29,7 +29,7 @@ import type {
   EditScope,
 } from '../types/index';
 
-const BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:8400/api';
+const BASE_URL = config.apiUrl;
 
 const api = axios.create({
   baseURL: BASE_URL,
