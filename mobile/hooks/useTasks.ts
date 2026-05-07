@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import * as Haptics from 'expo-haptics';
 import { taskApi } from '../shared/services/api';
 import type { Task, EditScope } from '../shared/types/index';
 import { TaskStatus } from '../shared/types/index';
@@ -86,6 +87,13 @@ export function useToggleTaskStatus() {
       return res.data.data;
     },
     onMutate: async ({ task }) => {
+      // Haptic feedback
+      const isCompleting = task.status !== TaskStatus.COMPLETED;
+      if (isCompleting) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
       // Optimistic update
       await queryClient.cancelQueries({ queryKey: ['view-tasks'] });
       const newStatus =

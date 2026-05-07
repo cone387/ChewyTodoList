@@ -1,5 +1,5 @@
 import '../global.css';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -50,23 +50,37 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+
+  // Check onboarding status on mount
+  useEffect(() => {
+    AsyncStorage.getItem('onboarding_completed').then((val) => {
+      setNeedsOnboarding(val !== 'true');
+      setOnboardingChecked(true);
+    });
+  }, []);
 
   useEffect(() => {
+    if (!onboardingChecked) return;
     if (isAuthenticated === null) return;
 
-    // On web, Expo Router strips group names from segments,
-    // so /login has segments=['login'] not segments=['(auth)','login']
     const inAuthGroup = segments[0] === '(auth)' ||
       segments.some(s => s === 'login' || s === 'register');
+    const inOnboarding = segments.some(s => s === 'onboarding');
 
-    // Use microtask deferral via Promise.resolve — ensures navigation happens
-    // after current render commit without the brittle fixed-ms delays.
-    if (!isAuthenticated && !inAuthGroup) {
+    // First launch: show onboarding
+    if (needsOnboarding && !inOnboarding) {
+      Promise.resolve().then(() => router.replace('/onboarding' as any));
+      return;
+    }
+
+    if (!isAuthenticated && !inAuthGroup && !inOnboarding) {
       Promise.resolve().then(() => router.replace('/(auth)/login'));
-    } else if (isAuthenticated && inAuthGroup) {
+    } else if (isAuthenticated && (inAuthGroup || inOnboarding)) {
       Promise.resolve().then(() => router.replace('/(tabs)'));
     }
-  }, [isAuthenticated, segments]);
+  }, [isAuthenticated, segments, onboardingChecked, needsOnboarding]);
 
   // User initialization check
   useEffect(() => {

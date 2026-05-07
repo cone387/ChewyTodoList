@@ -6,6 +6,7 @@ import {
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTask, useUpdateTask, useDeleteTask, useCreateTask, useSkipTask } from '../../hooks/useTasks';
+import * as Haptics from 'expo-haptics';
 import { useProjects } from '../../hooks/useProjects';
 import { useTags } from '../../hooks/useTags';
 import { useSubtasks } from '../../hooks/useSubtasks';
@@ -185,6 +186,12 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
       setPendingScopeAction({ type: 'complete' });
       setShowScopeSheet(true);
       return;
+    }
+    // Haptic feedback
+    if (!task.is_completed) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     try { await updateTask.mutateAsync({ uid: task.uid, data: { status: task.is_completed ? TaskStatus.TODO : TaskStatus.COMPLETED } }); } catch {}
   };

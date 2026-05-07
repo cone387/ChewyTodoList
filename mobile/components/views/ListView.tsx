@@ -11,6 +11,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { Task, TaskView, TaskCardConfig, CardFieldConfig } from '../../shared/types/index';
 import { DEFAULT_FIELD_CONFIGS, TaskCard } from '../task/TaskCard';
 import { EmptyState } from '../ui/EmptyState';
+import { AnimatedCheckbox } from '../ui/AnimatedCheckbox';
 import { useToggleTaskStatus } from '../../hooks/useTasks';
 import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
@@ -93,7 +94,7 @@ export const ListView: React.FC<ListViewProps> = ({
               style={{ paddingLeft: 44 }}
             />
             {/* Quick complete checkbox — inside card padding */}
-            <TouchableOpacity
+            <View
               style={{
                 position: 'absolute',
                 left: 28,
@@ -103,26 +104,12 @@ export const ListView: React.FC<ListViewProps> = ({
                 width: 28,
                 alignItems: 'center',
               }}
-              onPress={() => toggleStatus.mutate({ task: item })}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <View
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: 10,
-                  borderWidth: 2,
-                  borderColor: item.is_completed ? Colors.success : colors.text.muted,
-                  backgroundColor: item.is_completed ? Colors.success : 'transparent',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {item.is_completed && (
-                  <MaterialCommunityIcons name="check" size={12} color="#fff" />
-                )}
-              </View>
-            </TouchableOpacity>
+              <AnimatedCheckbox
+                checked={item.is_completed}
+                onToggle={() => toggleStatus.mutate({ task: item })}
+              />
+            </View>
           </View>
         </View>
       );

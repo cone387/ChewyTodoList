@@ -213,11 +213,19 @@ export default function SettingsPage() {
           关于
         </Text>
         <View style={{ marginHorizontal: 16, backgroundColor: colors.card, borderRadius: 12, overflow: 'hidden' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
             <MaterialCommunityIcons name={SettingsIcons.version} size={20} color={colors.text.secondary} style={{ marginRight: 12 }} />
             <Text style={{ fontSize: 15, color: colors.text.secondary, flex: 1 }}>版本</Text>
             <Text style={{ fontSize: 14, color: colors.text.muted }}>{APP_VERSION}</Text>
           </View>
+          <TouchableOpacity
+            style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 }}
+            onPress={() => router.push('/(tabs)/settings/privacy' as any)}
+          >
+            <MaterialCommunityIcons name="shield-lock-outline" size={20} color={colors.text.secondary} style={{ marginRight: 12 }} />
+            <Text style={{ fontSize: 15, color: colors.text.secondary, flex: 1 }}>隐私政策</Text>
+            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.text.muted} />
+          </TouchableOpacity>
         </View>
 
         {/* Logout */}
