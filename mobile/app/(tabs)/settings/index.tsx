@@ -17,10 +17,10 @@ import { authApi } from '../../../shared/services/api';
 import { useToast } from '../../../hooks/useToast';
 import { Colors } from '../../../constants/theme';
 import { SettingsIcons } from '../../../constants/icons';
+import Constants from 'expo-constants';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const appJson = require('../../../app.json');
-const APP_VERSION: string = appJson?.expo?.version || '0.0.0';
+const APP_VERSION: string = Constants.expoConfig?.version || '1.0.0';
 
 export default function SettingsPage() {
   const { logout } = useAuth();
