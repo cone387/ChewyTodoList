@@ -22,6 +22,10 @@ import type {
   AvailableField,
   ViewFilter,
   ViewSort,
+  Reminder,
+  ReminderInput,
+  RecurrenceInput,
+  EditScope,
 } from '../types/index';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -152,14 +156,25 @@ export const taskApi = {
   getTask: (uid: string) =>
     api.get<ApiResponse<Task>>(`/tasks/${uid}/`),
 
-  createTask: (data: Partial<Task> & { project_uid?: string; tag_uids?: string[]; parent_uid?: string }) =>
+  createTask: (data: Partial<Task> & {
+    project_uid?: string; tag_uids?: string[]; parent_uid?: string;
+    recurrence_input?: RecurrenceInput; reminders_input?: ReminderInput[];
+  }) =>
     api.post<ApiResponse<Task>>('/tasks/', data),
 
-  updateTask: (uid: string, data: Partial<Task> & { project_uid?: string; tag_uids?: string[]; parent_uid?: string | null }) =>
-    api.patch<ApiResponse<Task>>(`/tasks/${uid}/`, data),
+  updateTask: (uid: string, data: Partial<Task> & {
+    project_uid?: string; tag_uids?: string[]; parent_uid?: string | null;
+    reminders_input?: ReminderInput[];
+  }, scope?: EditScope) =>
+    api.patch<ApiResponse<Task>>(`/tasks/${uid}/`, data, {
+      headers: scope ? { 'X-Edit-Scope': scope } : undefined,
+    }),
 
-  deleteTask: (uid: string) =>
-    api.delete(`/tasks/${uid}/`),
+  deleteTask: (uid: string, scope?: EditScope) =>
+    api.delete(`/tasks/${uid}/${scope ? `?scope=${scope}` : ''}`),
+
+  skipTask: (uid: string) =>
+    api.post<ApiResponse<{ skipped: Task; next: Task | null }>>(`/tasks/${uid}/skip/`),
 
   bulkUpdate: (data: { task_uids: string[]; data: Record<string, any> }) =>
     api.patch('/tasks/bulk-update/', data),
@@ -318,6 +333,29 @@ export const attachmentApi = {
 
   deleteAttachment: (id: string) =>
     api.delete(`/attachments/files/${id}/`),
+};
+
+// ========================
+// 提醒 API
+// ========================
+export const reminderApi = {
+  getReminders: (params?: { task?: string }) =>
+    api.get<ApiResponse<PaginatedResponse<Reminder>>>('/reminders/', { params }),
+
+  getUpcoming: (withinMinutes = 60) =>
+    api.get<ApiResponse<Reminder[]>>(`/reminders/upcoming/?within_minutes=${withinMinutes}`),
+
+  createReminder: (data: ReminderInput & { task_uid: string }) =>
+    api.post<ApiResponse<Reminder>>('/reminders/', data),
+
+  updateReminder: (uid: string, data: Partial<ReminderInput>) =>
+    api.patch<ApiResponse<Reminder>>(`/reminders/${uid}/`, data),
+
+  deleteReminder: (uid: string) =>
+    api.delete(`/reminders/${uid}/`),
+
+  markTriggered: (uid: string) =>
+    api.post<ApiResponse<Reminder>>(`/reminders/${uid}/mark-triggered/`),
 };
 
 export default api;

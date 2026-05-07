@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useTask, useUpdateTask, useDeleteTask, useCreateTask } from '../../hooks/useTasks';
+import { useTask, useUpdateTask, useDeleteTask, useCreateTask, useSkipTask } from '../../hooks/useTasks';
 import { useProjects } from '../../hooks/useProjects';
 import { useTags } from '../../hooks/useTags';
 import { useSubtasks } from '../../hooks/useSubtasks';
@@ -17,9 +17,11 @@ import { SubtaskList } from './detail/SubtaskList';
 import { AttachmentList } from './detail/AttachmentList';
 import { DatePicker } from './detail/DatePicker';
 import { MarkdownEditor } from './detail/MarkdownEditor';
+import { RecurrencePicker, buildHumanText } from './detail/RecurrencePicker';
+import { ReminderPicker, formatReminder } from './detail/ReminderPicker';
 import { useToast } from '../../hooks/useToast';
 import { TaskStatus, TaskPriority } from '../../shared/types/index';
-import type { Task, Project, Tag } from '../../shared/types/index';
+import type { Task, Project, Tag, RecurrenceInput, ReminderInput, EditScope } from '../../shared/types/index';
 import { useTheme } from '../../hooks/useTheme';
 import { Colors } from '../../constants/theme';
 
@@ -68,6 +70,7 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
   const createTask = useCreateTask();
+  const skipTask = useSkipTask();
   const { data: projectsData } = useProjects();
   const { data: tagsData } = useTags();
   const { showToast } = useToast();
@@ -90,6 +93,12 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
   const [createTagUids, setCreateTagUids] = useState<string[]>([]);
   const [createStartDate, setCreateStartDate] = useState<string | null>(null);
   const [createDueDate, setCreateDueDate] = useState<string | null>(null);
+  const [showRecurrencePicker, setShowRecurrencePicker] = useState(false);
+  const [showReminderPicker, setShowReminderPicker] = useState(false);
+  const [showScopeSheet, setShowScopeSheet] = useState(false);
+  const [pendingScopeAction, setPendingScopeAction] = useState<{ type: 'complete' | 'edit' | 'delete' | 'skip'; data?: any } | null>(null);
+  const [createRecurrence, setCreateRecurrence] = useState<RecurrenceInput | null>(null);
+  const [createReminders, setCreateReminders] = useState<ReminderInput[]>([]);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialLoadRef = useRef(true);
 
@@ -135,6 +144,8 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
       setCreateTagUids([]);
       setCreateStartDate(null);
       setCreateDueDate(null);
+      setCreateRecurrence(null);
+      setCreateReminders([]);
       setCreateProjectUid(projectUid || null);
       initialLoadRef.current = true;
     }
@@ -167,7 +178,33 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
 
   const handleStatusChange = async (opt: any) => { if (!task) return; try { await updateTask.mutateAsync({ uid: task.uid, data: { status: opt.value } }); } catch {} };
   const handlePriorityChange = async (val: TaskPriority) => { if (isCreate) { setCreatePriority(val); return; } if (!task) return; try { await updateTask.mutateAsync({ uid: task.uid, data: { priority: val } }); } catch {} };
-  const handleToggleComplete = async () => { if (!task || isCreate) return; try { await updateTask.mutateAsync({ uid: task.uid, data: { status: task.is_completed ? TaskStatus.TODO : TaskStatus.COMPLETED } }); } catch {} };
+  const handleToggleComplete = async () => {
+    if (!task || isCreate) return;
+    // Recurring task: show scope confirmation
+    if (task.recurrence && !task.is_completed) {
+      setPendingScopeAction({ type: 'complete' });
+      setShowScopeSheet(true);
+      return;
+    }
+    try { await updateTask.mutateAsync({ uid: task.uid, data: { status: task.is_completed ? TaskStatus.TODO : TaskStatus.COMPLETED } }); } catch {}
+  };
+  const handleScopeSelect = async (opt: any) => {
+    if (!task || !pendingScopeAction) return;
+    const value = opt.value as string;
+    try {
+      if (pendingScopeAction.type === 'complete') {
+        if (value === 'instance') {
+          await updateTask.mutateAsync({ uid: task.uid, data: { status: TaskStatus.COMPLETED }, scope: 'instance' });
+        } else if (value === 'skip') {
+          await skipTask.mutateAsync(task.uid);
+        }
+      } else if (pendingScopeAction.type === 'delete') {
+        await deleteTask.mutateAsync({ uid: task.uid, scope: value as EditScope });
+        handleClose();
+      }
+    } catch {}
+    setPendingScopeAction(null);
+  };
   const handleProjectChange = async (pUid: string | null) => { if (isCreate) { setCreateProjectUid(pUid); setShowProjectPicker(false); return; } if (!task) return; try { await updateTask.mutateAsync({ uid: task.uid, data: { project_uid: pUid || undefined } }); } catch {} setShowProjectPicker(false); };
   const handleToggleTag = async (tagUid: string) => {
     if (isCreate) {
@@ -179,7 +216,16 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
     const next = cur.includes(tagUid) ? cur.filter((id: string) => id !== tagUid) : [...cur, tagUid];
     try { await updateTask.mutateAsync({ uid: task.uid, data: { tag_uids: next } }); } catch {}
   };
-  const handleDelete = async () => { if (!task) return; try { await deleteTask.mutateAsync(task.uid); handleClose(); } catch {} };
+  const handleDelete = async () => {
+    if (!task) return;
+    // Recurring task: show scope confirmation
+    if (task.recurrence) {
+      setPendingScopeAction({ type: 'delete' });
+      setShowScopeSheet(true);
+      return;
+    }
+    try { await deleteTask.mutateAsync({ uid: task.uid }); handleClose(); } catch {}
+  };
   const handleCreate = async () => {
     if (createTask.isPending) return;
     if (!title.trim()) { showToast('error', '请输入标题'); return; }
@@ -190,6 +236,8 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
       if (createTagUids.length > 0) d.tag_uids = createTagUids;
       if (createStartDate) d.start_date = createStartDate;
       if (createDueDate) d.due_date = createDueDate;
+      if (createRecurrence) d.recurrence_input = createRecurrence;
+      if (createReminders.length > 0) d.reminders_input = createReminders;
       await createTask.mutateAsync(d); handleClose();
     } catch { showToast('error', '创建失败'); }
   };
@@ -392,6 +440,36 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
                   </View>
                 </View>
               )}
+              {/* Recurrence row */}
+              <TouchableOpacity onPress={() => setShowRecurrencePicker(true)} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={{ fontSize: 15, color: colors.text.muted, width: 64 }}>重复</Text>
+                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <MaterialCommunityIcons name="repeat" size={16} color={
+                    (isCreate ? createRecurrence : task?.recurrence) ? Colors.primary : colors.text.muted
+                  } />
+                  <Text style={{ fontSize: 14, color: (isCreate ? createRecurrence : task?.recurrence) ? Colors.primary : colors.text.muted }}>
+                    {isCreate
+                      ? (createRecurrence ? buildHumanText(createRecurrence) : '不重复')
+                      : (task?.recurrence ? task.recurrence.human : '不重复')
+                    }
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              {/* Reminder row */}
+              <TouchableOpacity onPress={() => setShowReminderPicker(true)} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={{ fontSize: 15, color: colors.text.muted, width: 64 }}>提醒</Text>
+                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <MaterialCommunityIcons name="bell-outline" size={16} color={
+                    (isCreate ? createReminders.length > 0 : (task?.reminders && task.reminders.length > 0)) ? Colors.primary : colors.text.muted
+                  } />
+                  <Text style={{ fontSize: 14, color: (isCreate ? createReminders.length > 0 : (task?.reminders && task.reminders.length > 0)) ? Colors.primary : colors.text.muted }}>
+                    {isCreate
+                      ? (createReminders.length > 0 ? `${createReminders.length} 条提醒` : '无')
+                      : (task?.reminders && task.reminders.length > 0 ? `${task.reminders.length} 条提醒` : '无')
+                    }
+                  </Text>
+                </View>
+              </TouchableOpacity>
             </View>
 
             {/* Subtasks */}
@@ -451,6 +529,66 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
         confirmText="放弃" destructive
         onConfirm={() => { if (task) updateTask.mutateAsync({ uid: task.uid, data: { status: TaskStatus.ABANDONED } }); }}
         onCancel={() => setShowAbandonConfirm(false)} />
+      <RecurrencePicker
+        visible={showRecurrencePicker}
+        value={isCreate ? createRecurrence : (task?.recurrence ? { freq: 'DAILY' } : null)}
+        existingInfo={!isCreate ? task?.recurrence : undefined}
+        onConfirm={(input) => {
+          if (isCreate) {
+            setCreateRecurrence(input);
+          } else if (task) {
+            updateTask.mutateAsync({ uid: task.uid, data: { recurrence_input: input } as any });
+          }
+          setShowRecurrencePicker(false);
+        }}
+        onCancel={() => setShowRecurrencePicker(false)}
+      />
+      <ReminderPicker
+        visible={showReminderPicker}
+        value={isCreate ? createReminders : (task?.reminders?.map(r => ({
+          type: r.type,
+          trigger_at: r.trigger_at || undefined,
+          offset_minutes: r.offset_minutes || undefined,
+          relative_to: r.relative_to,
+        })) || [])}
+        onConfirm={(reminders) => {
+          if (isCreate) {
+            setCreateReminders(reminders);
+          } else if (task) {
+            updateTask.mutateAsync({ uid: task.uid, data: { reminders_input: reminders } as any });
+          }
+          setShowReminderPicker(false);
+        }}
+        onCancel={() => setShowReminderPicker(false)}
+      />
+      <ActionSheet visible={showScopeSheet} title="编辑范围"
+        options={
+          pendingScopeAction?.type === 'complete'
+            ? [
+                { label: '仅完成本次', value: 'instance', mci: 'check' },
+                { label: '跳过本次', value: 'skip', mci: 'skip-next' },
+              ]
+            : pendingScopeAction?.type === 'delete'
+            ? [
+                { label: '仅删除本次', value: 'instance', mci: 'delete-outline' },
+                { label: '删除整个系列', value: 'series', mci: 'delete-sweep', destructive: true },
+                { label: '删除此后所有', value: 'following', mci: 'delete-clock', destructive: true },
+              ]
+            : [
+                { label: '仅修改本次', value: 'instance', mci: 'pencil' },
+                { label: '修改整个系列', value: 'series', mci: 'pencil-box-multiple' },
+                { label: '修改此后所有', value: 'following', mci: 'pencil-plus' },
+              ]
+        }
+        onSelect={(o) => {
+          if (pendingScopeAction?.type === 'complete' && o.value === 'skip') {
+            handleScopeSelect({ value: 'skip' });
+          } else {
+            handleScopeSelect(o);
+          }
+        }}
+        onCancel={() => { setShowScopeSheet(false); setPendingScopeAction(null); }}
+      />
       </View>
     </Modal>
   );

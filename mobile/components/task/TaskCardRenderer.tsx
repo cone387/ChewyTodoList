@@ -198,6 +198,28 @@ export const SubtasksProgressField: React.FC<{ task: Task; style: Record<string,
 };
 
 // ========================
+// 重复 & 提醒标记字段
+// ========================
+export const RecurrenceField: React.FC<{ task: Task; style: Record<string, any> }> = ({ task }) => {
+  if (!task.recurrence) return null;
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <MaterialCommunityIcons name="repeat" size={12} color={Colors.primary} />
+    </View>
+  );
+};
+
+export const RemindersField: React.FC<{ task: Task; style: Record<string, any> }> = ({ task }) => {
+  const pendingReminders = task.reminders?.filter(r => r.status === 'pending') || [];
+  if (pendingReminders.length === 0) return null;
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <MaterialCommunityIcons name="bell-outline" size={12} color={Colors.primary} />
+    </View>
+  );
+};
+
+// ========================
 // 字段渲染分发器
 // ========================
 export const FieldRenderer: React.FC<{ field: string; task: Task; fieldStyle: Record<string, any> }> = ({
@@ -213,6 +235,8 @@ export const FieldRenderer: React.FC<{ field: string; task: Task; fieldStyle: Re
     case 'tags': return <TagsField task={task} style={fieldStyle} />;
     case 'project': return <ProjectField task={task} style={fieldStyle} />;
     case 'subtasks_count': return <SubtasksProgressField task={task} style={fieldStyle} />;
+    case 'recurrence': return <RecurrenceField task={task} style={fieldStyle} />;
+    case 'reminders': return <RemindersField task={task} style={fieldStyle} />;
     default: return null;
   }
 };

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { taskApi } from '../shared/services/api';
-import type { Task } from '../shared/types/index';
+import type { Task, EditScope } from '../shared/types/index';
 import { TaskStatus } from '../shared/types/index';
 
 export function useTasks(params?: Record<string, any>) {
@@ -41,8 +41,8 @@ export function useCreateTask() {
 export function useUpdateTask() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ uid, data }: { uid: string; data: Parameters<typeof taskApi.updateTask>[1] }) =>
-      taskApi.updateTask(uid, data),
+    mutationFn: ({ uid, data, scope }: { uid: string; data: Parameters<typeof taskApi.updateTask>[1]; scope?: EditScope }) =>
+      taskApi.updateTask(uid, data, scope),
     onSuccess: (_, { uid }) => {
       queryClient.invalidateQueries({ queryKey: ['task', uid] });
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
@@ -55,7 +55,19 @@ export function useUpdateTask() {
 export function useDeleteTask() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (uid: string) => taskApi.deleteTask(uid),
+    mutationFn: ({ uid, scope }: { uid: string; scope?: EditScope }) => taskApi.deleteTask(uid, scope),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['view-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['activity-logs'] });
+    },
+  });
+}
+
+export function useSkipTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (uid: string) => taskApi.skipTask(uid),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['view-tasks'] });

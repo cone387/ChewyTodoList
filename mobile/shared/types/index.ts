@@ -104,7 +104,69 @@ export interface Task {
   is_overdue: boolean;
   subtasks_count: number;
   completed_subtasks_count: number;
+  // M2: 重复任务 + 提醒
+  recurrence?: RecurrenceInfo | null;
+  recurrence_parent?: string | null;
+  is_recurrence_template?: boolean;
+  reminders?: Reminder[];
 }
+
+// 重复规则信息（API 读取时返回）
+export interface RecurrenceInfo {
+  rule: string;
+  dtstart: string | null;
+  human: string; // 中文可读描述，如"每周 周一, 周三, 周五"
+}
+
+// 重复任务创建/编辑时的输入结构
+export interface RecurrenceInput {
+  freq: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+  interval?: number;
+  byday?: string[];      // ['MO', 'WE', 'FR']
+  bymonthday?: number;
+  count?: number;
+  until?: string;        // ISO date string
+}
+
+// 提醒类型
+export const ReminderType = {
+  RELATIVE: 'relative',
+  ABSOLUTE: 'absolute',
+} as const;
+export type ReminderType = typeof ReminderType[keyof typeof ReminderType];
+
+export const ReminderStatus = {
+  PENDING: 'pending',
+  TRIGGERED: 'triggered',
+  CANCELLED: 'cancelled',
+} as const;
+export type ReminderStatus = typeof ReminderStatus[keyof typeof ReminderStatus];
+
+export interface Reminder {
+  uid: string;
+  type: ReminderType;
+  trigger_at?: string | null;
+  offset_minutes?: number | null;
+  relative_to?: 'due_date' | 'start_date';
+  effective_trigger_at?: string | null;
+  status: ReminderStatus;
+  task_uid: string;
+  client_notification_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// 提醒创建/编辑输入
+export interface ReminderInput {
+  type?: ReminderType;
+  trigger_at?: string;
+  offset_minutes?: number;
+  relative_to?: 'due_date' | 'start_date';
+  client_notification_id?: string;
+}
+
+// scope 编辑类型
+export type EditScope = 'instance' | 'series' | 'following';
 
 // API响应类型
 export interface ApiResponse<T> {

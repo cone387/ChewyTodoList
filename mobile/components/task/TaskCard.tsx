@@ -19,6 +19,8 @@ export const DEFAULT_FIELD_CONFIGS: CardFieldConfig[] = [
   { field: 'project', visible: true, position: 'footer', style: {} },
   { field: 'due_date', visible: true, position: 'footer', style: { showRelative: true } },
   { field: 'subtasks_count', visible: true, position: 'footer', style: { showProgress: true } },
+  { field: 'recurrence', visible: true, position: 'footer', style: {} },
+  { field: 'reminders', visible: true, position: 'footer', style: {} },
 ];
 
 interface TaskCardProps {

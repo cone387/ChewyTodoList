@@ -1,5 +1,5 @@
 import '../global.css';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -9,11 +9,26 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as Notifications from 'expo-notifications';
+import type { EventSubscription } from 'expo-modules-core';
 import { useAuth, AuthContext, useAuthProvider } from '../hooks/useAuth';
 import { authApi } from '../shared/services/api';
 import { ToastContainer } from '../components/ui/Toast';
 import { ToastContext, useToastProvider } from '../hooks/useToast';
 import { ThemeContext, useThemeProvider } from '../hooks/useTheme';
+import { useReminderScheduler } from '../hooks/useReminderScheduler';
+import { useNotificationPermission } from '../hooks/useNotificationPermission';
+
+// 配置通知在前台也显示
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -74,6 +89,49 @@ export default function RootLayout() {
   const toastCtx = useToastProvider();
   const themeCtx = useThemeProvider();
   const authCtx = useAuthProvider();
+  const router = useRouter();
+  const { syncUpcoming, markTriggered } = useReminderScheduler();
+  const { requestPermission } = useNotificationPermission();
+  const notificationResponseListener = useRef<EventSubscription | undefined>(undefined);
+  const notificationReceivedListener = useRef<EventSubscription | undefined>(undefined);
+
+  // 通知权限 + 调度同步
+  useEffect(() => {
+    requestPermission();
+    // App 启动时同步即将触发的提醒
+    syncUpcoming();
+  }, []);
+
+  // 监听通知点击 → 跳转任务详情
+  useEffect(() => {
+    notificationResponseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data as { taskUid?: string; reminderUid?: string } | undefined;
+      if (data?.taskUid) {
+        router.push(`/task/${data.taskUid}` as any);
+      }
+      // 标记已触发
+      if (data?.reminderUid) {
+        markTriggered(data.reminderUid);
+      }
+    });
+
+    // 监听前台通知接收 → 标记已触发
+    notificationReceivedListener.current = Notifications.addNotificationReceivedListener((notification) => {
+      const data = notification.request.content.data as { taskUid?: string; reminderUid?: string } | undefined;
+      if (data?.reminderUid) {
+        markTriggered(data.reminderUid);
+      }
+    });
+
+    return () => {
+      if (notificationResponseListener.current) {
+        notificationResponseListener.current.remove();
+      }
+      if (notificationReceivedListener.current) {
+        notificationReceivedListener.current.remove();
+      }
+    };
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
