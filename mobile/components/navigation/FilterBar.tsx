@@ -58,7 +58,6 @@ export function hasActiveFilterBarSettings(
   groupBy: string,
   displaySettings: DisplaySettings,
 ) {
-  const { colors } = useTheme();
   if (sortField || groupBy) return true;
 
   return DISPLAY_OPTIONS.some(({ key }) => displaySettings[key] !== DEFAULT_DISPLAY_SETTINGS[key]);
@@ -93,6 +92,7 @@ export const HomeFilterBar: React.FC<HomeFilterBarProps> = ({
   onGroupByChange,
   onDisplaySettingsChange,
 }) => {
+  const { colors } = useTheme();
   const [activePanel, setActivePanel] = useState<'sort' | 'group' | 'display' | null>(null);
 
   useEffect(() => {
@@ -244,6 +244,7 @@ export const HomeFilterBar: React.FC<HomeFilterBarProps> = ({
 };
 
 function TabButton({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  const { colors } = useTheme();
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -271,6 +272,7 @@ function TabButton({ label, active, onPress }: { label: string; active: boolean;
 }
 
 function DirectionButton({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+  const { colors } = useTheme();
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -278,7 +280,7 @@ function DirectionButton({ label, selected, onPress }: { label: string; selected
         paddingHorizontal: 10,
         paddingVertical: 5,
         borderRadius: 999,
-        backgroundColor: selected ? Colors.primary + '12' : '#f3f4f6',
+        backgroundColor: selected ? Colors.primary + '12' : colors.background.tertiary,
       }}
     >
       <Text style={{ fontSize: 12, color: selected ? Colors.primary : colors.text.secondary, fontWeight: selected ? '600' : '500' }}>

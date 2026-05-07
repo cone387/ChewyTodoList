@@ -82,7 +82,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         sounds: [],
       },
     ],
-    'expo-haptics',
   ],
   experiments: {
     typedRoutes: true,

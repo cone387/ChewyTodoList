@@ -64,7 +64,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
   const showProject = displaySettings.show_project ?? true;
 
   const renderCard = useCallback(({ item, index }: { item: Task; index: number }) => {
-    const colors = getTaskColor(item.title);
+    const cardColors = getTaskColor(item.title);
     const isLeft = index % 2 === 0;
 
     return (
@@ -83,7 +83,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
         activeOpacity={0.8}
       >
         {/* Background gradient */}
-        <View style={{ flex: 1, backgroundColor: colors[0], padding: 14, justifyContent: 'space-between' }}>
+        <View style={{ flex: 1, backgroundColor: cardColors[0], padding: 14, justifyContent: 'space-between' }}>
           {/* Top row: status + priority */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flexDirection: 'row', gap: 4 }}>

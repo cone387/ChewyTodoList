@@ -31,11 +31,11 @@ function formatTime(dateString: string): string {
 }
 
 const ACTION_ICONS: Record<string, { icon: string; color: string }> = {
-  created: { icon: '➕', color: colors.text.secondary },
+  created: { icon: '➕', color: '#6b7280' },
   updated: { icon: '✏️', color: '#3b82f6' },
   status_changed: { icon: '🔄', color: '#8b5cf6' },
-  completed: { icon: '✅', color: colors.success },
-  deleted: { icon: '🗑', color: colors.error },
+  completed: { icon: '✅', color: '#22c55e' },
+  deleted: { icon: '🗑', color: '#ef4444' },
 };
 
 export const ActivityLog: React.FC<ActivityLogProps> = ({ taskUid }) => {

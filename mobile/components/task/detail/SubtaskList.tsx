@@ -60,7 +60,7 @@ export const SubtaskList: React.FC<Props> = ({ parentTask, subtasks, onRefresh }
 
   const handleDel = async () => {
     if (!selTask) return;
-    try { await deleteTask.mutateAsync(selTask.uid); onRefresh?.(); } catch {}
+    try { await deleteTask.mutateAsync({ uid: selTask.uid }); onRefresh?.(); } catch {}
     setShowDel(false); setSelTask(null);
   };
 
@@ -81,8 +81,8 @@ export const SubtaskList: React.FC<Props> = ({ parentTask, subtasks, onRefresh }
         data: {
           title: quickTitle.trim(),
           priority: quickPriority,
-          start_date: quickStartDate,
-          due_date: quickDueDate,
+          start_date: quickStartDate || undefined,
+          due_date: quickDueDate || undefined,
         },
       });
       setShowQuickEdit(false);

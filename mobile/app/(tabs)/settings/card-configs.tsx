@@ -30,7 +30,7 @@ const PREVIEW_TASK: Task = {
   priority_display: '高',
   project: { uid: 'p1', name: '示例项目', group: { uid: 'g1', name: '默认分组', sort_order: 0, settings: {}, created_at: '', updated_at: '', projects_count: 1 }, view_type: 'list', style: {}, settings: {}, sort_order: 0, created_at: '', updated_at: '', tasks_count: 5, completed_tasks_count: 2, desc: '' },
   tags: [
-    { uid: 't1', name: '重要', color: colors.error, sort_order: 0, created_at: '', updated_at: '' },
+    { uid: 't1', name: '重要', color: '#ef4444', sort_order: 0, created_at: '', updated_at: '' },
     { uid: 't2', name: '工作', color: '#3b82f6', sort_order: 1, created_at: '', updated_at: '' },
   ],
   is_all_day: false,

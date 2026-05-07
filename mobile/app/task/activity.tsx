@@ -10,11 +10,11 @@ import { Colors } from '../../constants/theme';
 import type { ActivityLog } from '../../shared/types/index';
 
 const ICONS: Record<string, { icon: string; color: string; bg: string }> = {
-  created: { icon: 'plus-circle', color: colors.text.secondary, bg: '#f3f4f6' },
+  created: { icon: 'plus-circle', color: '#6b7280', bg: '#f3f4f6' },
   updated: { icon: 'pencil', color: '#3b82f6', bg: '#eff6ff' },
   status_changed: { icon: 'swap-horizontal', color: '#8b5cf6', bg: '#f3f0ff' },
-  completed: { icon: 'check-circle', color: colors.success, bg: '#f0fdf4' },
-  deleted: { icon: 'delete', color: colors.error, bg: '#fef2f2' },
+  completed: { icon: 'check-circle', color: '#22c55e', bg: '#f0fdf4' },
+  deleted: { icon: 'delete', color: '#ef4444', bg: '#fef2f2' },
 };
 
 function fmtTime(s: string): string {
