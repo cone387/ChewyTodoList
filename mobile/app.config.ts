@@ -15,11 +15,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     image: './assets/splash-icon.png',
     resizeMode: 'contain',
     backgroundColor: '#ffffff',
+    imageWidth: 120,
   },
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.chewytodo.app',
     buildNumber: '1',
+    associatedDomains: [],
     infoPlist: {
       NSUserNotificationsUsageDescription:
         'ChewyTodo 需要通知权限来发送任务提醒，确保您不会错过重要事项。',
@@ -69,6 +71,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   web: {
     favicon: './assets/favicon.png',
     bundler: 'metro',
+  },
+  updates: {
+    url: 'https://u.expo.dev/your-project-id',
   },
   plugins: [
     'expo-router',
