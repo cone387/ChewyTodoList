@@ -254,12 +254,10 @@ export default function ProjectsPage() {
           {groupedProjects.length === 0 && !isLoading && (
             <EmptyState
               icon="folder-multiple-outline"
-              message="暂无项目"
+              title="暂无项目"
               description="创建分组后可以在里面添加清单"
-              action={{
-                label: '新建分组',
-                onPress: () => setShowCreateGroup(true),
-              }}
+              actionLabel="新建分组"
+              onAction={() => setShowCreateGroup(true)}
             />
           )}
         </ScrollView>

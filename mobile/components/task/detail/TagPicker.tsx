@@ -14,6 +14,7 @@ import { useToast } from '../../../hooks/useToast';
 import { useTheme } from '../../../hooks/useTheme';
 import { Colors } from '../../../constants/theme';
 import type { Tag } from '../../../shared/types/index';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface TagPickerProps {
   visible: boolean;
@@ -96,7 +97,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({
                       <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: tag.color, marginRight: 12 }} />
                       <Text style={{ flex: 1, fontSize: 15, color: colors.text.secondary }}>{tag.name}</Text>
                       {isSelected && (
-                        <Text style={{ color: Colors.primary, fontSize: 18, fontWeight: '600' }}>✓</Text>
+                        <MaterialCommunityIcons name="check" size={20} color={Colors.primary} />
                       )}
                     </TouchableOpacity>
                   );

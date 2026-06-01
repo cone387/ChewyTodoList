@@ -89,7 +89,8 @@ export default function OnboardingPage() {
       {!isLastPage && (
         <TouchableOpacity
           onPress={handleSkip}
-          style={{ position: 'absolute', top: Platform.OS === 'ios' ? 60 : 40, right: 24, zIndex: 10, padding: 8 }}
+          style={{ position: 'absolute', top: Platform.OS === 'ios' ? 60 : 40, right: 24, zIndex: 10, padding: 8, cursor: 'pointer' }}
+          activeOpacity={0.7}
         >
           <Text style={{ fontSize: 15, color: '#9ca3af' }}>跳过</Text>
         </TouchableOpacity>
@@ -153,18 +154,19 @@ export default function OnboardingPage() {
             borderRadius: 16,
             paddingVertical: 16,
             alignItems: 'center',
-            ...Platform.select({
-              default: {
-                shadowColor: Colors.primary,
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.3,
-                shadowRadius: 12,
-                elevation: 8,
-              },
+            cursor: 'pointer',
+            ...(Platform.OS === 'web' ? {
+              boxShadow: '0px 6px 12px rgba(139,92,246,0.3)',
+            } : {
+              shadowColor: Colors.primary,
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.3,
+              shadowRadius: 12,
+              elevation: 8,
             }),
           }}
         >
-          <Text style={{ color: '#fff', fontSize: 17, fontWeight: '700' }}>
+          <Text style={{ color: '#fff', fontSize: 17, fontWeight: '700', userSelect: 'none' }}>
             {isLastPage ? '开始使用' : '下一步'}
           </Text>
         </TouchableOpacity>

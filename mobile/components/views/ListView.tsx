@@ -11,6 +11,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { Task, TaskView, TaskCardConfig, CardFieldConfig } from '../../shared/types/index';
 import { DEFAULT_FIELD_CONFIGS, TaskCard } from '../task/TaskCard';
 import { EmptyState } from '../ui/EmptyState';
+import { SkeletonCard } from '../ui/SkeletonLoader';
 import { AnimatedCheckbox } from '../ui/AnimatedCheckbox';
 import { useToggleTaskStatus } from '../../hooks/useTasks';
 import { useTheme } from '../../hooks/useTheme';
@@ -129,15 +130,17 @@ export const ListView: React.FC<ListViewProps> = ({
   const renderEmpty = useCallback(() => {
     if (isLoading) {
       return (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 80 }}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+        <View style={{ paddingTop: 60 }}>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
         </View>
       );
     }
     return (
       <EmptyState
         icon="clipboard-text-outline"
-        message={emptyMessage}
+        title={emptyMessage}
       />
     );
   }, [isLoading, emptyMessage]);

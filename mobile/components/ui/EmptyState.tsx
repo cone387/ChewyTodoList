@@ -6,51 +6,93 @@ import { Colors } from '../../constants/theme';
 
 interface EmptyStateProps {
   icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
-  iconSize?: number;
-  iconColor?: string;
-  message: string;
+  title: string;
   description?: string;
-  action?: {
-    label: string;
-    onPress: () => void;
-  };
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
+/**
+ * 标准化空状态组件
+ */
 export const EmptyState: React.FC<EmptyStateProps> = ({
   icon,
-  iconSize = 48,
-  iconColor,
-  message,
+  title,
   description,
-  action,
+  actionLabel,
+  onAction,
 }) => {
   const { colors } = useTheme();
-  const effectiveIconColor = iconColor ?? colors.text.muted;
+
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 60, paddingHorizontal: 24 }}>
-      <MaterialCommunityIcons name={icon} size={iconSize} color={effectiveIconColor} />
-      <Text style={{ fontSize: 16, color: colors.text.muted, marginTop: 12, textAlign: 'center' }}>
-        {message}
+    <View style={{ alignItems: 'center', paddingVertical: 60, paddingHorizontal: 32 }}>
+      {/* Icon */}
+      <View
+        style={{
+          width: 80,
+          height: 80,
+          borderRadius: 40,
+          backgroundColor: colors.background.tertiary,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 16,
+        }}
+      >
+        <MaterialCommunityIcons name={icon} size={40} color={colors.text.muted} />
+      </View>
+
+      {/* Title */}
+      <Text
+        style={{
+          fontSize: 17,
+          fontWeight: '600',
+          color: colors.text.primary,
+          marginBottom: 8,
+          textAlign: 'center',
+        }}
+      >
+        {title}
       </Text>
-      {description ? (
-        <Text style={{ fontSize: 13, color: colors.text.muted, marginTop: 4, textAlign: 'center' }}>
-          {description}
-        </Text>
-      ) : null}
-      {action ? (
-        <TouchableOpacity
-          onPress={action.onPress}
+
+      {/* Description */}
+      {description && (
+        <Text
           style={{
-            marginTop: 16,
-            paddingHorizontal: 20,
-            paddingVertical: 10,
-            backgroundColor: Colors.primary,
-            borderRadius: 8,
+            fontSize: 14,
+            color: colors.text.muted,
+            textAlign: 'center',
+            marginBottom: 24,
+            lineHeight: 20,
           }}
         >
-          <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>{action.label}</Text>
+          {description}
+        </Text>
+      )}
+
+      {/* Action Button */}
+      {actionLabel && onAction && (
+        <TouchableOpacity
+          onPress={onAction}
+          style={{
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+            backgroundColor: Colors.primary,
+            borderRadius: 10,
+            minWidth: 120,
+          }}
+        >
+          <Text
+            style={{
+              color: '#fff',
+              fontSize: 15,
+              fontWeight: '600',
+              textAlign: 'center',
+            }}
+          >
+            {actionLabel}
+          </Text>
         </TouchableOpacity>
-      ) : null}
+      )}
     </View>
   );
 };

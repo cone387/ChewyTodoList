@@ -1,50 +1,53 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Animated, ViewStyle, Platform } from 'react-native';
+import { View, Animated } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 
 interface SkeletonLoaderProps {
   width?: number | string;
   height?: number;
   borderRadius?: number;
-  style?: ViewStyle;
+  style?: any;
 }
 
+/**
+ * 基础骨架屏加载组件 — 带呼吸动画
+ */
 export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   width = '100%',
   height = 16,
-  borderRadius = 4,
+  borderRadius = 8,
   style,
 }) => {
   const { colors } = useTheme();
   const opacity = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
-    const animation = Animated.loop(
+    const pulse = Animated.loop(
       Animated.sequence([
         Animated.timing(opacity, {
-          toValue: 0.7,
+          toValue: 0.6,
           duration: 800,
-          useNativeDriver: Platform.OS !== 'web',
+          useNativeDriver: true,
         }),
         Animated.timing(opacity, {
           toValue: 0.3,
           duration: 800,
-          useNativeDriver: Platform.OS !== 'web',
+          useNativeDriver: true,
         }),
       ])
     );
-    animation.start();
-    return () => animation.stop();
-  }, [opacity]);
+    pulse.start();
+    return () => pulse.stop();
+  }, []);
 
   return (
     <Animated.View
       style={[
         {
-          width: width as any,
+          width,
           height,
           borderRadius,
-          backgroundColor: colors.border,
+          backgroundColor: colors.background.tertiary,
           opacity,
         },
         style,
@@ -53,56 +56,62 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   );
 };
 
-/** Approximates a TaskCard skeleton */
-export const SkeletonCard: React.FC<{ style?: ViewStyle }> = ({ style }) => {
+/**
+ * 任务卡片骨架屏
+ */
+export const SkeletonCard: React.FC = () => {
   const { colors } = useTheme();
+
   return (
     <View
-      style={[
-        {
-          backgroundColor: colors.card,
-          borderRadius: 10,
-          padding: 12,
-          marginHorizontal: 16,
-          marginVertical: 4,
-        },
-        style,
-      ]}
+      style={{
+        backgroundColor: colors.card,
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 8,
+        borderWidth: 1,
+        borderColor: colors.borderLight,
+      }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <SkeletonLoader width={14} height={14} borderRadius={2} />
-        <SkeletonLoader width="60%" height={16} borderRadius={4} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+        <SkeletonLoader width={20} height={20} borderRadius={10} />
+        <View style={{ flex: 1, marginLeft: 8 }}>
+          <SkeletonLoader width="70%" height={16} />
+        </View>
+        <SkeletonLoader width={40} height={20} borderRadius={4} />
       </View>
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        <SkeletonLoader width={48} height={12} borderRadius={4} />
-        <SkeletonLoader width={64} height={12} borderRadius={4} />
+      <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
+        <SkeletonLoader width={60} height={18} borderRadius={4} />
+        <SkeletonLoader width={80} height={18} borderRadius={4} />
+        <SkeletonLoader width={50} height={18} borderRadius={4} />
       </View>
     </View>
   );
 };
 
-/** Approximates a list item skeleton (icon circle + two text bars) */
-export const SkeletonListItem: React.FC<{ style?: ViewStyle }> = ({ style }) => {
+/**
+ * 列表项骨架屏
+ */
+export const SkeletonListItem: React.FC = () => {
   const { colors } = useTheme();
+
   return (
     <View
-      style={[
-        {
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingHorizontal: 16,
-          paddingVertical: 14,
-          backgroundColor: colors.card,
-          gap: 12,
-        },
-        style,
-      ]}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.borderLight,
+      }}
     >
-      <SkeletonLoader width={36} height={36} borderRadius={10} />
-      <View style={{ flex: 1, gap: 6 }}>
-        <SkeletonLoader width="70%" height={14} borderRadius={4} />
-        <SkeletonLoader width="40%" height={10} borderRadius={4} />
+      <SkeletonLoader width={36} height={36} borderRadius={18} />
+      <View style={{ flex: 1, marginLeft: 12 }}>
+        <SkeletonLoader width="60%" height={16} style={{ marginBottom: 6 }} />
+        <SkeletonLoader width="40%" height={12} />
       </View>
+      <SkeletonLoader width={24} height={24} borderRadius={12} />
     </View>
   );
 };

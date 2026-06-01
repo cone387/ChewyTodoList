@@ -13,7 +13,9 @@ import { useSubtasks } from '../../hooks/useSubtasks';
 import { useTaskModal } from '../../hooks/useTaskModal';
 import { ActionSheet } from '../ui/ActionSheet';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { ProjectPicker } from './detail/ProjectPicker';
 import { TagPicker } from './detail/TagPicker';
+import { ParentTaskLink } from './detail/ParentTaskLink';
 import { SubtaskList } from './detail/SubtaskList';
 import { AttachmentList } from './detail/AttachmentList';
 import { DatePicker } from './detail/DatePicker';
@@ -212,7 +214,14 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
     } catch {}
     setPendingScopeAction(null);
   };
-  const handleProjectChange = async (pUid: string | null) => { if (isCreate) { setCreateProjectUid(pUid); setShowProjectPicker(false); return; } if (!task) return; try { await updateTask.mutateAsync({ uid: task.uid, data: { project_uid: pUid || undefined } }); } catch {} setShowProjectPicker(false); };
+  const handleProjectChange = async (pUid: string | null) => {
+    if (isCreate) { setCreateProjectUid(pUid); setShowProjectPicker(false); return; }
+    if (!task) return;
+    try { await updateTask.mutateAsync({ uid: task.uid, data: { project_uid: pUid || undefined } }); }
+    catch {}
+    setShowProjectPicker(false);
+  };
+  const handleSetParent = async (parentUid: string | null) => { if (isCreate || !task) return; try { await updateTask.mutateAsync({ uid: task.uid, data: { parent_uid: parentUid || undefined } }); } catch {} };
   const handleToggleTag = async (tagUid: string) => {
     if (isCreate) {
       setCreateTagUids((prev) => prev.includes(tagUid) ? prev.filter((id) => id !== tagUid) : [...prev, tagUid]);
@@ -488,9 +497,11 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
             )}
 
             {task?.parent && (
-              <TouchableOpacity onPress={() => { handleClose(); setTimeout(() => openParentTask(task.parent!), 150); }} style={{ paddingHorizontal: 16, paddingVertical: 2 }}>
-                <Text style={{ fontSize: 10, color: Colors.primary }}>查看父任务 →</Text>
-              </TouchableOpacity>
+              <ParentTaskLink
+                currentTaskUid={task.uid}
+                parentTaskUid={task.parent}
+                onSetParent={handleSetParent}
+              />
             )}
           </View>
 
@@ -515,10 +526,12 @@ export function TaskDetailModal({ visible, taskUid, projectUid, onClose }: TaskD
         options={STATUSES.map((s) => ({ ...s, value: String(s.value) }))}
         onSelect={(o) => handleStatusChange({ ...o, value: parseInt(o.value as string) })}
         onCancel={() => setShowStatusSheet(false)} />
-      <ActionSheet visible={showProjectPicker} title="选择项目"
-        options={[{ label: '收集箱', value: '__none__', mci: 'inbox-outline' }, ...projects.map((p: Project) => ({ label: p.name, value: p.uid, mci: 'folder-outline' }))]}
-        onSelect={(o) => handleProjectChange(o.value === '__none__' ? null : o.value as string)}
-        onCancel={() => setShowProjectPicker(false)} />
+      <ProjectPicker
+        visible={showProjectPicker}
+        selectedProjectUid={isCreate ? (createProjectUid || undefined) : (task?.project?.uid || null)}
+        onSelectProject={handleProjectChange}
+        onClose={() => setShowProjectPicker(false)}
+      />
       <ActionSheet visible={showMoreMenu} title="更多操作" options={[
         ...(task?.status !== TaskStatus.ABANDONED ? [{ label: '放弃任务', value: 'abandon', mci: 'cancel' }] : [{ label: '恢复任务', value: 'restore', mci: 'backup-restore' }]),
         { label: '删除任务', value: 'delete', mci: 'trash-can-outline', color: colors.error, destructive: true },

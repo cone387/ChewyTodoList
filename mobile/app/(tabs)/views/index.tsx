@@ -323,7 +323,9 @@ export default function ViewsPage() {
               </ScrollView>
             )}
           </View>
-        ) : <EmptyState icon="tab" message="导航栏中还没有视图" description="去「我的」或「系统」添加" />
+        ) : (
+          <EmptyState icon="tab" title="导航栏中还没有视图" description="去「我的」或「系统」添加" />
+        )
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 }}>
           {tab === 'my' && (myFiltered.length > 0 ? (
@@ -361,7 +363,12 @@ export default function ViewsPage() {
                 );
               })}
             </View>
-          ) : search ? <EmptyState icon="magnify" message="未找到匹配视图" /> : <EmptyState icon="view-dashboard-outline" message="暂无视图" description="点击右上角新建" />)}
+          ) : search ? (
+            <EmptyState icon="magnify" title="未找到匹配视图" />
+          ) : (
+            <EmptyState icon="view-dashboard-outline" title="暂无视图" description="点击右上角新建" />
+          ))
+          }
 
           {tab === 'system' && (
             <View style={{ marginTop: 10, paddingHorizontal: 16, gap: 10 }}>
