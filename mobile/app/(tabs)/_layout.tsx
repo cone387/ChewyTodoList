@@ -6,6 +6,7 @@ import { TabIcons } from '../../constants/icons';
 import { useTheme } from '../../hooks/useTheme';
 import { TaskModalProvider, useTaskModal } from '../../hooks/useTaskModal';
 import { TaskDetailModal } from '../../components/task/TaskDetailModal';
+import { NetworkStatusBanner } from '../../components/ui/NetworkStatusBanner';
 
 const TABS = [
   { name: 'index', path: '/(tabs)', title: '主页', icon: TabIcons.home },
@@ -37,6 +38,7 @@ function TabsContent() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background.primary }}>
+      <NetworkStatusBanner />
       <Slot />
       <View
         style={{
