@@ -1,14 +1,14 @@
 /**
- * ErrorBoundary — 全局错误边界
- * 捕获子组件渲染时的 JS 错误，防止白屏
+ * 错误边界组件 - 捕获子组件渲染错误并显示友好提示
  */
-import React, { Component, type ReactNode } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Platform } from 'react-native';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  onRetry?: () => void;
 }
 
 interface State {
@@ -17,79 +17,52 @@ interface State {
 }
 
 export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
+  public state: State = {
+    hasError: false,
+    error: null,
+  };
 
-  static getDerivedStateFromError(error: Error): State {
+  public static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // 可以在此上报错误到 Sentry/Bugsnag 等
-    console.error('[ErrorBoundary] Caught:', error, errorInfo);
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('[ErrorBoundary] Uncaught error:', error, errorInfo);
+    
+    // TODO: 上报到 Sentry
+    // if (!__DEV__) {
+    //   Sentry.captureException(error, { contexts: { react: errorInfo } });
+    // }
   }
 
-  handleRetry = () => {
+  private handleRetry = () => {
     this.setState({ hasError: false, error: null });
+    this.props.onRetry?.();
   };
 
-  render() {
+  public render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
         return this.props.fallback;
       }
 
       return (
-        <View style={{ flex: 1, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <View style={{
-            width: 80, height: 80, borderRadius: 40,
-            backgroundColor: '#fef2f2',
-            alignItems: 'center', justifyContent: 'center',
-            marginBottom: 20,
-          }}>
-            <MaterialCommunityIcons name="alert-circle-outline" size={40} color="#ef4444" />
-          </View>
-
-          <Text style={{ fontSize: 20, fontWeight: '700', color: '#1f2937', textAlign: 'center', marginBottom: 8 }}>
-            出了点问题
+        <View style={styles.container}>
+          <MaterialCommunityIcons name="alert-circle-outline" size={64} color="#ef4444" />
+          <Text style={styles.title}>出现了一些问题</Text>
+          <Text style={styles.message}>
+            {__DEV__ && this.state.error
+              ? this.state.error.message
+              : '应用遇到了意外错误，请重试'}
           </Text>
-          <Text style={{ fontSize: 14, color: '#6b7280', textAlign: 'center', marginBottom: 24, lineHeight: 20 }}>
-            应用遇到了意外错误。{'\n'}请尝试重新加载。
-          </Text>
-
-          <TouchableOpacity
-            onPress={this.handleRetry}
-            style={{
-              backgroundColor: '#8b5cf6',
-              borderRadius: 12,
-              paddingHorizontal: 24,
-              paddingVertical: 14,
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 8,
-            }}
-          >
-            <MaterialCommunityIcons name="refresh" size={18} color="#fff" />
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>重新加载</Text>
+          <TouchableOpacity style={styles.button} onPress={this.handleRetry}>
+            <Text style={styles.buttonText}>重试</Text>
           </TouchableOpacity>
-
           {__DEV__ && this.state.error && (
-            <ScrollView
-              style={{
-                marginTop: 24, maxHeight: 160,
-                backgroundColor: '#f9fafb', borderRadius: 8,
-                padding: 12, width: '100%',
-              }}
-            >
-              <Text style={{ fontSize: 11, color: '#ef4444', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' }}>
-                {this.state.error.message}
-              </Text>
-              <Text style={{ fontSize: 10, color: '#9ca3af', marginTop: 4, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' }}>
-                {this.state.error.stack?.slice(0, 500)}
-              </Text>
-            </ScrollView>
+            <View style={styles.devInfo}>
+              <Text style={styles.devTitle}>开发信息：</Text>
+              <Text style={styles.devText}>{this.state.error.stack}</Text>
+            </View>
           )}
         </View>
       );
@@ -97,4 +70,73 @@ export class ErrorBoundary extends Component<Props, State> {
 
     return this.props.children;
   }
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+    backgroundColor: '#ffffff',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1e1b4b',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  message: {
+    fontSize: 15,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  button: {
+    backgroundColor: '#8b5cf6',
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  devInfo: {
+    marginTop: 32,
+    padding: 16,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+    width: '100%',
+  },
+  devTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  devText: {
+    fontSize: 11,
+    color: '#6b7280',
+    fontFamily: 'monospace',
+  },
+});
+
+/**
+ * 带错误边界的页面组件 HOC
+ */
+export function withErrorBoundary<P extends object>(
+  Component: React.ComponentType<P>,
+  fallback?: ReactNode
+) {
+  return function WithErrorBoundary(props: P) {
+    return (
+      <ErrorBoundary fallback={fallback}>
+        <Component {...props} />
+      </ErrorBoundary>
+    );
+  };
 }

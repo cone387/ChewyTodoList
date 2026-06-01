@@ -264,9 +264,23 @@ export default function LoginPage() {
             </Link>
           </View>
 
-          <Text style={{ textAlign: 'center', fontSize: 12, color: colors.text.muted, marginTop: 24 }}>
-            © 2026 ChewyTodo · 让效率成为习惯
-          </Text>
+          <View style={{ marginTop: 24 }}>
+            <Text style={{ textAlign: 'center', fontSize: 12, color: colors.text.muted }}>
+              © 2026 ChewyTodo · 让效率成为习惯
+            </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8, gap: 16 }}>
+              <Link href="/privacy-policy" asChild>
+                <TouchableOpacity>
+                  <Text style={{ fontSize: 11, color: Colors.primary }}>隐私政策</Text>
+                </TouchableOpacity>
+              </Link>
+              <Link href="/terms-of-service" asChild>
+                <TouchableOpacity>
+                  <Text style={{ fontSize: 11, color: Colors.primary }}>用户协议</Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

@@ -9,6 +9,7 @@ import axios from 'axios';
 import { router } from 'expo-router';
 import { storage } from './storage';
 import config from '../../config.json';
+import { logError } from '../utils/errorHandler';
 import type {
   AuthResponse,
   ApiResponse,
@@ -36,7 +37,7 @@ console.log('[API] BASE_URL =', BASE_URL);
 const api = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 15000,
+  timeout: 30000, // 增加到 30 秒
 });
 
 // 请求拦截器 — 添加 Bearer token
@@ -106,6 +107,7 @@ api.interceptors.response.use(
           processQueue(refreshError, null);
           await storage.removeItem('access_token');
           await storage.removeItem('refresh_token');
+          logError(refreshError, 'Token refresh failed');
           router.replace('/(auth)/login');
           return Promise.reject(refreshError);
         } finally {
@@ -114,9 +116,15 @@ api.interceptors.response.use(
       } else {
         await storage.removeItem('access_token');
         await storage.removeItem('refresh_token');
+        logError(error, 'No refresh token available');
         router.replace('/(auth)/login');
         return Promise.reject(error);
       }
+    }
+
+    // 记录其他错误
+    if (__DEV__) {
+      logError(error, 'API request failed');
     }
 
     return Promise.reject(error);
